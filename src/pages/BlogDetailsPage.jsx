@@ -18,7 +18,6 @@ const BlogDetailPage = () => {
   const { title, id } = useParams();
 
   useEffect(() => {
-    console.log("Selected blog title:", title);
 
     const fetchBlogs = async () => {
       try {
@@ -65,6 +64,14 @@ const BlogDetailPage = () => {
     const doc = parser.parseFromString(htmlContent, "text/html");
     return doc.body.innerHTML;
   };
+  let urlTitle = blog.title
+    .toLowerCase()
+    .replace(/[^a-z0-9\s-]/g, "")
+    .trim()
+    .split(/\s+/)
+    .slice(0, 7)
+    .join("-");
+ 
 
   return (
     <>
@@ -80,8 +87,9 @@ const BlogDetailPage = () => {
         <meta property="og:description" content={blog.description} />
         <link
   rel="canonical"
-  href={`https://zymo.app/blogs/${encodeURIComponent(blog.title)}/${blog.id}`}
+  href={`https://zymo.app/blogs/${urlTitle}/${blog.id}`}
 />
+
 
       </Helmet>
       <NavBar />

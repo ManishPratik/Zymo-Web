@@ -72,6 +72,7 @@ export default function AgentLogin({ onClose, title }) {
   };
 
   return (
+<<<<<<< HEAD
     <>
 
       <Helmet>
@@ -87,6 +88,27 @@ export default function AgentLogin({ onClose, title }) {
           content="Access the Zymo Agent portal to streamline your operations, manage customers, and monitor car rentals with ease."
         />
       </Helmet>
+=======
+    <>    
+      <Helmet>
+     <title>{title}</title>
+     <meta
+         name="description"
+         content="Securely log in to your Zymo agent account to manage bookings, view customer details, and access agent-specific tools."
+     />
+     <meta property="og:title" content={title} />
+     <meta
+         property="og:description"
+         content="Sign in to your Zymo agent dashboard to handle bookings, track rentals, and manage your account seamlessly."
+     />
+     <link rel="canonical" href="https://zymo.app/agent-login" />
+ </Helmet>
+ 
+    <div
+      className="fixed inset-0 flex items-center justify-center bg-[#212121] bg-opacity-50 backdrop-blur-sm z-50"
+      onClick={onClose}
+    >
+>>>>>>> 7e9f8be (fix non-canonical page in sitemap)
       <div
         className="fixed inset-0 flex items-center justify-center bg-[#212121] bg-opacity-50 backdrop-blur-sm z-50"
         onClick={onClose}
