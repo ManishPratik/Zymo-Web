@@ -79,11 +79,10 @@ const BlogDetailPage = () => {
         <meta property="og:title" content={`${blog.title} - Zymo Blog`} />
         <meta property="og:description" content={blog.description} />
         <link
-          rel="canonical"
-          href={`https://zymo.app/blogs/${blog.id}/${encodeURIComponent(
-            blog.title
-          )}`}
-        />
+  rel="canonical"
+  href={`https://zymo.app/blogs/${encodeURIComponent(blog.title)}/${blog.id}`}
+/>
+
       </Helmet>
       <NavBar />
 
