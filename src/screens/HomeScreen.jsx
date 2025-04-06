@@ -1,6 +1,5 @@
 import NavBar from "../components/NavBar";
 import Header from "../components/homecomponent/Header";
-import RSB from "../components/homecomponent/RSB";
 import HeroImage from "../components/homecomponent/HeroImage";
 import Benefits from "../components/homecomponent/Benefits";
 import Reviews from "../components/homecomponent/Reviews";
@@ -13,40 +12,54 @@ import { Helmet } from "react-helmet-async";
 import NewRSB from "../components/NewRSB";
 import { useEffect } from "react";
 import useTrackEvent from "../hooks/useTrackEvent";
-import ChatBot from "../components/Chatbot/ChatBot";
 import { useParams } from "react-router-dom";
 import ChatBotButton from "../components/Chatbot/ChatBotButton";
-const HomeScreen = ({ title }) => {
 
-  const {city} =useParams();
+const HomeScreen = ({ title, canonical }) => {
+  const { city } = useParams();
+  console.log(city);
+
+  const capitalizedCity =
+    city?.charAt(0).toUpperCase() + city?.slice(1).toLowerCase();
+
+  const pageTitle = city
+    ? ` Explore Self-Drive Car Rentals in ${capitalizedCity} | Zymo`
+    : title || "Zymo Car Rentals";
+   
+  const pageDescription = city
+    ? `Rent affordable self-drive cars in ${capitalizedCity}. Compare prices, book in minutes, and enjoy affordable, hassle-free car rentals.`
+    : "Rent self-drive cars easily with Zymo. Compare prices, book in minutes, and enjoy affordable, hassle-free car rentals.";
+
+  const canonicalLink = canonical
+    ? `https://zymo.app${canonical}`
+    : city
+    ? `https://zymo.app/self-drive-car-rentals/${city.toLowerCase()}`
+    : "https://zymo.app/";
+
+  useEffect(() => {
+    document.title = pageTitle;
+  }, [pageTitle]);
+
   const trackEvent = useTrackEvent();
   const handleWhatsappClicks = (label) => {
     trackEvent("Whatsapp Icon", "Icon Clicks", label);
   };
 
-  useEffect(() => {
-    document.title = title;
-  }, [title]);
   return (
     <>
       <Helmet>
-        <title>{title}</title>
-        <meta
-          name="description"
-          content=" Rent self-drive cars easily with Zymo. Compare prices, book in minutes, and enjoy affordable, hassle-free car rentals."
-        />
-        <meta property="og:title" content={title} />
-        <meta
-          property="og:description"
-          content=" Rent self-drive cars easily with Zymo. Compare prices, book in minutes, and enjoy affordable, hassle-free car rentals."
-        />
-        <link rel="canonical" href={`https://zymo.app/self-drive-car-rentals/${city}`} />
-        </Helmet>
+        <title>{pageTitle}</title>
+        <meta name="description" content={pageDescription} />
+        <meta property="og:title" content={pageTitle} />
+        <meta property="og:description" content={pageDescription} />
+        <link rel="canonical" href={canonicalLink} />
+      </Helmet>
+
       <NavBar />
       <div className="container flex flex-col w-full mx-auto">
         <div className="container">
           <Header />
-          <NewRSB urlcity={city}/>
+          <NewRSB urlcity={city} />
           <HeroImage />
           {/* <RSB /> */}
           <Benefits />
@@ -55,6 +68,7 @@ const HomeScreen = ({ title }) => {
           <Reviews />
           <Cities />
         </div>
+
         {/* WhatsApp Floating Button */}
         <a
           href="https://wa.me/919987933348"
@@ -66,11 +80,11 @@ const HomeScreen = ({ title }) => {
           <FaWhatsapp className="text-3xl" />
         </a>
 
-        
         <div>
-                    <ChatBotButton />
-                </div> 
+          <ChatBotButton />
+        </div>
       </div>
+
       <Footer />
     </>
   );

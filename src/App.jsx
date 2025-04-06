@@ -51,18 +51,33 @@ const App = () => {
         <CookiesConsent /> {/* Cookie consent component f*/}
         <ScrollToTop /> {/* Ensures scrolling to top on route change */}
         <Routes>
+
           <Route
             path="/"
-            element={<HomeScreen title="Home - Zymo Car Rentals" />}
+            element={
+              <HomeScreen
+                title="Affordable Self-Drive Car Rentals | Compare, Save, and Book with Zymo"
+                canonical="/"
+              />
+            }
           />
+
           <Route
             path="/self-drive-car-rentals"
-            element={<Navigate to="/" replace />}
+            element={
+              <HomeScreen
+                title="Affordable Self-Drive Car Rentals | Compare, Save, and Book with Zymo"
+                canonical="/self-drive-car-rentals"
+              />
+            }
           />
+
           <Route
             path="/self-drive-car-rentals/:city"
-            element={<Navigate to="/" replace />}
+            element={<HomeScreen key={window.location.pathname} />}
           />
+
+
           <Route
             path="/self-drive-car-rentals/:city/cars"
             element={<Listing title="Available Cars - Zymo" />}

@@ -80,8 +80,8 @@ function BookingPage({ title }) {
     car.source === "zoomcar"
       ? "ZoomCar"
       : car.source === "mychoize"
-      ? "Mychoize"
-      : car.source;
+        ? "Mychoize"
+        : car.source;
 
   useEffect(() => {
     const fetchVendorDetails = async () => {
@@ -612,7 +612,7 @@ function BookingPage({ title }) {
         theme: {
           color: "#edff8d",
           backdrop_color: "#212121",
-      },
+        },
         prefill: {
           name: userData.name,
           email: userData.email,
@@ -757,11 +757,10 @@ function BookingPage({ title }) {
                     onClick={() => setShowPickupPopup(true)}
                   >
                     {selectedPickupLocation
-                      ? `${selectedPickupLocation.LocationName} | ${
-                          selectedPickupLocation.IsPickDropChargesApplicable
-                            ? `₹${selectedPickupLocation.DeliveryCharge}`
-                            : "FREE"
-                        }`
+                      ? `${selectedPickupLocation.LocationName} | ${selectedPickupLocation.IsPickDropChargesApplicable
+                        ? `₹${selectedPickupLocation.DeliveryCharge}`
+                        : "FREE"
+                      }`
                       : "Select pickup location"}
                   </div>
                   <textarea
@@ -785,11 +784,10 @@ function BookingPage({ title }) {
                     onClick={() => setShowDropupPopup(true)}
                   >
                     {selectedDropLocation
-                      ? `${selectedDropLocation.LocationName} | ${
-                          selectedDropLocation.IsPickDropChargesApplicable
-                            ? `₹${selectedDropLocation.DeliveryCharge}`
-                            : "FREE"
-                        }`
+                      ? `${selectedDropLocation.LocationName} | ${selectedDropLocation.IsPickDropChargesApplicable
+                        ? `₹${selectedDropLocation.DeliveryCharge}`
+                        : "FREE"
+                      }`
                       : "Select drop location"}
                   </div>
                   <textarea
@@ -970,6 +968,42 @@ function BookingPage({ title }) {
             </div>
           </div>
 
+          {/* zoom car section */}
+          {car.source === "zoomcar" && (
+            <div className="max-w-3xl mx-auto rounded-lg bg-[#303030] p-1 ">
+              {/* <div className="min-h-screen  flex flex-col items-center justify-center p-4 space-y-4"> */}
+              {/* White card with logo and booking text */}
+              <div className=" rounded-xl shadow-md p-6  text-center ">
+                <div className="img-container flex justify-center p-2  ">
+                  <img src={car.sourceImg} alt={car.source} className="h-14 bg-white p-3 rounded-md" />
+                </div>
+
+
+                <p className="text-[#fff] p-4">
+                  Sign into ZoomCar using your number <br />
+                  <span className="font-bold text-[#fff]"> {preBookingData.customer.mobile}</span> to view your booking.
+                </p>
+              </div>
+
+              {/* yellow notice box */}
+              <div className="bg-[#faffa4] text-[#212121] rounded-xl shadow-md py-6 px-3 text-center">
+                <h2 className="text-lg font-semibold mb-3">Please Note</h2>
+                <p className="mb-3">
+                  As per ZoomCar policy you will have to upload your driving license and Aadhaar card on the ZoomCar app.
+                </p>
+                <p className="mb-2">
+                  If you already have a ZoomCar profile use the same mobile number registered with Zoomcar.
+                </p>
+                <p className="text-sm italic">
+                  (Creation of second profile is not allowed by Zoomcar).
+                </p>
+              </div>
+              {/* </div>
+              ff */}
+            </div>
+          )}
+
+
           {/* Customer Input Fields */}
           <div className="max-w-3xl mx-auto rounded-lg bg-[#303030] p-5">
             <h3 className="text-center mb-1 text-white text-3xl font-bold">
@@ -1025,11 +1059,10 @@ function BookingPage({ title }) {
               <div className="flex flex-col justify-center items-center">
                 <button
                   className={`px-6 py-2 rounded-lg font-semibold transition-colors
-                                ${
-                                  !customerUploadDetails
-                                    ? "text-black bg-[#eeff87] hover:bg-[#e2ff5d] cursor-pointer"
-                                    : "text-[#eeff87] bg-transparent border-2 border-[#eeff87] cursor-not-allowed"
-                                }`}
+                                ${!customerUploadDetails
+                      ? "text-black bg-[#eeff87] hover:bg-[#e2ff5d] cursor-pointer"
+                      : "text-[#eeff87] bg-transparent border-2 border-[#eeff87] cursor-not-allowed"
+                    }`}
                   onClick={handleUploadDocuments}
                   disabled={customerUploadDetails}
                 >
