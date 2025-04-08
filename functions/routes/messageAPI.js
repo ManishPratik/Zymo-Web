@@ -2,10 +2,12 @@ const express = require("express");
 const twilio = require("twilio");
 const dotenv = require("dotenv");
 const {
-    sendWhatsAppMessage,
+    sendWhatsAppMessageWhenZoomCarVendor,
+    sendWhatsAppMessageWhenZoomCarVendorToZymo,
+    sendWhatsAppMessageWhenOtherVendor,
+    sendWhatsAppMessageWhenOtherVendorToZymo,
     sendTestDriveWhatsappMessage,
     sendExtendedTestDriveWhatsappMessage,
-    sendWhatsAppMessageIncludeVendor,
 } = require("../config/twilio.js");
 const router = express.Router();
 dotenv.config();
@@ -103,18 +105,21 @@ router.post("/otp/verify", async (req, res) => {
     }
 });
 
-// API to send a WhatsApp message
-router.post("/send-whatsapp-message", async (req, res) => {
+// API to send a WhatsApp message to user (vendor is zoomCar)
+router.post("/booking-confirmation-zoomcar-vendor", async (req, res) => {
     try {
-        const { bookingData } = req.body;
+        const { data } = req.body;
 
-        if (!bookingData) {
+        if (!data) {
             return res
                 .status(400)
                 .json({ error: "Booking data are required." });
         }
 
-        const response = await sendWhatsAppMessage(bookingData);
+        const response = await Promise.allSettled([
+            sendWhatsAppMessageWhenZoomCarVendor(data),
+            sendWhatsAppMessageWhenZoomCarVendorToZymo(data),
+        ]);        
         res.status(200).json({
             message: "WhatsApp message sent successfully.",
             response,
@@ -125,7 +130,8 @@ router.post("/send-whatsapp-message", async (req, res) => {
     }
 });
 
-router.post("/booking-confirmation", async (req, res) => {
+// API to send a WhatsApp message to user (other vendor)
+router.post("/booking-confirmation-other-vendor", async (req, res) => {
     try {
         const { data } = req.body;
 
@@ -134,8 +140,8 @@ router.post("/booking-confirmation", async (req, res) => {
         }
 
         const response = await Promise.allSettled([
-            sendWhatsAppMessage(data),
-            sendWhatsAppMessageIncludeVendor(data),
+            sendWhatsAppMessageWhenOtherVendor(data),
+            sendWhatsAppMessageWhenOtherVendorToZymo(data),
         ]);
 
         res.status(200).json({

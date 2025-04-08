@@ -1,49 +1,9 @@
 import { Check } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { useEffect, useRef, useCallback } from "react";
+import { useEffect } from "react";
 
 const ConfirmPage = ({ isOpen, close, car, userData }) => {
   const navigate = useNavigate();
-  const hasSentMessage = useRef(false);
-
-  const functionsUrl = import.meta.env.VITE_FUNCTIONS_API_URL;
-
-  // Function to send WhatsApp message, wrapped in useCallback
-  const sendWhatsAppMessage = useCallback(
-    async (bookingData) => {
-      try {
-        const endpoint =
-        bookingData.source === "zymo"
-          ? "message/send-whatsapp-message"
-          : "message/booking-confirmation";
-
-        const response = await fetch(`${functionsUrl}/${endpoint}`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ bookingData }),
-        });
-
-        const data = await response.json();
-        console.log("WhatsApp Message Response:", data);
-      } catch (error) {
-        console.error("Error sending WhatsApp message:", error);
-      }
-    },
-    [functionsUrl] 
-  );
-
-  useEffect(() => {
-    if (!car || !userData || hasSentMessage.current) {
-      return;
-    }
-
-    const bookingData = { car, userData };
-    // sendWhatsAppMessage(bookingData);
-    hasSentMessage.current = true;
-  }, [car, userData, sendWhatsAppMessage]);
-
   useEffect(() => {
     if (!isOpen) return;
 

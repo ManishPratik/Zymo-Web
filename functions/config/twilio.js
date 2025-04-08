@@ -22,8 +22,8 @@ const send_whatsapp_message_extended_test_drive_booking_confirm_template_id =
 
 const client = twilio(accountSid, authToken);
 
-//Whatsapp message to user
-async function sendWhatsAppMessage(data) {
+//Whatsapp message to user(when vendor is zoomcar)
+async function sendWhatsAppMessageWhenZoomCarVendor(data) {
     try {
         const response = await client.messages.create({
             from: whatsapp_messaging_service_id, // WhatsApp Messaging Service ID
@@ -50,12 +50,43 @@ async function sendWhatsAppMessage(data) {
     }
 }
 
-//Whatsapp message to vendor
-async function sendWhatsAppMessageIncludeVendor(data) {
+//Whatsapp message to zymo(when vendor is zoomcar)
+async function sendWhatsAppMessageWhenZoomCarVendorToZymo(data) {
+    console.log(data);
+    try {
+        const response = await client.messages.create({
+            from: whatsapp_messaging_service_id, // WhatsApp Messaging Service ID
+            to: `whatsapp:+919987933348`, // Dynamic recipient
+            contentSid: send_whatsapp_message_booking_confirm_template_id, // Template ID
+            contentVariables: JSON.stringify({
+                1: data.customerName, // Customer Name
+                2: `${data.model}-${data.transmission}`, // Car Name and Transmission Type
+                3: data.pickupLocation, // Pick-up Location
+                4: data.id, // Booking ID
+                5: data.freeKMs, // Free KMs
+                6: data.startDate, // Start Date
+                7: data.endDate, // End Date
+                8: data.city, // City
+                9: data.phone, // Phone Number
+            }),
+        });
+
+        console.log(
+            `Booking confirmation message sent to ${data.phone}: ${response.sid}`
+        );
+    } catch (error) {
+        console.error(`Failed to send WhatsApp message: ${error.message}`);
+    }
+}
+
+
+
+//Whatsapp message to user(for other vendors)
+async function sendWhatsAppMessageWhenOtherVendor(data) {
     try {
         const response = await client.messages.create({
             from: whatsapp_messaging_service_id, // WhatsApp Messaging Services ID
-            to: `whatsapp:${data.vendorPhone}`,
+            to: `whatsapp:${data.phone}`,
             contentSid:
                 send_whatsapp_message_booking_confirm_vendor_template_id, // Template ID
             contentVariables: JSON.stringify({
@@ -68,8 +99,8 @@ async function sendWhatsAppMessageIncludeVendor(data) {
                 7: data.email, // Email ID
                 8: data.serviceType, // Service Type
                 9: data.city, // City
-                10: data.startDateTime, // Start Date & Time
-                11: data.endDateTime, // End Date & Time
+                10: data.startDate, // Start Date & Time
+                11: data.endDate, // End Date & Time
                 12: data.amount, // Amount
                 13: data.dateOfBirth, // Date of Birth
                 14: data.package, // Package
@@ -79,7 +110,7 @@ async function sendWhatsAppMessageIncludeVendor(data) {
         });
 
         console.log(
-            `Vendor Booking Message sent to ${data.vendorPhone}: ${response.sid}`
+            `Vendor Booking Message sent to ${data.phone}: ${response.sid}`
         );
     } catch (error) {
         console.error(
@@ -87,6 +118,46 @@ async function sendWhatsAppMessageIncludeVendor(data) {
         );
     }
 }
+
+//Whatsapp message to zymo(for other vendors)
+async function sendWhatsAppMessageWhenOtherVendorToZymo(data) {
+    try {
+        const response = await client.messages.create({
+            from: whatsapp_messaging_service_id, // WhatsApp Messaging Services ID
+            to: `whatsapp:+919987933348`,
+            contentSid:
+                send_whatsapp_message_booking_confirm_vendor_template_id, // Template ID
+            contentVariables: JSON.stringify({
+                1: data.customerName, // Customer Name
+                2: `${data.model}-${data.transmission}`, // Car Name and Transmission Type
+                3: data.pickupLocation, // Pick-up Location
+                4: data.id, // Booking ID
+                5: data.vendorName, // Vendor Name
+                6: data.phone, // Mobile Number
+                7: data.email, // Email ID
+                8: data.serviceType, // Service Type
+                9: data.city, // City
+                10: data.startDate, // Start Date & Time
+                11: data.endDate, // End Date & Time
+                12: data.amount, // Amount
+                13: data.dateOfBirth, // Date of Birth
+                14: data.package, // Package
+                15: data.paymentMode, // Payment Mode
+                16: data.vendorLocation, // Vendor Location
+            }),
+        });
+
+        console.log(
+            `Vendor Booking Message sent to ${data.phone}: ${response.sid}`
+        );
+    } catch (error) {
+        console.error(
+            `Failed to send vendor booking message: ${error.message}`
+        );
+    }
+}
+
+
 
 //Refund Message Function
 async function sendRefundMessage(data) {
@@ -182,8 +253,10 @@ async function sendExtendedTestDriveWhatsappMessage(data) {
 }
 
 module.exports = {
-    sendWhatsAppMessage,
-    sendWhatsAppMessageIncludeVendor,
+    sendWhatsAppMessageWhenZoomCarVendor,
+    sendWhatsAppMessageWhenOtherVendor,
+    sendWhatsAppMessageWhenZoomCarVendorToZymo,
+    sendWhatsAppMessageWhenOtherVendorToZymo,
     sendRefundMessage,
     bookingCancelMessage,
     sendTestDriveWhatsappMessage,
