@@ -14,6 +14,8 @@ import { useEffect } from "react";
 import useTrackEvent from "../hooks/useTrackEvent";
 import { useParams } from "react-router-dom";
 import ChatBotButton from "../components/Chatbot/ChatBotButton";
+import StepsofZymo from "../components/homecomponent/StepsofZymo";
+//import StepsofZymo from "../components/homecomponent/StepsofZymo.jsx";
 
 const HomeScreen = ({ title, canonical }) => {
   const { city } = useParams();
@@ -64,7 +66,9 @@ const HomeScreen = ({ title, canonical }) => {
           {/* <RSB /> */}
           <Benefits />
           <BrandsAvailable />
+         
           <ServiceProvider />
+          <StepsofZymo></StepsofZymo>
           <Reviews />
           <Cities />
         </div>
