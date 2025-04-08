@@ -65,6 +65,7 @@ const NearestCar = ({ title }) => {
       </Helmet>
 
       <NavBar />
+      
       <div className="head-container flex flex-col sm:flex-row justify-between items-center bg-darkGrey text-white p-4">
         <button
           onClick={() => navigate("/")}
@@ -72,7 +73,7 @@ const NearestCar = ({ title }) => {
         >
           <ArrowLeft className="w-6 h-6" />
         </button>
-
+        
         <h1 className="text-white text-3xl font-bold pl-5">Nearest Car</h1>
 
         <div className="mt-3 sm:mt-0 sm:ml-4 flex justify-end w-full sm:w-auto">
