@@ -17,7 +17,7 @@ import ChatBotButton from "../components/Chatbot/ChatBotButton";
 import StepsofZymo from "../components/homecomponent/StepsofZymo";
 //import StepsofZymo from "../components/homecomponent/StepsofZymo.jsx";
 
-const HomeScreen = ({ title, canonical ,canonical}) => {
+const HomeScreen = ({ title, canonical}) => {
   const { city } = useParams();
   console.log(city);
 
@@ -44,27 +44,7 @@ const HomeScreen = ({ title, canonical ,canonical}) => {
 
   console.log(city);
 
-  const capitalizedCity =
-    city?.charAt(0).toUpperCase() + city?.slice(1).toLowerCase();
-
-  const pageTitle = city
-    ? `${capitalizedCity} Car Rentals | Zymo`
-    : title || "Zymo Car Rentals";
-
-  const pageDescription = city
-    ? `Rent affordable self-drive cars in ${capitalizedCity}. Compare prices, book in minutes, and enjoy affordable, hassle-free car rentals.`
-    : "Rent self-drive cars easily with Zymo. Compare prices, book in minutes, and enjoy affordable, hassle-free car rentals.";
-
-    const canonicalLink = canonical
-    ? `https://zymo.app${canonical}`
-    : city
-    ? `https://zymo.app/self-drive-car-rentals/${city.toLowerCase()}`
-    : "https://zymo.app/";
-
-  useEffect(() => {
-    document.title = pageTitle;
-  }, [pageTitle]);
-  
+   
   const trackEvent = useTrackEvent();
   const handleWhatsappClicks = (label) => {
     trackEvent("Whatsapp Icon", "Icon Clicks", label);
