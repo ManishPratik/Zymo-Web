@@ -4,7 +4,7 @@ const axios = require("axios");
 const router = express.Router();
 
 // Zoom credentials
-let prod = false;
+let prod = true;
 const zoomApiKey = prod
     ? process.env.ZOOMCAR_PROD_API_KEY
     : process.env.ZOOMCAR_TEST_API_KEY;

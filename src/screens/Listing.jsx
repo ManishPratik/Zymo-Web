@@ -258,8 +258,8 @@ const Listing = ({ title }) => {
                   tripDurationHours
                 );
 
-          const firebasePromise = fetchFirebaseCars();
-          // const firebasePromise = null; // Temporarily Disabled
+          // const firebasePromise = fetchFirebaseCars();
+          const firebasePromise = null; // Temporarily Disabled
 
           // Execute both API calls in parallel
           const [zoomData, mychoizeData, firebaseData] =

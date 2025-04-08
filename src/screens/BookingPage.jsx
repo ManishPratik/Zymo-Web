@@ -75,6 +75,7 @@ function BookingPage({ title }) {
   const customerUploadDetails = formData && uploadDocData;
 
   const functionsUrl = import.meta.env.VITE_FUNCTIONS_API_URL;
+  // const functionsUrl = "http://127.0.0.1:5001/zymo-prod/us-central1/api";
 
   const vendor =
     car.source === "zoomcar"

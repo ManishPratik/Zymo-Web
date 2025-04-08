@@ -2,9 +2,6 @@ const express = require("express");
 const router = express.Router();
 const crypto = require("crypto");
 const { getRazorpayInstance } = require("../config/razorpay.js");
-const { defineSecret } = require("firebase-functions/params");
-
-const RAZORPAY_PROD_KEY_SECRET = defineSecret("RAZORPAY_PROD_KEY_SECRET");
 
 router.post("/create-order", async (req, res) => {
     try {
@@ -56,7 +53,7 @@ router.post("/verifyPayment", async (req, res) => {
                     "Razorpay order ID, payment ID, and signature are required.",
             });
         }
-        const key_secret=process.env.RAZORPAY_PROD_KEY_SECRET;
+        const key_secret = process.env.RAZORPAY_PROD_KEY_SECRET;
   
         const sign = razorpay_order_id + "|" + razorpay_payment_id;
         const expectedSignature = crypto
