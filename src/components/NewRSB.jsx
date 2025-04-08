@@ -72,18 +72,9 @@ const NewRSB = ({urlcity}) => {
                                     : address
                             );
                             
-                            const cityComponent =
-                            placeDetails.address_components?.find((component) =>
-                                component.types.includes("locality")
-                            ) ||
-                            placeDetails.address_components?.find((component) =>
-                                component.types.includes("administrative_area_level_2")
-                            ) ||
-                            placeDetails.address_components?.find((component) =>
-                                component.types.includes("sublocality")
-                            );
-                        
-                        setCity(cityComponent ? cityComponent.long_name : "");
+                            const city = extractCityFromComponents(placeDetails.address_components);
+                            setCity(city);
+                            
                         
                         } else {
                             console.error("Failed to fetch place details.");
@@ -138,6 +129,31 @@ const NewRSB = ({urlcity}) => {
     const placesAPILibraries = useMemo(() => ["places"], []);
     const placesAPIKey = import.meta.env.VITE_PLACES_API_KEY;
 
+    const extractCityFromComponents = (components) => {
+        const cityTypesPriority = [
+            "locality",                                       
+            "sublocality_level_1",             
+            "sublocality",                    
+            "neighborhood",                   
+            "administrative_area_level_3",  
+            "administrative_area_level_2",     
+            "administrative_area_level_1"   
+        ];
+        
+    
+        for (let type of cityTypesPriority) {
+            const match = components.find((c) => c.types.includes(type));
+            if (match) {
+                console.log("Matched city type:", type, "→", match.long_name);
+                return match.long_name;
+            }
+        }
+    
+        console.warn("No suitable city component found.");
+        return "";
+    };
+    
+
     const handlePlaceSelect = () => {
         if (autocomplete) {
             const placeDetails = autocomplete.getPlace();
@@ -152,18 +168,9 @@ const NewRSB = ({urlcity}) => {
                         ? `${address[0]}, ${address[1]}, ${address.at(-2)}`
                         : address
                 );
-                const cityComponent =
-                placeDetails.address_components?.find((component) =>
-                    component.types.includes("locality")
-                ) ||
-                placeDetails.address_components?.find((component) =>
-                    component.types.includes("administrative_area_level_2")
-                ) ||
-                placeDetails.address_components?.find((component) =>
-                    component.types.includes("sublocality")
-                );
-            
-            setCity(cityComponent ? cityComponent.long_name : "");
+                const city = extractCityFromComponents(placeDetails.address_components);
+setCity(city);
+
             
 
                 // Update placeInput with the selected place's formatted address
@@ -196,18 +203,9 @@ const NewRSB = ({urlcity}) => {
                                         : address
                                 );
 
-                                const cityComponent =
-                                placeDetails.address_components?.find((component) =>
-                                    component.types.includes("locality")
-                                ) ||
-                                placeDetails.address_components?.find((component) =>
-                                    component.types.includes("administrative_area_level_2")
-                                ) ||
-                                placeDetails.address_components?.find((component) =>
-                                    component.types.includes("sublocality")
-                                );
-                            
-                            setCity(cityComponent ? cityComponent.long_name : "");
+                                const city = extractCityFromComponents(placeDetails.address_components);
+                                setCity(city);
+                                
                             
 
                                 // Update the input field with the current location
