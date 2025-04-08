@@ -89,7 +89,7 @@ function BookingPage() {
 
       setVendorDetails(docSnap.data());
     };
-
+    
     fetchVendorDetails();
   }, [car.source]);
 
@@ -309,8 +309,8 @@ function BookingPage() {
     return bookingId;
   };
 
-  // Sends whatsapp notif to both user and zymo
-  const sendWhatsappNotif = async (bookingId) => {
+  // Sends whatsapp notif to both user and zymo(other vendor )
+  const sendWhatsappNotifMychoizeBooking = async (bookingId) => {
     const formattedPhoneNumber = customerPhone.startsWith("+91")
       ? customerPhone
       : `+91${customerPhone}`;
@@ -326,7 +326,6 @@ function BookingPage() {
       pickupLocation: selectedPickupLocation?.HubAddress || car.address,
       amount: formatFare(payableAmount),
       vendorName: vendor,
-      vendorPhone: "+919987933348", // TODO: Change this later
       vendorLocation: car.address,
       model: `${car.brand} ${car.name}`,
       transmission: car.options[0],
@@ -336,7 +335,37 @@ function BookingPage() {
       serviceType: "",
     };
 
-    await fetch(`${functionsUrl}/message/booking-confirmation`, {
+    await fetch(`${functionsUrl}/message/booking-confirmation-other-vendor`, {
+      method: "POST",
+      body: JSON.stringify({
+        data,
+      }),
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+  };
+
+  // Sends whatsapp notif to both user and zymo(vendor is zoomCar)
+  const sendWhatsappNotifZoomcarBooking = async (bookingId) => {
+    const formattedPhoneNumber = customerPhone.startsWith("+91")
+      ? customerPhone
+      : `+91${customerPhone}`;
+    const data = {
+      id: bookingId,
+      customerName: formData?.userName || customerName,
+      phone: formData?.phone || formattedPhoneNumber,
+      email: formData?.email || customerEmail,
+      startDate: startDateFormatted,
+      endDate: endDateFormatted,
+      city: city,
+      pickupLocation: selectedPickupLocation?.HubAddress || car.address,
+      model: `${car.brand} ${car.name}`,
+      transmission: car.options[0],
+      freeKMs: "",
+    };
+    
+    await fetch(`${functionsUrl}/message/booking-confirmation-zoomcar-vendor`, {
       method: "POST",
       body: JSON.stringify({
         data,
@@ -350,7 +379,7 @@ function BookingPage() {
   // Booking handling
   const handleMychoizeBooking = async (paymentData) => {
     const bookingId = saveSuccessfulBooking(paymentData.razorpay_payment_id);
-    sendWhatsappNotif(bookingId);
+    sendWhatsappNotifMychoizeBooking(bookingId);
     setIsConfirmPopupOpen(true);
   };
 
@@ -358,7 +387,7 @@ function BookingPage() {
     try {
       const bookingId = await retryFunction(createBooking);
       saveSuccessfulBooking(paymentData.razorpay_payment_id, bookingId);
-      sendWhatsappNotif(bookingId);
+      sendWhatsappNotifZoomcarBooking(bookingId);
       setIsConfirmPopupOpen(true);
     } catch (error) {
       console.error(error.message);
@@ -492,7 +521,7 @@ function BookingPage() {
           amount,
           currency,
         }
-      );
+      );      
       return response.data.data;
     } catch (error) {
       console.error("Error creating order:", error);
