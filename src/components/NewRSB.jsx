@@ -72,10 +72,19 @@ const NewRSB = ({urlcity}) => {
                                     : address
                             );
                             
-                            const cityComponent = placeDetails.address_components?.find(
-                                (component) => component.types.includes("locality")
+                            const cityComponent =
+                            placeDetails.address_components?.find((component) =>
+                                component.types.includes("locality")
+                            ) ||
+                            placeDetails.address_components?.find((component) =>
+                                component.types.includes("administrative_area_level_2")
+                            ) ||
+                            placeDetails.address_components?.find((component) =>
+                                component.types.includes("sublocality")
                             );
-                            setCity(cityComponent ? cityComponent.long_name : "");
+                        
+                        setCity(cityComponent ? cityComponent.long_name : "");
+                        
                         } else {
                             console.error("Failed to fetch place details.");
                         }
@@ -143,11 +152,19 @@ const NewRSB = ({urlcity}) => {
                         ? `${address[0]}, ${address[1]}, ${address.at(-2)}`
                         : address
                 );
-
-                const cityComponent = placeDetails.address_components.find(
-                    (component) => component.types.includes("locality")
+                const cityComponent =
+                placeDetails.address_components?.find((component) =>
+                    component.types.includes("locality")
+                ) ||
+                placeDetails.address_components?.find((component) =>
+                    component.types.includes("administrative_area_level_2")
+                ) ||
+                placeDetails.address_components?.find((component) =>
+                    component.types.includes("sublocality")
                 );
-                setCity(cityComponent ? cityComponent.long_name : "");
+            
+            setCity(cityComponent ? cityComponent.long_name : "");
+            
 
                 // Update placeInput with the selected place's formatted address
                 setPlaceInput(placeDetails.formatted_address);
@@ -179,10 +196,19 @@ const NewRSB = ({urlcity}) => {
                                         : address
                                 );
 
-                                const cityComponent = placeDetails.address_components.find(
-                                    (component) => component.types.includes("locality")
+                                const cityComponent =
+                                placeDetails.address_components?.find((component) =>
+                                    component.types.includes("locality")
+                                ) ||
+                                placeDetails.address_components?.find((component) =>
+                                    component.types.includes("administrative_area_level_2")
+                                ) ||
+                                placeDetails.address_components?.find((component) =>
+                                    component.types.includes("sublocality")
                                 );
-                                setCity(cityComponent ? cityComponent.long_name : "");
+                            
+                            setCity(cityComponent ? cityComponent.long_name : "");
+                            
 
                                 // Update the input field with the current location
                                 setPlaceInput(placeDetails.formatted_address);
@@ -286,6 +312,7 @@ const NewRSB = ({urlcity}) => {
                 tripDurationHours,
                 activeTab,
             };
+            console.log(formattedCity);
     
             console.log("Navigating with:", stateData); // Debugging
     
