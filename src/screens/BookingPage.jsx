@@ -647,7 +647,7 @@ function BookingPage() {
         >
           <ArrowLeft className="w-6 h-6" />
         </button>
-        <h1 className=" text-3xl font-bold  flex-grow text-center">
+        <h1 className=" text-lg font-bold  flex-grow text-center">
           Confirm Booking
         </h1>
       </div>
@@ -655,30 +655,32 @@ function BookingPage() {
       {/* Main Content */}
       <div className="mx-auto p-6 sm:p-10 lg:p-20 space-y-5 text-white">
         {/* Header Details */}
-        <div className="flex flex-wrap justify-between items-center gap-5 rounded-lg p-6 shadow-sm w-full">
-          <div className="flex-1 min-w-[200px] text-xl">
-            <h2 className="font-semibold mb-2">
-              {preBookingData.headerDetails.name}
-            </h2>
-          </div>
+        <div className="flex flex-col lg:flex-row flex-wrap justify-between items-center gap-5 rounded-lg p-6 shadow-sm w-full">
+            {/* Left Section */}
+            <div className="flex-1 min-w-[200px] text-xl text-center lg:text-left">
+              <h2 className="font-semibold mb-2">
+                {preBookingData.headerDetails.name}
+              </h2>
+            </div>
 
-          <div className="flex-1 flex justify-center -mt-10">
-            <img
-              src={preBookingData.headerDetails.image || "/placeholder.svg"}
-              alt={`${preBookingData.headerDetails.name}`}
-              className="w-full sm:w-96 lg:w-80 h-[200px] sm:h-[280px] lg:h-[200px] object-cover rounded-lg"
-            />
-          </div>
+            {/* Center Image */}
+            <div className="flex-1 flex justify-center  lg:order-none">
+              <img
+                src={preBookingData.headerDetails.image || "/placeholder.svg"}
+                alt={`${preBookingData.headerDetails.name}`}
+                className="w-full max-w-xs sm:max-w-sm md:max-w-md lg:max-w-[20rem] h-[200px] sm:h-[280px] lg:h-[200px] object-cover rounded-lg"
+              />
+            </div>
 
-          <div className="flex-1 flex justify-end items-end gap-1 text-xl">
-            <div className="flex flex-row items-center gap-2">
+            {/* Right Section */}
+            <div className="flex-1 flex justify-center lg:justify-end items-center gap-2 text-lg">
               <p className="text-muted-foreground whitespace-nowrap">
-                Fulfilled by:{" "}
-                <img src={car.sourceImg} alt={car.source} className="h-10" />
+                Fulfilled by:
               </p>
+              <img src={car.sourceImg} alt={car.source} className="h-10 bg-white p-2 rounded-md" />
             </div>
           </div>
-        </div>
+
 
         {/* Pickup Details */}
         <div className="max-w-3xl mx-auto rounded-lg bg-[#303030] p-5">
@@ -899,7 +901,7 @@ function BookingPage() {
                 <IndianRupee className="w-5 h-5 text-[#eeff87]" />
                 <span>
                   Discount{" "}
-                  {`(${((1 - vendorDetails?.DiscountSd) * 100).toFixed(0)}%)`}
+                  {/* {`(${((1 - vendorDetails?.DiscountSd) * 100).toFixed(0)}%)`} */}
                 </span>
               </div>
               <span className="ml-auto text-white">
@@ -935,6 +937,42 @@ function BookingPage() {
             </div>
           </div>
         </div>
+
+
+ {/* zoom car section */}
+ {car.source === "zoomcar" && (
+            <div className="max-w-3xl mx-auto rounded-lg bg-[#303030] p-1 ">
+              {/* <div className="min-h-screen  flex flex-col items-center justify-center p-4 space-y-4"> */}
+              {/* White card with logo and booking text */}
+              <div className=" rounded-xl shadow-md p-6  text-center ">
+                <div className="img-container flex justify-center p-2  ">
+                  <img src={car.sourceImg} alt={car.source} className="h-14 bg-white p-3 rounded-md" />
+                </div>
+
+
+                <p className="text-[#fff] p-4">
+                  Sign into ZoomCar using your number <br />
+                  <span className="font-bold text-[#fff]"> {preBookingData.customer.mobile}</span> to view your booking.
+                </p>
+              </div>
+
+              {/* yellow notice box */}
+              <div className="bg-[#faffa4] text-[#212121] rounded-xl shadow-md py-6 px-3 text-center">
+                <h2 className="text-lg font-semibold mb-3">Please Note</h2>
+                <p className="mb-3">
+                  As per ZoomCar policy you will have to upload your driving license and Aadhaar card on the ZoomCar app.
+                </p>
+                <p className="mb-2">
+                  If you already have a ZoomCar profile use the same mobile number registered with Zoomcar.
+                </p>
+                <p className="text-sm italic">
+                  (Creation of second profile is not allowed by Zoomcar).
+                </p>
+              </div>
+              
+            </div>
+          )}
+
 
         {/* Customer Input Fields */}
         <div className="max-w-3xl mx-auto rounded-lg bg-[#303030] p-5">

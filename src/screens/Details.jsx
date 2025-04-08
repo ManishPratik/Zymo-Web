@@ -93,22 +93,22 @@ const CarDetails = ({ title }) => {
       rating: car.ratingData.rating,
       features: [
         {
-          icon: <Armchair className="m-2 w-8 h-8" />,
+          icon: <Armchair className="m-2 w-8 min-h-8" />,
           label: "Seats",
           value: car.options[2],
         },
         {
-          icon: <Car className="m-2 w-8 h-8" />,
+          icon: <Car className="m-2 w-8 min-h-8" />,
           label: "Trips",
           value: car.trips,
         },
         {
-          icon: <Fuel className="m-2 w-9 h-9" />,
+          icon: <Fuel className="m-2 w-8 min-h-8" />,
           label: "Fuel Type",
           value: car.options[1],
         },
         {
-          icon: <Joystick className="m-2 w-8 h-8" />,
+          icon: <Joystick className="m-2 w-8 min-h-8" />,
           label: "Transmission",
           value: car.options[0],
         },
@@ -127,7 +127,7 @@ const CarDetails = ({ title }) => {
           label: "Hourly Amount",
           value:
             car.source === "mychoize"
-              ? `₹${car.hourly_amount}/hr`
+              ? `₹${car.hourly_amount}`
               : car.hourly_amount,
         },
         { label: "Seats", value: car.options[2] },
@@ -308,7 +308,7 @@ const CarDetails = ({ title }) => {
                           loading="lazy"
                           src={car.bookingInfo.logo}
                           alt="Zoomcar Logo"
-                          className="h-6"
+                          className="h-10 p-2 bg-white rounded-md"
                         />
                         <span className="ml-2">
                           {car.bookingInfo.driveType}
@@ -327,21 +327,17 @@ const CarDetails = ({ title }) => {
                     </span>
                   </div>
 
-                  {/* Key Features */}
-                  <div className="grid grid-cols-2 gap-4 mb-8">
+                  {/* Key Features NEW */}
+                  <div className="grid grid-cols-2 gap-2 mb-8 text-md">
                     {car.features.map((feature, idx) => (
                       <div
                         key={idx}
-                        className="bg-darkGrey2 rounded-xl p-4 gap-2 shadow-lg flex"
+                        className="bg-darkGrey2 rounded-xl px-2 py-3 shadow-lg flex flex-col sm:flex-row items-center sm:items-start gap-2 sm:gap-3 text-center sm:text-left"
                       >
-                        {feature.icon}
+                        <div className="text-white">{feature.icon}</div>
                         <div>
-                          <p className="text-sm text-gray-400">
-                            {feature.label}
-                          </p>
-                          <p className="text-xl font-semibold">
-                            {feature.value}
-                          </p>
+                          <p className="text-gray-400">{feature.label}</p>
+                          <p className="font-semibold">{feature.value}</p>
                         </div>
                       </div>
                     ))}
@@ -363,11 +359,11 @@ const CarDetails = ({ title }) => {
           </div>
 
           {/* Price and Booking */}
-          <div className="mt-10 flex items-center justify-between lg:flex-col lg:space-y-4 lg:justify-center">
+          <div className="mt-10 flex items-center flex-col space-y-4 justify-center">
             <p className="text-3xl font-semibold text-appColor">
               {carDetails[0].price}
             </p>
-            <span className="text-sm text-gray-400">
+            <span className="text-xs text-gray-400">
               {car.source === "zoomcar" ? "GST Included" : "GST Not Included"}
             </span>
             <button
