@@ -335,7 +335,7 @@ function BookingPage() {
       serviceType: "",
     };
 
-    await fetch(`${functionsUrl}/message/booking-confirmation`, {
+    await fetch(`${functionsUrl}/message/booking-confirmation-other-vendor`, {
       method: "POST",
       body: JSON.stringify({
         data,
