@@ -1,37 +1,66 @@
 import { Check } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useEffect, useRef, useCallback } from "react";
 
 const ConfirmPage = ({ isOpen, close, car, userData }) => {
   const navigate = useNavigate();
-
-  // If not open, don't render anything
-  if (!isOpen) return null;
+  const hasSentMessage = useRef(false);
 
   const functionsUrl = import.meta.env.VITE_FUNCTIONS_API_URL;
 
-  // Function to send WhatsApp message
-  const sendWhatsAppMessage = async (bookingData) => {
-    try {
-      const response = await fetch(`${functionsUrl}/message/send-whatsapp-message`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ bookingData }),
-      });
+  // Function to send WhatsApp message, wrapped in useCallback
+  const sendWhatsAppMessage = useCallback(
+    async (bookingData) => {
+      try {
+        const endpoint =
+        bookingData.source === "zymo"
+          ? "message/send-whatsapp-message"
+          : "message/booking-confirmation";
 
-      const data = await response.json();
-      console.log("WhatsApp Message Response:", data);
-    } catch (error) {
-      console.error("Error sending WhatsApp message:", error);
+        const response = await fetch(`${functionsUrl}/${endpoint}`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ bookingData }),
+        });
+
+        const data = await response.json();
+        console.log("WhatsApp Message Response:", data);
+      } catch (error) {
+        console.error("Error sending WhatsApp message:", error);
+      }
+    },
+    [functionsUrl] 
+  );
+
+  useEffect(() => {
+    if (!car || !userData || hasSentMessage.current) {
+      return;
     }
+
+    const bookingData = { car, userData };
+    // sendWhatsAppMessage(bookingData);
+    hasSentMessage.current = true;
+  }, [car, userData, sendWhatsAppMessage]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const timer = setTimeout(() => {
+      close();
+      navigate("/", { replace: true });
+    }, 8000); 
+
+    return () => clearTimeout(timer);
+  }, [isOpen, close, navigate]);
+
+  const handleConfirm = () => {
+    close();
+    navigate("/", { replace: true });
   };
 
-  // Handle button click
-  const handleConfirm = () => {
-    close(); 
-    navigate("/"); 
-  };
+  if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm z-50">

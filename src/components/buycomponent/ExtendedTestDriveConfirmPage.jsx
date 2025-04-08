@@ -60,12 +60,23 @@ const ExtendedTestDriveConfirmPage = ({ isOpen, close, bookingData }) => {
     processBooking();
   }, [isOpen, bookingData, sendWhatsAppMessage, trackEvent]);
 
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const timer = setTimeout(() => {
+      close();
+      navigate("/", { replace: true });
+    }, 8000); 
+
+    return () => clearTimeout(timer);
+  }, [isOpen, close, navigate]);
+
   // Handle button click
   const handleConfirm = () => {
     localStorage.clear();
     sessionStorage.clear();
     close();
-    navigate("/");
+    navigate("/", { replace: true });
   };
 
   if (!isOpen) return null;

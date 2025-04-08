@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { appDB } from '../utils/firebase';
 import { collection, addDoc } from 'firebase/firestore';
 import bcrypt from 'bcryptjs';

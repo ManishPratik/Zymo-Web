@@ -106,10 +106,21 @@ const TestDriveConfirmPage = ({ title }) => {
     processBooking();
   }, [car, userData, sendWhatsAppMessage, uploadDataToFirebase, trackEvent ]);
   
+  useEffect(() => {
+
+    const timer = setTimeout(() => {
+      close();
+      navigate("/", { replace: true });
+    }, 8000); 
+
+    return () => clearTimeout(timer);
+  }, [navigate]);
+
+
   const handlesubmit = ()=>{
     localStorage.clear();
     sessionStorage.clear();
-    navigate('/')
+    navigate('/',{ replace: true })
   }
   return (
     <>
