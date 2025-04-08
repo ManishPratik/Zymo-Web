@@ -52,7 +52,6 @@ async function sendWhatsAppMessageWhenZoomCarVendor(data) {
 
 //Whatsapp message to zymo(when vendor is zoomcar)
 async function sendWhatsAppMessageWhenZoomCarVendorToZymo(data) {
-    console.log(data);
     try {
         const response = await client.messages.create({
             from: whatsapp_messaging_service_id, // WhatsApp Messaging Service ID
