@@ -312,7 +312,7 @@ function BookingPage() {
     const data = {
       id: bookingId,
       customerName: formData?.userName || customerName,
-      dateOfBirth: formData?.dob || "",
+      dateOfBirth: formData?.dob || "N/A",
       phone: formData?.phone || formattedPhoneNumber,
       email: formData?.email || customerEmail,
       startDate: startDateFormatted,
