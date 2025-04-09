@@ -14,7 +14,7 @@ body.chatbot-open {
     flex-direction: row-reverse;
     gap: 10px;
     position: fixed;
-    bottom: 100px;
+    bottom: 50px;
     right: 20px;
     z-index: 1000;
     justify-content: center;
@@ -32,7 +32,7 @@ body.chatbot-open {
 .chatbot-toggle-button {
     background-color:black ;
     border: 5px solid #faffa4;
-    border-radius: 0%;
+    border-radius: 25%;
     box-sizing: border-box;
     color: white;
     font-size: 24px;

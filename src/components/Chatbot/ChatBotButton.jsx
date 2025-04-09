@@ -32,7 +32,7 @@ const ChatBotButton = () => {
                 aria-label="Toggle chat"
                 style={{ display: 'flex', alignItems: 'center' }}
             >
-                <img className="bot-icon" style={{ width: '28px' }} src={chatBotIcon} alt="Chatbot icon" />
+                <img className="bot-icon" style={{ width: '20px' }} src={chatBotIcon} alt="Chatbot icon" />
             </button>
             {showMessage && <span className="ask-me-message text-[#faffa4]">Hey there👋</span>}
         </div>
