@@ -24,6 +24,8 @@ const client = twilio(accountSid, authToken);
 
 //Whatsapp message to user(when vendor is zoomcar)
 async function sendWhatsAppMessageWhenZoomCarVendor(data) {
+    // console.log("Data Came",data);
+    
     try {
         const response = await client.messages.create({
             from: whatsapp_messaging_service_id, // WhatsApp Messaging Service ID
@@ -41,7 +43,7 @@ async function sendWhatsAppMessageWhenZoomCarVendor(data) {
                 9: data.phone, // Phone Number
             }),
         });
-
+        // console.log("Response to user:",response)
         console.log(
             `Booking confirmation message sent to ${data.phone}: ${response.sid}`
         );
@@ -52,6 +54,7 @@ async function sendWhatsAppMessageWhenZoomCarVendor(data) {
 
 //Whatsapp message to zymo(when vendor is zoomcar)
 async function sendWhatsAppMessageWhenZoomCarVendorToZymo(data) {
+    console.log("Data Came",data);
     try {
         const response = await client.messages.create({
             from: whatsapp_messaging_service_id, // WhatsApp Messaging Service ID
@@ -69,9 +72,9 @@ async function sendWhatsAppMessageWhenZoomCarVendorToZymo(data) {
                 9: data.phone, // Phone Number
             }),
         });
-
+        // console.log("Response to user:",response)
         console.log(
-            `Booking confirmation message sent to ${data.phone}: ${response.sid}`
+            `Booking confirmation message sent to +919987933348: ${response.sid}`
         );
     } catch (error) {
         console.error(`Failed to send WhatsApp message: ${error.message}`);

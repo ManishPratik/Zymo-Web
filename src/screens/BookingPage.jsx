@@ -330,9 +330,9 @@ function BookingPage() {
       model: `${car.brand} ${car.name}`,
       transmission: car.options[0],
       package: findPackage(car.rateBasis),
-      freeKMs: "",
+      freeKMs: "limited",
       paymentMode: "Online (Razorpay)",
-      serviceType: "",
+      serviceType: "Online",
     };
 
     await fetch(`${functionsUrl}/message/booking-confirmation-other-vendor`, {
@@ -362,7 +362,7 @@ function BookingPage() {
       pickupLocation: selectedPickupLocation?.HubAddress || car.address,
       model: `${car.brand} ${car.name}`,
       transmission: car.options[0],
-      freeKMs: "",
+      freeKMs: "Unlimited",
     };
     
     await fetch(`${functionsUrl}/message/booking-confirmation-zoomcar-vendor`, {
