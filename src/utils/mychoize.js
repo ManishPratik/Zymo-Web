@@ -1,4 +1,4 @@
-import { toPascalCase } from "./helperFunctions";
+import { getVendorDetails, toPascalCase } from "./helperFunctions";
 
 const getTotalKms = (tripDurationHours) => {
     return {
@@ -174,9 +174,12 @@ const fetchMyChoizeCars = async (
             });
         });
 
+        const vendorData = await getVendorDetails("mychoize");
+
         return Object.values(groupedCars).map((car) => ({
             ...car,
             fare: `₹${Math.min(...car.all_fares)}`,
+            inflated_fare: `₹${parseInt(vendorData?.CurrentrateSd * Math.min(...car.all_fares))}`,
         }));
     } catch (error) {
         console.error(error.message);
