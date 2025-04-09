@@ -2,12 +2,12 @@ import { useEffect, useRef } from "react";
 
 const ServiceProvider = () => {
     const brands = [
-        { name: "avis", logo: "/images/ServiceProvider/avis.png" },
-        { name: "carronrent", logo: "/images/ServiceProvider/carronrent.png" },
-        { name: "doorcars", logo: "/images/ServiceProvider/doorcars.jpeg" },
-        { name: "rnex", logo: "/images/ServiceProvider/renx.jpeg" },
-        { name: "wheelup", logo: "/images/ServiceProvider/wheelup.png" },
-        { name: "zoomcars", logo: "/images/ServiceProvider/zoomcars.png" },
+        { name: "Avis", logo: "/images/ServiceProvider/avis.png" },
+        { name: "Carronrent", logo: "/images/ServiceProvider/carronrent.png" },
+        { name: "Doorcars", logo: "/images/ServiceProvider/doorcars.jpeg" },
+        { name: "Rnex", logo: "/images/ServiceProvider/renx.jpeg" },
+        { name: "Wheelup", logo: "/images/ServiceProvider/wheelup.png" },
+        { name: "Zoomcars", logo: "/images/ServiceProvider/zoomcars.png" },
     ];
 
     const scrollRef = useRef(null);
@@ -35,7 +35,7 @@ const ServiceProvider = () => {
             <h2 className="text-center text-xl font-bold mb-6">
                 Service Provider
             </h2>
-            <div className="bg-darkGrey2 rounded-lg p-6 py-8 mx-auto max-w-4xl overflow-hidden">
+            <div className="bg-darkGrey2 rounded-lg p-6 py-8 mx-auto max-w-7xl overflow-hidden">
                 <div
                     ref={scrollRef}
                     className="flex space-x-6 overflow-hidden whitespace-nowrap scroll-container"

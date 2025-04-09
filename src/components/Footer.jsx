@@ -6,6 +6,7 @@ import {
     Linkedin,
     Youtube,
 } from "lucide-react";
+import { FaWhatsapp } from "react-icons/fa";
 import { Link } from "react-router-dom";
 import useTrackEvent from "../hooks/useTrackEvent";
 
@@ -16,6 +17,9 @@ const Footer = () => {
         trackEvent("Foooter new Section","Footer Link Clicked",label);
 
     }
+    const handleWhatsappClicks = (label) => {
+        trackEvent("Whatsapp Icon", "Icon Clicks", label);
+    };
 
     return (
         <div className="text-white p-8 flex flex-row justify-between text-left gap-4 flex-wrap">
@@ -148,6 +152,17 @@ const Footer = () => {
                         onClick={()=> handleFooterClicks("Youtube")}
                     >
                         <Youtube size={30} />
+                    </a>
+                    {/* WhatsApp Floating Button */}
+                    <a
+                        href="https://wa.me/919987933348"
+                        className=" text-[#faffa4] shadow-lg hover:text-[#faffa4] transition duration-300"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        onClick={() => handleWhatsappClicks("Whatsapp Icon")}
+                    >
+                        {/* <FaWhatsapp className="text-3xl" size={30}/> */}
+                        <FaWhatsapp size={30}/>
                     </a>
                     {/* Copyright Section */}
             

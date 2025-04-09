@@ -74,7 +74,7 @@ const HomeScreen = ({ title, canonical }) => {
         </div>
 
         {/* WhatsApp Floating Button */}
-        <a
+        {/* <a
           href="https://wa.me/919987933348"
           className="fixed bottom-5 right-5 bg-green-500 text-white p-3 rounded-full shadow-lg hover:bg-green-600 transition duration-300"
           target="_blank"
@@ -82,7 +82,7 @@ const HomeScreen = ({ title, canonical }) => {
           onClick={() => handleWhatsappClicks("Whatsapp Icon")}
         >
           <FaWhatsapp className="text-3xl" />
-        </a>
+        </a> */}
 
         <div>
           <ChatBotButton />
