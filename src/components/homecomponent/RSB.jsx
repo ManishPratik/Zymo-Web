@@ -185,30 +185,30 @@ const RSB = () => {
                     <div className="flex justify-center gap-8 mb-6">
                         <button
                             onClick={() => setActiveTab("rent")}
-                            className={`text-lg ${
+                            className={`text-lg px-4 py-1 rounded-lg transition-colors duration-200 ${
                                 activeTab === "rent"
-                                    ? "text-white border-b-2 border-white"
-                                    : "text-gray-400"
+                                    ? "bg-yellow-300 text-black"
+                                    : "text-gray-400 hover:bg-yellow-300 hover:text-black"
                             }`}
                         >
                             Rent
                         </button>
                         <button
                             onClick={() => setActiveTab("subscribe")}
-                            className={`text-sm ${
+                            className={`text-sm px-4 py-1 rounded-lg transition-colors duration-200 ${
                                 activeTab === "subscribe"
-                                    ? "text-white border-b-2 border-white"
-                                    : "text-gray-400"
+                                    ? "bg-yellow-300 text-black"
+                                    : "text-gray-400 hover:bg-yellow-300 hover:text-black"
                             }`}
                         >
                             Subscribe
                         </button>
                         <button
                             onClick={() => setActiveTab("buy")}
-                            className={`text-sm ${
+                            className={`text-sm px-4 py-1 rounded-lg transition-colors duration-200 ${
                                 activeTab === "buy"
-                                    ? "text-white border-b-2 border-white"
-                                    : "text-gray-400"
+                                    ? "bg-yellow-300 text-black"
+                                    : "text-gray-400 hover:bg-yellow-300 hover:text-black"
                             }`}
                         >
                             Buy
