@@ -61,6 +61,7 @@ const cityList = [
 function getCityKey(cityName) {
     cityName = cityName.toLowerCase();
     if (cityName === "bangalore") cityName = "bengaluru";
+    if (cityName === "delhi")cityName = "delhi-ncr";
     const city = cityList.find(city => city.CityDescription === cityName);
     return city ? city.CityKey : null;
 }
@@ -76,6 +77,7 @@ router.post("/search-cars", async (req, res) => {
         // Get CityKey from CityName
         const CityKey = getCityKey(CityName);
         if (!CityKey) {
+            console.error("City not found:", CityName);
             return res.status(404).json({ error: "City not found" });
         }
 

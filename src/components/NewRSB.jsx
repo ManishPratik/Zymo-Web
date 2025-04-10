@@ -289,45 +289,51 @@ setCity(city);
     };
 
 
-    const handleSearch = () => {
-        if (city && startDate && endDate) {
-            if (!place || !place.lat || !place.lng) {
-                toast.error("Please select a valid location", {
-                    position: "top-center",
-                    autoClose: 5000,
-                });
-                return;
-            }
-    
-            const formattedCity = city === "Bengaluru" ? "bangalore" : city.toLowerCase();
-            const stateData = {
-                address: address || place.name,  // Ensure the address is included
-                lat: place.lat,
-                lng: place.lng,
-                startDate,
-                endDate,
-                tripDuration,
-                tripDurationHours,
-                activeTab,
-            };
-            console.log(formattedCity);
-    
-            console.log("Navigating with:", stateData); // Debugging
-    
-            handleRSBFunctionClicks("Search");
-            sessionStorage.setItem("fromSearch", true);
-    
-            navigate(`/self-drive-car-rentals/${formattedCity}/cars`, {
-                state: stateData,
-            });
-        } else {
-            toast.error("Required fields are empty", {
-                position: "top-center",
-                autoClose: 5000,
-            });
-        }
-    };
-    
+   const handleSearch = () => {
+          if (city && startDate && endDate) {
+              if (!place || !place.lat || !place.lng) {
+                  toast.error("Please select a valid location", {
+                      position: "top-center",
+                      autoClose: 5000,
+                  });
+                  return;
+              }
+      
+              const formattedCity =
+              city === "Bengaluru"
+                ? "bangalore"
+                : ["New Delhi", "Delhi Division", "Delhi"].includes(city)
+                ? "delhi"
+                : city.toLowerCase();
+            
+              const stateData = {
+                  address: address || place.name,  // Ensure the address is included
+                  lat: place.lat,
+                  lng: place.lng,
+                  startDate,
+                  endDate,
+                  tripDuration,
+                  tripDurationHours,
+                  activeTab,
+              };
+              console.log(formattedCity);
+      
+              console.log("Navigating with:", stateData); // Debugging
+      
+              handleRSBFunctionClicks("Search");
+              sessionStorage.setItem("fromSearch", true);
+      
+              navigate(`/self-drive-car-rentals/${formattedCity}/cars`, {
+                  state: stateData,
+              });
+          } else {
+              toast.error("Required fields are empty", {
+                  position: "top-center",
+                  autoClose: 5000,
+              });
+          }
+      };
+      
 
 
     const handleTabClick = (tab) => {
