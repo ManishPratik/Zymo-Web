@@ -17,7 +17,7 @@ import ChatBotButton from "../components/Chatbot/ChatBotButton";
 import StepsofZymo from "../components/homecomponent/StepsofZymo";
 //import StepsofZymo from "../components/homecomponent/StepsofZymo.jsx";
 
-const HomeScreen = ({ title, canonical }) => {
+const HomeScreen = ({ title, canonical}) => {
   const { city } = useParams();
   console.log(city);
 
@@ -42,6 +42,9 @@ const HomeScreen = ({ title, canonical }) => {
     document.title = pageTitle;
   }, [pageTitle]);
 
+  console.log(city);
+
+   
   const trackEvent = useTrackEvent();
   const handleWhatsappClicks = (label) => {
     trackEvent("Whatsapp Icon", "Icon Clicks", label);
