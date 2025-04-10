@@ -15,6 +15,10 @@ import useTrackEvent from "../hooks/useTrackEvent";
 import { useParams } from "react-router-dom";
 import ChatBotButton from "../components/Chatbot/ChatBotButton";
 import StepsofZymo from "../components/homecomponent/StepsofZymo";
+import FeaturedIn from "../components/homecomponent/FeaturerdIn";
+import CompareAndChoice from "../components/CityContentComponent/CompareAndChoice";
+import CityBenefits from "../components/CityContentComponent/CityBenefits";
+import CityContents from "../components/CityContentComponent/CityContents";
 //import StepsofZymo from "../components/homecomponent/StepsofZymo.jsx";
 
 const HomeScreen = ({ title, canonical }) => {
@@ -27,7 +31,7 @@ const HomeScreen = ({ title, canonical }) => {
   const pageTitle = city
     ? ` Explore Self-Drive Car Rentals in ${capitalizedCity} | Zymo`
     : title || "Zymo Car Rentals";
-   
+
   const pageDescription = city
     ? `Rent affordable self-drive cars in ${capitalizedCity}. Compare prices, book in minutes, and enjoy affordable, hassle-free car rentals.`
     : "Rent self-drive cars easily with Zymo. Compare prices, book in minutes, and enjoy affordable, hassle-free car rentals.";
@@ -35,8 +39,8 @@ const HomeScreen = ({ title, canonical }) => {
   const canonicalLink = canonical
     ? `https://zymo.app${canonical}`
     : city
-    ? `https://zymo.app/self-drive-car-rentals/${city.toLowerCase()}`
-    : "https://zymo.app/";
+      ? `https://zymo.app/self-drive-car-rentals/${city.toLowerCase()}`
+      : "https://zymo.app/";
 
   useEffect(() => {
     document.title = pageTitle;
@@ -57,7 +61,7 @@ const HomeScreen = ({ title, canonical }) => {
         <link rel="canonical" href={canonicalLink} />
       </Helmet>
 
-      <NavBar />
+      <NavBar city={city} />
       <div className="container flex flex-col w-full mx-auto">
         <div className="container">
           <Header />
@@ -66,8 +70,24 @@ const HomeScreen = ({ title, canonical }) => {
           {/* <RSB /> */}
           <Benefits />
           <BrandsAvailable />
-         
+
           <ServiceProvider />
+          <FeaturedIn />
+          {city && (
+            <>
+              <CompareAndChoice />
+              <CityBenefits />
+              <div
+                className="px-4 md:px-12 py-12 mb-12 bg-[#404040] text-white font-poppins rounded-2xl max-w-screen-lg mx-auto border border-[#505050]"
+                style={{
+                  background: "linear-gradient(to bottom, #212121, #faffa4)",
+                }}
+              >
+                <CityContents city={city} />
+              </div>
+            </>
+          )}
+
           <StepsofZymo></StepsofZymo>
           <Reviews />
           <Cities />

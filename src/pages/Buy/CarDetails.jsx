@@ -1,5 +1,5 @@
 import  { useState,useEffect } from 'react';
-import { useParams , Link } from 'react-router-dom';
+import { useParams , Link, useLocation } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import ExtendedTestDriveBenefits from '../../components/buycomponent/ExtendedTestDriveBenefits';
@@ -13,12 +13,16 @@ const CarDetails = ({ title }) => {
   const { id } = useParams();
   const navigate = useNavigate();
   const trackEvent = useTrackEvent();
+  const location = useLocation();
   const [isTestDrivePopupOpen, setIsTestDrivePopupOpen] = useState(false);
   const [showPopup, setShowPopup] = useState(false);
   const [carDetail, setCarDetail] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  
+  console.log("location.state:", location.state);
+  const { car } = location.state || {};
   useEffect(() => {
     document.title = title;
   }, [title]);
@@ -26,19 +30,21 @@ const CarDetails = ({ title }) => {
   useEffect(() => {
     const fetchCarData = async () => {
       try {
-        const carsCollectionRef = collection(webDB, 'BuySectionCars');
-        const q = query(carsCollectionRef, where('carId', '==', parseInt(id)));
+        // const carsCollectionRef = collection(webDB, 'BuySectionCars');
+        // const q = query(carsCollectionRef, where('carId', '==', parseInt(id)));
 
-        const querySnapshot = await getDocs(q);
+        // const querySnapshot = await getDocs(q);
         
-        if (!querySnapshot.empty) {
-          querySnapshot.forEach(doc => {
-            // console.log('Fetched document:', doc.data());
-            setCarDetail(doc.data());
-          });
-        } else {
-          setError('No car found');
-        }
+        // if (!querySnapshot.empty) {
+        //   querySnapshot.forEach(doc => {
+        //     // console.log('Fetched document:', doc.data());
+        //     setCarDetail(doc.data());
+        //   });
+        // } else {
+        //   setError('No car found');
+        // }
+        setCarDetail(car)
+        console.log(car)
       } catch (err) {
         console.error('Error fetching car details:', err); 
         setError('Error fetching car details');
@@ -91,7 +97,7 @@ const CarDetails = ({ title }) => {
             {/* Image Section */}
             <div className=" fixed w-1/2 top-6 left-3 h-screen flex justify-center items-center  p-2">
               <img
-                src="/images/Cars/newtnexcar.png"   //add newtnexcar.png image here
+                src={carDetail.image}   //add newtnexcar.png image here
                 alt={`${carDetail.name} ${carDetail.model}`}
                 className="rounded-lg shadow-md p-2bg-transparent"
               />
