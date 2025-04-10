@@ -15,8 +15,8 @@ import {
   findPackage,
   formatDateForMyChoize,
 } from "../utils/mychoize";
-import { addDoc, collection, doc, getDoc } from "firebase/firestore";
-import { appDB, appStorage } from "../utils/firebase";
+import { addDoc, collection, doc, getDoc, setDoc } from "firebase/firestore";
+import { appDB, appStorage, webDB } from "../utils/firebase";
 import PickupPopup from "../components/PickupPopup";
 import DropupPopup from "../components/DropupPopup";
 import BookingPageFormPopup from "../components/BookingPageFormPopup";
@@ -294,12 +294,34 @@ function BookingPage() {
       paymentId,
       price: payableAmount,
     };
+    setBookingData(bookingDataStructure);
 
     await addDoc(
       collection(appDB, "CarsPaymentSuccessDetails"),
       bookingDataStructure
     );
-    setBookingData(bookingDataStructure);
+
+    try {
+      // Saving booking into user specific collection (webDB)
+      const userDocRef = doc(webDB, "webUserProfiles", userData.uid);
+      const userDocSnap = await getDoc(userDocRef);
+
+      if (!userDocSnap.exists()) {
+        await setDoc(userDocRef, {
+          uid: userData.uid,
+          email: customerEmail,
+          name: customerName,
+          phone: customerPhone,
+          createdAt: Date.now(),
+        });
+      }
+
+      const bookingsCollectionRef = collection(userDocRef, "bookings");
+
+      await addDoc(bookingsCollectionRef, bookingDataStructure);
+    } catch (error) {
+      console.error("Error saving booking to user collection:", error);
+    }
 
     return bookingId;
   };
@@ -312,7 +334,7 @@ function BookingPage() {
     const data = {
       id: bookingId,
       customerName: formData?.userName || customerName,
-      dateOfBirth: formData?.dob || "N/A",
+      dateOfBirth: formData?.dob || "Not Provided",
       phone: formData?.phone || formattedPhoneNumber,
       email: formData?.email || customerEmail,
       startDate: startDateFormatted,

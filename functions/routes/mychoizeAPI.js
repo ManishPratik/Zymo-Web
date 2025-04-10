@@ -114,7 +114,7 @@ router.post("/location-list", async (req, res) => {
             return res.status(400).json({ error: "Missing required fields" });
         }
 
-        const CityKey = await getCityKeyFromName(CityName);
+        const CityKey = getCityKey(CityName);
         if (!CityKey) {
             return res.status(404).json({ error: "City not found" });
         }
