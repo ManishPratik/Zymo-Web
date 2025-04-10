@@ -244,18 +244,19 @@ const RSB = () => {
                         {/* Start Date Picker */}
                         <div
                             className="bg-[#303030] rounded-full p-2 flex items-center relative cursor-pointer text-sm"
-                            onClick={handleStartDateClick}
+                            
                         >
                             <CalendarIcon className="w-6 h-5 text-gray-400 absolute left-3 " />
 
                             <input
-                                type="datetime-local"
-                                step="3600"
-                                ref={startInputRef}
-                                value={startDate}
-                                onChange={handleStartDateChange}
-                                className="absolute inset-0 opacity-0 w-full h-full cursor-pointer"
-                            />
+                                    type="datetime-local"
+                                    step="3600"
+                                     ref={startInputRef}
+                                    value={startDate}
+                                    onChange={handleStartDateChange}
+                                    className="bg-[#303030] text-white outline-none pl-8 pr-2 w-full h-full rounded-full cursor-text"
+/>
+
                             <span className="text-white pl-8">
                                 {startDate
                                     ? new Intl.DateTimeFormat("en-US", {
@@ -273,17 +274,18 @@ const RSB = () => {
                         {/* End Date Picker */}
                         <div
                             className="bg-[#303030] rounded-full p-2 flex items-center relative cursor-pointer text-sm"
-                            onClick={handleEndDateClick}
+                            
                         >
                             <CalendarIcon className="w-6 h-5 text-gray-400 absolute left-3" />
                             <input
-                                type="datetime-local"
-                                step="3600"
-                                ref={endInputRef}
-                                value={endDate}
-                                onChange={handleEndDateChange}
-                                className="absolute inset-0 opacity-0 w-full h-full cursor-pointer"
-                            />
+    type="datetime-local"
+    step="3600"
+    ref={endInputRef}
+    value={endDate}
+    onChange={handleEndDateChange}
+    className="bg-[#303030] text-white outline-none pl-8 pr-2 w-full h-full rounded-full cursor-text"
+/>
+
 
                             <span className="text-white pl-8">
                                 {endDate
