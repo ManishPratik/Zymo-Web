@@ -410,14 +410,12 @@ const Listing = ({ title }) => {
               sourceImg: "/images/ServiceProvider/zoomcarlogo.png",
               rateBasis: "DR",
             }));
-            console.log("Zoomcar Data:", zoomCarData);
             allCarData = [...allCarData, ...zoomCarData];
           } else {
             console.error("Zoomcar API failed:", zoomData.reason);
           }
 
           if (mychoizeData.status === "fulfilled" && mychoizeData.value) {
-            console.log("MyChoize Data:", mychoizeData.value);
             allCarData = [...allCarData, ...mychoizeData.value];
           } else {
             console.error(
@@ -441,9 +439,7 @@ const Listing = ({ title }) => {
             autoClose: 5000,
           });
         }
-        console.log("All Cars:", allCarData);
         const groupCarList = clubCarsByName(allCarData);
-        console.log("Grouped Cars:", groupCarList);
 
         setCarList(allCarData);
         setClubbedCarList(groupCarList);
@@ -540,11 +536,7 @@ const Listing = ({ title }) => {
         return priceRange === "lowToHigh" ? priceA - priceB : priceB - priceA;
       });
     }
-    console.log("Filtered CarClubbing List:", filteredGroups);
-    console.log(
-      "Filtered Cars Count:",
-      filteredGroups.reduce((count, group) => count + group.cars.length, 0)
-    );
+
     setFilteredList(filteredGroups);
     setCarCount(
       filteredGroups.reduce((count, group) => count + group.cars.length, 0)

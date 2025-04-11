@@ -23,6 +23,7 @@ import BookingPageFormPopup from "../components/BookingPageFormPopup";
 import BookingPageUploadPopup from "../components/BookingPageUploadPopup";
 import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
 import useTrackEvent from "../hooks/useTrackEvent";
+import BookingPageLoading from "../components/BookingPageLoading";
 
 // Function to dynamically load Razorpay script
 function loadScript(src) {
@@ -69,6 +70,8 @@ function BookingPage() {
   const [formData, setFormData] = useState(null);
   const [uploadDocData, setUploadDocData] = useState(null);
   const [bookingData, setBookingData] = useState(null);
+
+  const [loading, setLoading] = useState(false);
 
   const customerUploadDetails = formData && uploadDocData;
 
@@ -252,9 +255,11 @@ function BookingPage() {
   };
 
   const saveSuccessfulBooking = async (paymentId, booking_id = null) => {
-    const formattedPhoneNumber = customerPhone.startsWith("+91")
-      ? customerPhone
-      : `+91${customerPhone}`;
+    const phone = customerPhone || formData.phone;
+    const formattedPhoneNumber = phone.startsWith("+91")
+      ? phone
+      : `+91${phone}`;
+
     const bookingId = booking_id || "Z" + new Date().getTime().toString();
     const documents = await uploadDocs(uploadDocData);
 
@@ -328,9 +333,9 @@ function BookingPage() {
 
   // Sends whatsapp notif to both user and zymo(other vendor )
   const sendWhatsappNotifMychoizeBooking = async (bookingId) => {
-    const formattedPhoneNumber = customerPhone.startsWith("+91")
-      ? customerPhone
-      : `+91${customerPhone}`;
+    const formattedPhoneNumber = formData.phone.startsWith("+91")
+      ? formData.phone
+      : `+91${formData.phone}`;
     const data = {
       id: bookingId,
       customerName: formData?.userName || customerName,
@@ -347,7 +352,7 @@ function BookingPage() {
       model: `${car.brand} ${car.name}`,
       transmission: car.options[0],
       package: findPackage(car.rateBasis),
-      freeKMs: "limited",
+      // freeKMs: "limited",
       paymentMode: "Online (Razorpay)",
       serviceType: "Online",
     };
@@ -395,9 +400,21 @@ function BookingPage() {
 
   // Booking handling
   const handleMychoizeBooking = async (paymentData) => {
-    const bookingId = saveSuccessfulBooking(paymentData.razorpay_payment_id);
-    sendWhatsappNotifMychoizeBooking(bookingId);
-    setIsConfirmPopupOpen(true);
+    setLoading(true);
+    saveSuccessfulBooking(paymentData.razorpay_payment_id)
+      .then((bookingId) => {
+        setLoading(false);
+        sendWhatsappNotifMychoizeBooking(bookingId);
+        setIsConfirmPopupOpen(true);
+      })
+      .catch((error) => {
+        setLoading(false);
+        console.error(error);
+        toast.error("Booking creation failed...", {
+          position: "top-center",
+          autoClose: 5000,
+        });
+      });
   };
 
   const handleZoomcarBooking = async (paymentData) => {
@@ -612,7 +629,7 @@ function BookingPage() {
       const amount = parseInt(payableAmount);
       const orderData = await createOrder(amount, "INR");
       const options = {
-        key: import.meta.env.VITE_RAZORPAY_PROD_KEY,
+        key: import.meta.env.VITE_RAZORPAY_TEST_KEY,
         amount: orderData.amount,
         currency: "INR",
         name: "Zymo",
@@ -685,6 +702,8 @@ function BookingPage() {
 
   return (
     <div className="min-h-screen bg-[#212121]">
+      <BookingPageLoading isOpen={loading} />
+
       {/* Header */}
       <div className="bg-[#eeff87] p-4 flex items-center gap-2">
         <button
