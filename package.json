@@ -17,6 +17,7 @@
         "@emotion/styled": "^11.14.0",
         "@fortawesome/fontawesome-free": "^6.7.2",
         "@google/generative-ai": "^0.24.0",
+        "@googlemaps/places": "^2.0.1",
         "@mui/material": "^6.4.7",
         "@react-google-maps/api": "^2.20.5",
         "@tiptap/extension-placeholder": "^2.11.5",

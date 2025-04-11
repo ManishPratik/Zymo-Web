@@ -15,8 +15,8 @@ import {
   findPackage,
   formatDateForMyChoize,
 } from "../utils/mychoize";
-import { addDoc, collection, doc, getDoc } from "firebase/firestore";
-import { appDB, appStorage } from "../utils/firebase";
+import { addDoc, collection, doc, getDoc, setDoc } from "firebase/firestore";
+import { appDB, appStorage, webDB } from "../utils/firebase";
 import PickupPopup from "../components/PickupPopup";
 import DropupPopup from "../components/DropupPopup";
 import BookingPageFormPopup from "../components/BookingPageFormPopup";
@@ -53,7 +53,6 @@ function BookingPage() {
   const [isConfirmPopupOpen, setIsConfirmPopupOpen] = useState(false);
   const [vendorDetails, setVendorDetails] = useState(null);
 
-  const [gst, setGst] = useState(0);
   const [discount, setDiscount] = useState(0);
   const [payableAmount, setPayableAmount] = useState(0);
   const [deliveryCharges, setDeliveryCharges] = useState(0);
@@ -82,6 +81,7 @@ function BookingPage() {
       : car.source === "mychoize"
       ? "Mychoize"
       : car.source;
+
   useEffect(() => {
     const fetchVendorDetails = async () => {
       const docRef = doc(appDB, "carvendors", vendor);
@@ -89,25 +89,21 @@ function BookingPage() {
 
       setVendorDetails(docSnap.data());
     };
-    
     fetchVendorDetails();
   }, [car.source]);
 
   useEffect(() => {
     if (!car.fare || !vendorDetails) return;
 
-    const rawFare = parseInt(car.fare.slice(1));
-    const gstPercent = parseFloat(vendorDetails?.TaxSd) || 0;
+    const inflatedFare = parseInt(car.inflated_fare.slice(1));
+
     const discountPercent = parseFloat(vendorDetails?.DiscountSd) || 0;
     const deposit = parseInt(vendorDetails?.Securitydeposit) || 0;
+    const discountValue = inflatedFare * (1 - discountPercent);
 
-    const gstValue = gstPercent != 1 ? rawFare * gstPercent : 0;
-    const discountValue = rawFare * (1 - discountPercent);
-
-    setGst(gstValue);
     setDiscount(discountValue);
 
-    const amount = rawFare + gstValue + deposit - discountValue;
+    const amount = inflatedFare + deposit - discountValue;
     setPayableAmount(amount);
   }, [car.fare, vendorDetails]);
 
@@ -123,7 +119,7 @@ function BookingPage() {
     }
   }, [selectedPickupLocation, selectedDropLocation]);
 
-  const formattedFare = formatFare(car.fare);
+  const formattedFare = formatFare(car.inflated_fare);
 
   const preBookingData = {
     headerDetails: {
@@ -146,8 +142,7 @@ function BookingPage() {
     },
     fareDetails: {
       base: formattedFare,
-      fare: formattedFare,
-      gst: car.source === "zoomcar" ? "Incl. in Base Fare" : formatFare(gst),
+      gst: "Incl. in Base Fare",
       deposit:
         car.source === "zoomcar"
           ? "₹0"
@@ -299,12 +294,34 @@ function BookingPage() {
       paymentId,
       price: payableAmount,
     };
+    setBookingData(bookingDataStructure);
 
     await addDoc(
       collection(appDB, "CarsPaymentSuccessDetails"),
       bookingDataStructure
     );
-    setBookingData(bookingDataStructure);
+
+    try {
+      // Saving booking into user specific collection (webDB)
+      const userDocRef = doc(webDB, "webUserProfiles", userData.uid);
+      const userDocSnap = await getDoc(userDocRef);
+
+      if (!userDocSnap.exists()) {
+        await setDoc(userDocRef, {
+          uid: userData.uid,
+          email: customerEmail,
+          name: customerName,
+          phone: customerPhone,
+          createdAt: Date.now(),
+        });
+      }
+
+      const bookingsCollectionRef = collection(userDocRef, "bookings");
+
+      await addDoc(bookingsCollectionRef, bookingDataStructure);
+    } catch (error) {
+      console.error("Error saving booking to user collection:", error);
+    }
 
     return bookingId;
   };
@@ -317,7 +334,7 @@ function BookingPage() {
     const data = {
       id: bookingId,
       customerName: formData?.userName || customerName,
-      dateOfBirth: formData?.dob || "",
+      dateOfBirth: formData?.dob || "Not Provided",
       phone: formData?.phone || formattedPhoneNumber,
       email: formData?.email || customerEmail,
       startDate: startDateFormatted,
@@ -330,9 +347,9 @@ function BookingPage() {
       model: `${car.brand} ${car.name}`,
       transmission: car.options[0],
       package: findPackage(car.rateBasis),
-      freeKMs: "",
+      freeKMs: "limited",
       paymentMode: "Online (Razorpay)",
-      serviceType: "",
+      serviceType: "Online",
     };
 
     await fetch(`${functionsUrl}/message/booking-confirmation-other-vendor`, {
@@ -362,9 +379,9 @@ function BookingPage() {
       pickupLocation: selectedPickupLocation?.HubAddress || car.address,
       model: `${car.brand} ${car.name}`,
       transmission: car.options[0],
-      freeKMs: "",
+      freeKMs: "Unlimited",
     };
-    
+
     await fetch(`${functionsUrl}/message/booking-confirmation-zoomcar-vendor`, {
       method: "POST",
       body: JSON.stringify({
@@ -521,7 +538,7 @@ function BookingPage() {
           amount,
           currency,
         }
-      );      
+      );
       return response.data.data;
     } catch (error) {
       console.error("Error creating order:", error);
@@ -685,31 +702,34 @@ function BookingPage() {
       <div className="mx-auto p-6 sm:p-10 lg:p-20 space-y-5 text-white">
         {/* Header Details */}
         <div className="flex flex-col lg:flex-row flex-wrap justify-between items-center gap-5 rounded-lg p-6 shadow-sm w-full">
-            {/* Left Section */}
-            <div className="flex-1 min-w-[200px] text-xl text-center lg:text-left">
-              <h2 className="font-semibold mb-2">
-                {preBookingData.headerDetails.name}
-              </h2>
-            </div>
-
-            {/* Center Image */}
-            <div className="flex-1 flex justify-center  lg:order-none">
-              <img
-                src={preBookingData.headerDetails.image || "/placeholder.svg"}
-                alt={`${preBookingData.headerDetails.name}`}
-                className="w-full max-w-xs sm:max-w-sm md:max-w-md lg:max-w-[20rem] h-[200px] sm:h-[280px] lg:h-[200px] object-cover rounded-lg"
-              />
-            </div>
-
-            {/* Right Section */}
-            <div className="flex-1 flex justify-center lg:justify-end items-center gap-2 text-lg">
-              <p className="text-muted-foreground whitespace-nowrap">
-                Fulfilled by:
-              </p>
-              <img src={car.sourceImg} alt={car.source} className="h-10 bg-white p-2 rounded-md" />
-            </div>
+          {/* Left Section */}
+          <div className="flex-1 min-w-[200px] text-xl text-center lg:text-left">
+            <h2 className="font-semibold mb-2">
+              {preBookingData.headerDetails.name}
+            </h2>
           </div>
 
+          {/* Center Image */}
+          <div className="flex-1 flex justify-center  lg:order-none">
+            <img
+              src={preBookingData.headerDetails.image || "/placeholder.svg"}
+              alt={`${preBookingData.headerDetails.name}`}
+              className="w-full max-w-xs sm:max-w-sm md:max-w-md lg:max-w-[20rem] h-[200px] sm:h-[280px] lg:h-[200px] object-cover rounded-lg"
+            />
+          </div>
+
+          {/* Right Section */}
+          <div className="flex-1 flex justify-center lg:justify-end items-center gap-2 text-lg">
+            <p className="text-muted-foreground whitespace-nowrap">
+              Fulfilled by:
+            </p>
+            <img
+              src={car.sourceImg}
+              alt={car.source}
+              className="h-10 bg-white p-2 rounded-md"
+            />
+          </div>
+        </div>
 
         {/* Pickup Details */}
         <div className="max-w-3xl mx-auto rounded-lg bg-[#303030] p-5">
@@ -901,12 +921,7 @@ function BookingPage() {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <IndianRupee className="w-5 h-5 text-[#eeff87]" />
-                <span>
-                  GST{" "}
-                  {car.source !== "zoomcar"
-                    ? `(${(vendorDetails?.TaxSd * 100).toFixed(0)}%)`
-                    : ""}
-                </span>
+                <span>GST</span>
               </div>
               <span className="ml-auto text-white">
                 {preBookingData.fareDetails.gst}
@@ -967,41 +982,47 @@ function BookingPage() {
           </div>
         </div>
 
-
- {/* zoom car section */}
- {car.source === "zoomcar" && (
-            <div className="max-w-3xl mx-auto rounded-lg bg-[#303030] p-1 ">
-              {/* <div className="min-h-screen  flex flex-col items-center justify-center p-4 space-y-4"> */}
-              {/* White card with logo and booking text */}
-              <div className=" rounded-xl shadow-md p-6  text-center ">
-                <div className="img-container flex justify-center p-2  ">
-                  <img src={car.sourceImg} alt={car.source} className="h-14 bg-white p-3 rounded-md" />
-                </div>
-
-
-                <p className="text-[#fff] p-4">
-                  Sign into ZoomCar using your number <br />
-                  <span className="font-bold text-[#fff]"> {preBookingData.customer.mobile}</span> to view your booking.
-                </p>
+        {/* zoom car section */}
+        {car.source === "zoomcar" && (
+          <div className="max-w-3xl mx-auto rounded-lg bg-[#303030] p-1 ">
+            {/* <div className="min-h-screen  flex flex-col items-center justify-center p-4 space-y-4"> */}
+            {/* White card with logo and booking text */}
+            <div className=" rounded-xl shadow-md p-6  text-center ">
+              <div className="img-container flex justify-center p-2  ">
+                <img
+                  src={car.sourceImg}
+                  alt={car.source}
+                  className="h-14 bg-white p-3 rounded-md"
+                />
               </div>
 
-              {/* yellow notice box */}
-              <div className="bg-[#faffa4] text-[#212121] rounded-xl shadow-md py-6 px-3 text-center">
-                <h2 className="text-lg font-semibold mb-3">Please Note</h2>
-                <p className="mb-3">
-                  As per ZoomCar policy you will have to upload your driving license and Aadhaar card on the ZoomCar app.
-                </p>
-                <p className="mb-2">
-                  If you already have a ZoomCar profile use the same mobile number registered with Zoomcar.
-                </p>
-                <p className="text-sm italic">
-                  (Creation of second profile is not allowed by Zoomcar).
-                </p>
-              </div>
-              
+              <p className="text-[#fff] p-4">
+                Sign into ZoomCar using your number <br />
+                <span className="font-bold text-[#fff]">
+                  {" "}
+                  {preBookingData.customer.mobile}
+                </span>{" "}
+                to view your booking.
+              </p>
             </div>
-          )}
 
+            {/* yellow notice box */}
+            <div className="bg-[#faffa4] text-[#212121] rounded-xl shadow-md py-6 px-3 text-center">
+              <h2 className="text-lg font-semibold mb-3">Please Note</h2>
+              <p className="mb-3">
+                As per ZoomCar policy you will have to upload your driving
+                license and Aadhaar card on the ZoomCar app.
+              </p>
+              <p className="mb-2">
+                If you already have a ZoomCar profile use the same mobile number
+                registered with Zoomcar.
+              </p>
+              <p className="text-sm italic">
+                (Creation of second profile is not allowed by Zoomcar).
+              </p>
+            </div>
+          </div>
+        )}
 
         {/* Customer Input Fields */}
         <div className="max-w-3xl mx-auto rounded-lg bg-[#303030] p-5">

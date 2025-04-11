@@ -1,4 +1,4 @@
-import { toPascalCase } from "./helperFunctions";
+import { getVendorDetails, toPascalCase } from "./helperFunctions";
 
 const getTotalKms = (tripDurationHours) => {
     return {
@@ -36,9 +36,10 @@ const fetchWithRetry = async (url, options, retries = 5, delay = 500) => {
     throw new Error("MyChoize API failed after multiple retries.");
 };
 
-const fetchSubscriptionCars = async (CityName, formattedPickDate, formattedDropDate) => {
-    let apiUrl = import.meta.env.VITE_FUNCTIONS_API_URL;
+let apiUrl = import.meta.env.VITE_FUNCTIONS_API_URL;
+// const apiUrl = "http://127.0.0.1:5001/zymo-prod/us-central1/api";
 
+const fetchSubscriptionCars = async (CityName, formattedPickDate, formattedDropDate) => {
     try {
         const response = await fetch(`${apiUrl}/mychoize/search-cars`, {
             method: "POST",
@@ -175,9 +176,12 @@ const fetchMyChoizeCars = async (
             });
         });
 
+        const vendorData = await getVendorDetails("mychoize");
+
         return Object.values(groupedCars).map((car) => ({
             ...car,
             fare: `₹${Math.min(...car.all_fares)}`,
+            inflated_fare: `₹${parseInt(vendorData?.CurrentrateSd * Math.min(...car.all_fares))}`,
         }));
     } catch (error) {
         console.error(error.message);
@@ -190,8 +194,6 @@ const fetchMyChoizeLocationList = async (
     formattedDropDate,
     formattedPickDate
 ) => {
-    const apiUrl = import.meta.env.VITE_FUNCTIONS_API_URL;
-    // const apiUrl = "http://127.0.0.1:5001/zymo-prod/us-central1/api";
 
     try {
         const response = await fetch(`${apiUrl}/mychoize/location-list`, {
