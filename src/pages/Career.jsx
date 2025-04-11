@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { collection, addDoc, query, where, getDocs } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
-import { webDB, webStorage } from "../utils/firebase"; // Adjust the import path as needed
+import { webDB, webStorage } from "../utils/firebase";
 import NavBar from "../components/NavBar";
 import Footer from "../components/Footer";
 import { Helmet } from "react-helmet-async";
@@ -24,6 +24,7 @@ const CareerForm = ({ title }) => {
     applyFor: "",
   });
   const [hasSubmitted, setHasSubmitted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
 
   // Set document title
@@ -31,81 +32,105 @@ const CareerForm = ({ title }) => {
     document.title = title;
   }, [title]);
 
-  // Reset hasSubmitted after 5 seconds to show the form again
+  // Reset hasSubmitted after 5 seconds
   useEffect(() => {
     if (hasSubmitted) {
-      const timer = setTimeout(() => {
-        setHasSubmitted(false);
-      }, 5000); // 5-second delay
+      const timer = setTimeout(() => setHasSubmitted(false), 5000);
       return () => clearTimeout(timer);
     }
   }, [hasSubmitted]);
 
+  // Handle input changes, restricting phoneNumber to exactly 10 digits
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
+    if (name === "phoneNumber") {
+      const numericValue = value.replace(/\D/g, ""); // Remove non-digits
+      if (numericValue.length <= 10) {
+        setFormData({ ...formData, [name]: numericValue });
+      }
+    } else {
+      setFormData({ ...formData, [name]: value });
+    }
   };
 
+  // Handle file upload with size validation
   const handleFileChange = (e) => {
     const file = e.target.files[0];
-    if (file && file.type !== "application/pdf") {
-      alert("Please upload only PDF files");
-      e.target.value = null;
-      return;
+    if (file) {
+      if (file.type !== "application/pdf") {
+        alert("Please upload only PDF files");
+        e.target.value = null;
+        return;
+      }
+      if (file.size > 5 * 1024 * 1024) {
+        // 5MB limit
+        alert("File size exceeds 5MB. Please upload a smaller file.");
+        e.target.value = null;
+        return;
+      }
+      setFormData({ ...formData, resume: file });
     }
-    setFormData({ ...formData, resume: file });
   };
 
+  // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-    // Check if email already exists to prevent duplicates
-    const emailQuery = query(
-      collection(webDB, "careerApplications"),
-      where("email", "==", formData.email)
-    );
-    const emailSnapshot = await getDocs(emailQuery);
-    if (!emailSnapshot.empty) {
-      alert("Form already submitted with this email. Cannot submit again.");
-      return;
-    }
-
-    const isPaid = formData.expectedStipend === "Paid";
-
-    // Validate all required fields
-    if (
-      !formData.fullName ||
-      !formData.email ||
-      !formData.city ||
-      !formData.phoneNumber ||
-      !formData.aspirations ||
-      !formData.primarySkill ||
-      !formData.skillsDescription ||
-      !formData.resume ||
-      !formData.expectedStipend ||
-      !formData.applyFor
-    ) {
-      alert("All fields are required!");
-      return;
-    }
+    setIsSubmitting(true);
 
     try {
+      // Early validation
+      if (
+        !formData.fullName ||
+        !formData.email ||
+        !formData.city ||
+        !formData.phoneNumber ||
+        !formData.aspirations ||
+        !formData.primarySkill ||
+        !formData.skillsDescription ||
+        !formData.resume ||
+        !formData.expectedStipend ||
+        !formData.applyFor
+      ) {
+        alert("All fields are required!");
+        setIsSubmitting(false);
+        return;
+      }
+
+      // Validate phone number length (exactly 10 digits for Indian numbers)
+      if (formData.phoneNumber.length !== 10) {
+        alert("Phone number must be exactly 10 digits.");
+        setIsSubmitting(false);
+        return;
+      }
+
+      // Check if email already exists to prevent multiple submissions
+      const emailQuery = query(
+        collection(webDB, "careerApplications"),
+        where("email", "==", formData.email)
+      );
+      const emailSnapshot = await getDocs(emailQuery);
+      if (!emailSnapshot.empty) {
+        alert("Form already submitted with this email.");
+        setIsSubmitting(false);
+        return;
+      }
+
+      // Upload resume to Firebase Storage
       let resumeURL = "";
       if (formData.resume) {
-        // Define storage reference with .pdf extension
         const resumeRef = ref(
           webStorage,
           `resumes/${formData.email}-${Date.now()}.pdf`
         );
-        // Set metadata for content type and disposition
         const metadata = {
           contentType: "application/pdf",
-          contentDisposition: `inline; filename="${formData.email}-resume.pdf"`, // Set to inline
+          contentDisposition: `inline; filename="${formData.email}-resume.pdf"`,
         };
         await uploadBytes(resumeRef, formData.resume, metadata);
         resumeURL = await getDownloadURL(resumeRef);
       }
 
+      // Prepare application data
       const applicationData = {
         fullName: formData.fullName,
         email: formData.email,
@@ -119,22 +144,19 @@ const CareerForm = ({ title }) => {
         jobType: selectedType,
         timestamp: new Date(),
         applyFor: formData.applyFor,
+        ...(formData.expectedStipend === "Paid" && {
+          experience: formData.experience,
+          stipendAmount:
+            formData.stipendAmountOption === "Other"
+              ? formData.stipendAmountCustom
+              : formData.stipendAmountOption,
+        }),
       };
 
-      if (isPaid) {
-        applicationData.experience = formData.experience;
-        applicationData.stipendAmount =
-          formData.stipendAmountOption === "Other"
-            ? formData.stipendAmountCustom
-            : formData.stipendAmountOption;
-      }
-
+      // Submit to Firestore
       await addDoc(collection(webDB, "careerApplications"), applicationData);
 
-      // Store email in localStorage (optional, for tracking)
-      localStorage.setItem("careerFormSubmittedEmail", formData.email);
-
-      // Reset form
+      // Reset form after successful submission
       setFormData({
         fullName: "",
         email: "",
@@ -149,11 +171,14 @@ const CareerForm = ({ title }) => {
         stipendAmountCustom: "",
         applyFor: "",
       });
+      localStorage.setItem("careerFormSubmittedEmail", formData.email);
       setHasSubmitted(true);
       window.scrollTo({ top: 0, behavior: "smooth" });
     } catch (error) {
       console.error("Error submitting application: ", error);
       alert("Error submitting application. Please try again.");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -246,7 +271,8 @@ const CareerForm = ({ title }) => {
                 name="phoneNumber"
                 value={formData.phoneNumber}
                 onChange={handleChange}
-                placeholder="Phone Number"
+                placeholder="Phone Number (10 digits)"
+                maxLength="10"
                 className="w-full p-3 mb-4 bg-gray-200 rounded-lg"
                 required
               />
@@ -296,7 +322,7 @@ const CareerForm = ({ title }) => {
                 required
               />
               <label className="block font-semibold text-gray-100 mb-2">
-                Upload Your Resume (PDF only)
+                Upload Your Resume (PDF only, max 5MB)
               </label>
               <input
                 type="file"
@@ -366,7 +392,12 @@ const CareerForm = ({ title }) => {
               )}
               <button
                 type="submit"
-                className="w-full bg-[#faffa4] text-black py-3 rounded-lg font-semibold transition duration-300 hover:bg-[#faffa4]-700"
+                disabled={isSubmitting}
+                className={`w-full bg-[#faffa4] text-black py-3 rounded-lg font-semibold transition duration-300 ${
+                  isSubmitting
+                    ? "opacity-50 cursor-not-allowed"
+                    : "hover:bg-[#faffa4]-700"
+                }`}
               >
                 Submit Application
               </button>
