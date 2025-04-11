@@ -210,7 +210,7 @@ const Listing = ({ title }) => {
       setLoading(true);
       try {
         const url = import.meta.env.VITE_FUNCTIONS_API_URL;
-        //const url = "http://127.0.0.1:5001/zymo-prod/us-central1/api";
+        // const url = "http://127.0.0.1:5001/zymo-prod/us-central1/api";
 
         // Fetch Firebase Cars
         const fetchFirebaseCars = async () => {
