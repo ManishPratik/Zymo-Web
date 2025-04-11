@@ -1,5 +1,5 @@
 import  { useState } from 'react';
-import {carData} from "../../api/NewCarData"
+import carData from "../../api/NewCarData"
 const SearchBar = ({ setSearchResults }) => {
   const [searchQuery, setSearchQuery] = useState('');
 
