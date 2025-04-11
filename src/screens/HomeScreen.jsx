@@ -19,6 +19,7 @@ import FeaturedIn from "../components/homecomponent/FeaturerdIn";
 import CompareAndChoice from "../components/CityContentComponent/CompareAndChoice";
 import CityBenefits from "../components/CityContentComponent/CityBenefits";
 import CityContents from "../components/CityContentComponent/CityContents";
+import CityBlogsContent from "../components/CityBlogsContent";
 //import StepsofZymo from "../components/homecomponent/StepsofZymo.jsx";
 
 const HomeScreen = ({ title, canonical }) => {
@@ -85,6 +86,7 @@ const HomeScreen = ({ title, canonical }) => {
               >
                 <CityContents city={city} />
               </div>
+                <CityBlogsContent cityName={city}/>
             </>
           )}
 
