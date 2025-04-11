@@ -629,7 +629,7 @@ function BookingPage() {
       const amount = parseInt(payableAmount);
       const orderData = await createOrder(amount, "INR");
       const options = {
-        key: import.meta.env.VITE_RAZORPAY_TEST_KEY,
+        key: import.meta.env.VITE_RAZORPAY_PROD_KEY,
         amount: orderData.amount,
         currency: "INR",
         name: "Zymo",

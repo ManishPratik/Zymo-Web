@@ -36,7 +36,7 @@ const fetchWithRetry = async (url, options, retries = 5, delay = 500) => {
   throw new Error("MyChoize API failed after multiple retries.");
 };
 
-let apiUrl = import.meta.env.VITE_FUNCTIONS_API_URL;
+const apiUrl = import.meta.env.VITE_FUNCTIONS_API_URL;
 // const apiUrl = "http://127.0.0.1:5001/zymo-prod/us-central1/api";
 
 const fetchSubscriptionCars = async (
@@ -106,9 +106,6 @@ const fetchMyChoizeCars = async (
   formattedDropDate,
   tripDurationHours
 ) => {
-  let apiUrl = import.meta.env.VITE_FUNCTIONS_API_URL;
-  //apiUrl = "http://127.0.0.1:5001/zymo-prod/us-central1/api";
-
   try {
     const mychoizeData = await fetchWithRetry(
       `${apiUrl}/mychoize/search-cars`,
