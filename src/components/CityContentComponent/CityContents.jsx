@@ -1,29 +1,29 @@
-import PuneContent from './Punecontent';
-import MumbaiContent from './MumbaiContent';
-import DelhiContent from './DelhiContent';
-import BangaloreContent from './BangaloreContent';
-import HyderabadContent from './HyderabadContent';
-import ChennaiContent from './ChennaiContent';
-import ThaneContent from './ThaneContent';
-import AmritsarContent from './AmritsarContent';
+import PuneContent from "./PuneContent";
+import MumbaiContent from "./MumbaiContent";
+import DelhiContent from "./DelhiContent";
+import BangaloreContent from "./BangaloreContent";
+import HyderabadContent from "./HyderabadContent";
+import ChennaiContent from "./ChennaiContent";
+import ThaneContent from "./ThaneContent";
+import AmritsarContent from "./AmritsarContent";
 
 const CityContent = ({ city }) => {
   switch (city.toLowerCase()) {
-    case 'pune':
+    case "pune":
       return <PuneContent />;
-    case 'mumbai':
+    case "mumbai":
       return <MumbaiContent />;
-    case 'delhi':
+    case "delhi":
       return <DelhiContent />;
-    case 'bangalore':
+    case "bangalore":
       return <BangaloreContent />;
-    case 'hyderabad':
+    case "hyderabad":
       return <HyderabadContent />;
-    case 'chennai':
+    case "chennai":
       return <ChennaiContent />;
-    case 'thane':
+    case "thane":
       return <ThaneContent />;
-    case 'amritsar':
+    case "amritsar":
       return <AmritsarContent />;
     default:
       return <div>No content available for {city}</div>;

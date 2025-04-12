@@ -22,9 +22,8 @@ import CityContents from "../components/CityContentComponent/CityContents";
 import CityBlogsContent from "../components/CityBlogsContent";
 //import StepsofZymo from "../components/homecomponent/StepsofZymo.jsx";
 
-const HomeScreen = ({ title, canonical}) => {
+const HomeScreen = ({ title, canonical }) => {
   const { city } = useParams();
-  console.log(city);
 
   const capitalizedCity =
     city?.charAt(0).toUpperCase() + city?.slice(1).toLowerCase();
@@ -40,16 +39,13 @@ const HomeScreen = ({ title, canonical}) => {
   const canonicalLink = canonical
     ? `https://zymo.app${canonical}`
     : city
-      ? `https://zymo.app/self-drive-car-rentals/${city.toLowerCase()}`
-      : "https://zymo.app/";
+    ? `https://zymo.app/self-drive-car-rentals/${city.toLowerCase()}`
+    : "https://zymo.app/";
 
   useEffect(() => {
     document.title = pageTitle;
   }, [pageTitle]);
 
-  console.log(city);
-
-   
   const trackEvent = useTrackEvent();
   const handleWhatsappClicks = (label) => {
     trackEvent("Whatsapp Icon", "Icon Clicks", label);
@@ -89,7 +85,7 @@ const HomeScreen = ({ title, canonical}) => {
               >
                 <CityContents city={city} />
               </div>
-                <CityBlogsContent cityName={city}/>
+              <CityBlogsContent cityName={city} />
             </>
           )}
 
