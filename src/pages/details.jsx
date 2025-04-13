@@ -6,7 +6,7 @@ import Footer from "../components/Footer";
 import { ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { webDB, webStorage, appAuth } from "../utils/firebase"; // Import Firebase configuration
-import { collection, addDoc, query, where, getDocs} from "firebase/firestore"; // Firestore functions
+import { collection, addDoc, query, where, getDocs } from "firebase/firestore"; // Firestore functions
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage"; // Firebase Storage functions
 import { Helmet } from "react-helmet-async";
 import NavBar from "../components/NavBar";
@@ -17,13 +17,13 @@ import Webcam from "react-webcam";
 import { X } from "lucide-react";
 function UserNavigation(label) {
   ReactGA.event({
-    category: 'User Interaction',
-    action: 'User Dashboard',
-    label: label, 
+    category: "User Interaction",
+    action: "User Dashboard",
+    label: label,
   });
 }
 
-export default function YourDetails({title}) {
+export default function YourDetails({ title }) {
   const [formData, setFormData] = useState({
     name: "",
     phone: "",
@@ -42,9 +42,8 @@ export default function YourDetails({title}) {
   });
 
   const [isSaving, setIsSaving] = useState(false);
-  const [isSaved, setIsSaved] = useState(false);  // Loading state for save button
+  const [isSaved, setIsSaved] = useState(false); // Loading state for save button
   const navigate = useNavigate();
-
 
   const [aadharFrontImage, setAadharFrontImage] = useState(null);
   const [aadharBackImage, setAadharBackImage] = useState(null);
@@ -56,50 +55,49 @@ export default function YourDetails({title}) {
 
   useEffect(() => {
     document.title = title;
-}, [title]);
+  }, [title]);
 
-    // Fetch user data on component mount
-    useEffect(() => {
-      const unsubscribe = appAuth.onAuthStateChanged(async (user) => {
-        if (user) {
-          try {
-            
-            // Check if user profile exists
-            const q = query(
-              collection(webDB, "webUserProfiles"),
-              where("email", "==", user.email)
-            );
-            const querySnapshot = await getDocs(q);
-            
-            if (!querySnapshot.empty) {
-              const docData = querySnapshot.docs[0].data();
-              setFormData({
-                name: docData.name,
-                phone: docData.phone,
-                email: docData.email,
-                dob: docData.dob,
-                licenseFront: docData.licenseFront,
-                licenseBack: docData.licenseBack,
-                aadhaarFront: docData.aadhaarFront,
-                aadhaarBack: docData.aadhaarBack,
-                uploaded: docData.uploaded,
-              });
-            } else {
-              // Set email from authenticated user if no profile exists
-              setFormData(prev => ({
-                ...prev,
-                name: user.displayName || "",
-                email: user.email || "",
-                phone: user.phoneNumber || ""
-              }));
-            }
-          } catch (error) {
-            console.error("Error fetching user data:", error);
+  // Fetch user data on component mount
+  useEffect(() => {
+    const unsubscribe = appAuth.onAuthStateChanged(async (user) => {
+      if (user) {
+        try {
+          // Check if user profile exists
+          const q = query(
+            collection(webDB, "webUserProfiles"),
+            where("email", "==", user.email)
+          );
+          const querySnapshot = await getDocs(q);
+
+          if (!querySnapshot.empty) {
+            const docData = querySnapshot.docs[0].data();
+            setFormData({
+              name: docData.name,
+              phone: docData.phone,
+              email: docData.email,
+              dob: docData.dob,
+              licenseFront: docData.licenseFront,
+              licenseBack: docData.licenseBack,
+              aadhaarFront: docData.aadhaarFront,
+              aadhaarBack: docData.aadhaarBack,
+              uploaded: docData.uploaded,
+            });
+          } else {
+            // Set email from authenticated user if no profile exists
+            setFormData((prev) => ({
+              ...prev,
+              name: user.displayName || "",
+              email: user.email || "",
+              phone: user.phoneNumber || "",
+            }));
           }
+        } catch (error) {
+          console.error("Error fetching user data:", error);
         }
-      });
-      return () => unsubscribe();
-    }, []);
+      }
+    });
+    return () => unsubscribe();
+  }, []);
 
   useEffect(() => {
     if (isSaved) {
@@ -112,26 +110,25 @@ export default function YourDetails({title}) {
   //google - analytics
   function UserNavigation(label) {
     ReactGA.event({
-      category: 'User Interaction',
-      action: 'User Dashboard',
-      label: label, 
+      category: "User Interaction",
+      action: "User Dashboard",
+      label: label,
     });
   }
 
-
-//upload docs functions
-const allImagesUploaded =
-drivingFrontImage &&
-drivingBackImage &&
-aadharFrontImage &&
-aadharBackImage;
-// To handle image upload
+  //upload docs functions
+  const allImagesUploaded =
+    drivingFrontImage &&
+    drivingBackImage &&
+    aadharFrontImage &&
+    aadharBackImage;
+  // To handle image upload
   const handleImageUpload = (type, page, docType) => {
     setCurrentDocType(docType);
     setCurrentPage(page);
 
     if (type === "camera") {
-      setCameraOpen(true); 
+      setCameraOpen(true);
     } else {
       // Handle Gallery
       const input = document.createElement("input");
@@ -217,8 +214,7 @@ aadharBackImage;
     );
   };
 
-
-  //On Submit 
+  //On Submit
   const handleSubmit = async () => {
     try {
       // Check if all required documents are uploaded
@@ -252,26 +248,21 @@ aadharBackImage;
       }
       // toast.loading('Redirecting to Payment Dashboard...', {
       //   style: {
-      //     backgroundColor: '#edff8d', 
+      //     backgroundColor: '#edff8d',
       //     color: '#000',
       //     fontWeight: 'bold',
       //   },
-      //   autoClose: 5000, 
+      //   autoClose: 5000,
       // });
-      
 
       // await uploadDataToFirebase(convertedImages,paymentSuccess.orderId, paymentSuccess.paymentId);
 
       // trackEvent("Extended Test Drive Booking", "Extended Test Drive","User Documents Uploaded");
-
     } catch (error) {
       console.error("Error uploading images:", error);
-      // resetAllState();   
+      // resetAllState();
     }
   };
-
-
-  
 
   // Check if all fields are filled
   const isFormValid = () => {
@@ -327,10 +318,22 @@ aadharBackImage;
 
     try {
       // Upload files to Firebase Storage and get their URLs
-      const licenseFrontURL = await uploadFile(formData.licenseFront, `documents/${formData.email}/licenseFront`);
-      const licenseBackURL = await uploadFile(formData.licenseBack, `documents/${formData.email}/licenseBack`);
-      const aadhaarFrontURL = await uploadFile(formData.aadhaarFront, `documents/${formData.email}/aadhaarFront`);
-      const aadhaarBackURL = await uploadFile(formData.aadhaarBack, `documents/${formData.email}/aadhaarBack`);
+      const licenseFrontURL = await uploadFile(
+        formData.licenseFront,
+        `documents/${formData.email}/licenseFront`
+      );
+      const licenseBackURL = await uploadFile(
+        formData.licenseBack,
+        `documents/${formData.email}/licenseBack`
+      );
+      const aadhaarFrontURL = await uploadFile(
+        formData.aadhaarFront,
+        `documents/${formData.email}/aadhaarFront`
+      );
+      const aadhaarBackURL = await uploadFile(
+        formData.aadhaarBack,
+        `documents/${formData.email}/aadhaarBack`
+      );
 
       // Create user profile object
       const userProfile = {
@@ -346,7 +349,10 @@ aadharBackImage;
       };
 
       // Add the user profile to the Firestore collection
-      const docRef = await addDoc(collection(webDB, "webUserProfiles"), userProfile);
+      const docRef = await addDoc(
+        collection(webDB, "webUserProfiles"),
+        userProfile
+      );
       console.log("Document written with ID: ", docRef.id);
       setIsSaved(true); // Set saved state instead of alert
 
@@ -361,14 +367,20 @@ aadharBackImage;
 
   return (
     <>
-     <Helmet>
-                <title>{title}</title>
-                <meta name="description" content="Enter your personal details for a seamless experience with Zymo." />
-                <link rel="canonical" href="https://zymo.app/your-details" />
-                <meta property="og:title" content={title} />
-                <meta property="og:description" content="Keep your personal details up to date on Zymo." />
-            </Helmet>
-    <NavBar/>
+      <Helmet>
+        <title>{title}</title>
+        <meta
+          name="description"
+          content="Enter your personal details for a seamless experience with Zymo."
+        />
+        <link rel="canonical" href="https://zymo.app/your-details" />
+        <meta property="og:title" content={title} />
+        <meta
+          property="og:description"
+          content="Keep your personal details up to date on Zymo."
+        />
+      </Helmet>
+      <NavBar />
       <button
         onClick={() => navigate("/")}
         className="text-white m-5 cursor-pointer"
@@ -377,7 +389,9 @@ aadharBackImage;
       </button>
       <div className="min-h-screen bg-[#212121] p-4 flex justify-center items-center">
         <div className="w-full max-w-lg bg-[#424242] p-6 rounded-lg shadow-lg text-white font-sans">
-          <h2 className="text-xl font-semibold mb-4 flex justify-center items-center">Profile Details</h2>
+          <h2 className="text-xl font-semibold mb-4 flex justify-center items-center">
+            Profile Details
+          </h2>
 
           {isSaved && (
             <div className="mb-4 p-3 bg-green-500 text-white rounded-lg text-center">
@@ -399,9 +413,9 @@ aadharBackImage;
 
           <label className="block mb-2">Phone</label>
           <input
-             type="tel"
-             pattern="[0-9]{10}"
-             maxLength={10}
+            type="tel"
+            pattern="[0-9]{10}"
+            maxLength={10}
             name="phone"
             value={formData.phone}
             onChange={handleChange}
@@ -420,7 +434,7 @@ aadharBackImage;
             placeholder="Enter email"
             required
             // readOnly
-/>
+          />
 
           <label className="block mb-2">Date of Birth</label>
           <input
@@ -431,7 +445,7 @@ aadharBackImage;
             className="w-full p-2 border rounded mb-3 bg-white text-black"
             required
           />
-{/* 
+          {/* 
           {Object.keys(formData.uploaded).map((name, index) => (
             <div key={index} className="mt-4">
               <div className="flex items-center">
@@ -505,54 +519,51 @@ aadharBackImage;
           ))} */}
           {/* start  */}
           <div className="bg-[#2A2A2A] p-6 md:p-8 rounded-xl shadow-2xl border border-white/10">
-          <div className="space-y-8">
-            <UploadSection
-              title="Upload Driving License Front Page"
-              image={drivingFrontImage}
-              onUpload={(type) => handleImageUpload(type, "front", "driving")}
-            />
+            <div className="space-y-8">
+              <UploadSection
+                title="Upload Driving License Front Page"
+                image={drivingFrontImage}
+                onUpload={(type) => handleImageUpload(type, "front", "driving")}
+              />
 
-            <UploadSection
-              title="Upload Driving License Back Page"
-              image={drivingBackImage}
-              onUpload={(type) => handleImageUpload(type, "back", "driving")}
-            />
+              <UploadSection
+                title="Upload Driving License Back Page"
+                image={drivingBackImage}
+                onUpload={(type) => handleImageUpload(type, "back", "driving")}
+              />
 
-            <UploadSection
-              title="Upload Aadhar Card Front Page"
-              image={aadharFrontImage}
-              onUpload={(type) => handleImageUpload(type, "front", "aadhar")}
-            />
+              <UploadSection
+                title="Upload Aadhar Card Front Page"
+                image={aadharFrontImage}
+                onUpload={(type) => handleImageUpload(type, "front", "aadhar")}
+              />
 
-            <UploadSection
-              title="Upload Aadhar Card Back Page"
-              image={aadharBackImage}
-              onUpload={(type) => handleImageUpload(type, "back", "aadhar")}
-            />
-          </div>
-
-          
-        </div>
-    
-
-      {/* Modal for Camera */}
-      {cameraOpen && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-60 z-50">
-          <div className="bg-[#121212] p-6 rounded-lg w-[90%] md:w-[600px] text-white text-center relative">
-            <button
-              onClick={() => setCameraOpen(false)}
-              className="absolute top-2 right-2 text-white"
-            >
-              <X size={24} />
-            </button>
-
-            <h3 className="text-xl mb-4">Take a Photo</h3>
-            <div className="text-center">
-              <WebcamCapture />
+              <UploadSection
+                title="Upload Aadhar Card Back Page"
+                image={aadharBackImage}
+                onUpload={(type) => handleImageUpload(type, "back", "aadhar")}
+              />
             </div>
           </div>
-        </div>
-      )}
+
+          {/* Modal for Camera */}
+          {cameraOpen && (
+            <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-60 z-50">
+              <div className="bg-[#121212] p-6 rounded-lg w-[90%] md:w-[600px] text-white text-center relative">
+                <button
+                  onClick={() => setCameraOpen(false)}
+                  className="absolute top-2 right-2 text-white"
+                >
+                  <X size={24} />
+                </button>
+
+                <h3 className="text-xl mb-4">Take a Photo</h3>
+                <div className="text-center">
+                  <WebcamCapture />
+                </div>
+              </div>
+            </div>
+          )}
           {/* end  */}
 
           <button
@@ -565,7 +576,9 @@ aadharBackImage;
           {/* Save Button */}
           <button
             className={`w-full bg-[#edff8d] text-black p-2 rounded-lg mt-4 flex items-center justify-center gap-2 ${
-              !isFormValid() || isSaving ? "opacity-50 cursor-not-allowed" : "hover:bg-[#d4e07d]"
+              !isFormValid() || isSaving
+                ? "opacity-50 cursor-not-allowed"
+                : "hover:bg-[#d4e07d]"
             }`}
             onClick={handleSave}
             disabled={!isFormValid() || isSaving}
