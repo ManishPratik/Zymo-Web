@@ -381,7 +381,12 @@ const Listing = ({ title }) => {
               firebasePromise ? firebasePromise : Promise.resolve(null),
             ]);
 
-          if (zoomData.status === "fulfilled" && zoomData.value) {
+          if (
+            zoomData.status === "fulfilled" &&
+            zoomData.value &&
+            Array.isArray(zoomData.value.sections) &&
+            zoomData.value.sections.length > 0
+          ) {
             const vendorData = await getVendorDetails("zoomcar");
 
             const zoomCarData = zoomData.value.sections[
@@ -410,14 +415,14 @@ const Listing = ({ title }) => {
               sourceImg: "/images/ServiceProvider/zoomcarlogo.png",
               rateBasis: "DR",
             }));
-            console.log("Zoomcar Data:", zoomCarData);
+            /*console.log("Zoomcar Data:", zoomCarData);*/
             allCarData = [...allCarData, ...zoomCarData];
           } else {
             console.error("Zoomcar API failed:", zoomData.reason);
           }
 
           if (mychoizeData.status === "fulfilled" && mychoizeData.value) {
-            console.log("MyChoize Data:", mychoizeData.value);
+            /*console.log("MyChoize Data:", mychoizeData.value);*/
             allCarData = [...allCarData, ...mychoizeData.value];
           } else {
             console.error(
@@ -441,7 +446,7 @@ const Listing = ({ title }) => {
             autoClose: 5000,
           });
         }
-        console.log("All Cars:", allCarData);
+        /*console.log("All Cars:", allCarData);*/
         const groupCarList = clubCarsByName(allCarData);
         console.log("Grouped Cars:", groupCarList);
 

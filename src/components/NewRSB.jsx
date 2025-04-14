@@ -18,6 +18,7 @@ const NewRSB = ({ urlcity }) => {
   const [activeTab, setActiveTab] = useState("rent");
   const [placeInput, setPlaceInput] = useState(urlcity || "");
   const [place, setPlace] = useState(null);
+  const [suggestions, setSuggestions] = useState([]);
   const [autocomplete, setAutocomplete] = useState(null);
   const [city, setCity] = useState("");
   const [address, setAddress] = useState("");
@@ -43,70 +44,144 @@ const NewRSB = ({ urlcity }) => {
   ];
   const [headerIndex, setHeaderIndex] = useState(0);
 
-  const fetchAutocompleteDetails = (inputCity) => {
-    if (!inputCity || !window.google) return;
+ // Places API
+ const placesAPILibraries = useMemo(() => ["places"], []);
+ const placesAPIKey = import.meta.env.VITE_PLACES_API_KEY;
+ 
+ useEffect(() => {
+  if (!placeInput) {
+    setSuggestions([]); // Clear suggestions if input is empty
+    return;
+  }
 
-    const autocompleteService =
-      new window.google.maps.places.AutocompleteService();
-    autocompleteService.getPlacePredictions(
-      { input: inputCity, componentRestrictions: { country: "IN" } },
-      (predictions, status) => {
-        if (
-          status === window.google.maps.places.PlacesServiceStatus.OK &&
-          predictions?.length > 0
-        ) {
-          const placeId = predictions[0].place_id;
-          const placesService = new window.google.maps.places.PlacesService(
-            document.createElement("div")
-          );
+  const fetchSuggestions = async () => {
+    try {
+      if (window.google?.maps?.places?.AutocompleteSuggestion) {
+        const sessionToken = new window.google.maps.places.AutocompleteSessionToken();
 
-          placesService.getDetails({ placeId }, (placeDetails, status) => {
-            if (
-              status === window.google.maps.places.PlacesServiceStatus.OK &&
-              placeDetails?.geometry
-            ) {
-              setAutocomplete(placeDetails);
-              setPlace({
-                name: placeDetails.name,
-                lat: placeDetails.geometry.location.lat(),
-                lng: placeDetails.geometry.location.lng(),
-              });
-              setPlaceInput(placeDetails.formatted_address);
+        const response = await window.google.maps.places.AutocompleteSuggestion.fetchAutocompleteSuggestions({
+          input: placeInput,
+          includedRegionCodes: ["IN"], // Limit to India
+          language: "en",
+          sessionToken: sessionToken,
+        });
 
-              const address = placeDetails.formatted_address.split(",");
-              setAddress(
-                address.length > 2
-                  ? `${address[0]}, ${address[1]}, ${address.at(-2)}`
-                  : address
-              );
+        // Map the new nested structure
+        const formatted = response?.suggestions?.map((item) => {
+          const prediction = item?.placePrediction;
+          const placeId = prediction?.placeId || "";
+          const fullText = prediction?.text?.text || "";
+          const mainText = prediction?.mainText?.text || "";
+          const secondaryText = prediction?.secondaryText?.text || "";
 
-              const city = extractCityFromComponents(
-                placeDetails.address_components
-              );
-              setCity(city);
-            } else {
-              console.error("Failed to fetch place details.");
-            }
-          });
-        } else {
-          console.error("No place predictions found.");
-        }
+          // Extract city if available
+          let cityName = secondaryText; // Assuming secondaryText contains the city or region
+
+          return {
+            placeId,
+            fullAddress: fullText,
+            displayName: `${mainText}${secondaryText ? ", " + secondaryText : ""}`,
+            city: cityName, // Add the city to the formatted data
+          };
+        }) || [];
+/*
+        console.log("Raw suggestions:", response); // Optional for debugging
+        console.log("Formatted suggestions:", formatted);*/
+
+        setSuggestions(formatted);
       }
-    );
+    } catch (error) {
+      console.error("Error fetching autocomplete suggestions:", error);
+    }
   };
 
-  // Effect to trigger autocomplete on page load when `urlcity` changes
-  useEffect(() => {
-    if (!urlcity) return;
+  const debounce = setTimeout(fetchSuggestions, 300); // Debounce API calls
+  return () => clearTimeout(debounce); // Cleanup
+}, [placeInput]);
 
-    // Ensure we have a short delay before calling autocomplete (after city is set)
-    const timer = setTimeout(() => {
-      fetchAutocompleteDetails(urlcity);
-    }, 1000); // 1-second delay to ensure the input field is populated
+const handleSuggestionClick = async (sugg) => {
+  setPlaceInput(sugg.fullAddress);
+  setSuggestions([]);
 
-    return () => clearTimeout(timer); // Clean up timeout
-  }, [urlcity]); // Re-run the effect when the `urlcity` changes
+  const placeDetails = await getPlaceDetails(sugg.placeId);
+  if (placeDetails) {
+    const cityName = extractCityFromDetails(placeDetails);
 
+    setCity(cityName);
+
+    const location = placeDetails.Eg.location || {};
+    const lat = location.lat ?? "";
+    const lng = location.lng ?? "";
+
+    // Attach relevant data to a single object (assuming `setPlace`)
+    setPlace({
+      name: placeDetails.displayName || sugg.fullAddress,
+      lat,
+      lng,
+      addressComponents: placeDetails.addressComponents || [],
+    });
+
+    console.log("City:", cityName);
+    console.log("Lat:", lat, "Lng:", lng);
+  }
+};
+
+
+
+const getPlaceDetails = async (placeId) => {
+  try {
+    const { Place } = await window.google.maps.importLibrary("places");
+
+    const place = new Place({
+      id: placeId,
+      requestedLanguage: "en", // optional
+    });
+
+    await place.fetchFields({
+      fields: ["addressComponents", "displayName", "formattedAddress", "location"],
+    });
+    console.log("Fetched place details:", place); // Debugging log
+
+    return place; // `place` now contains the fetched fields
+  } catch (error) {
+    console.error("Error fetching place details:", error);
+    return null;
+  }
+};
+
+
+// Function to extract the city from the place details
+const extractCityFromDetails = (place) => {
+  const components = place?.addressComponents || [];
+
+  const cityTypesPriority = [
+    "locality",
+    "sublocality_level_1",
+    "sublocality",
+    "neighborhood",
+    "administrative_area_level_3",
+    "administrative_area_level_2",
+    "administrative_area_level_1",
+  ];
+
+  for (let type of cityTypesPriority) {
+    const match = components.find((c) => {
+      const types = c.types || c.Eg || [];
+      return types.includes(type);
+    });
+
+    if (match) {
+      const name = match.long_name || match.Fg || match.Gg || "";
+      console.log("Matched city type:", type, "→", name);
+      return name;
+    }
+  }
+
+  console.warn("No suitable city component found.");
+  return "";
+};
+
+ 
   useEffect(() => {
     const interval = setInterval(() => {
       setFade(true);
@@ -130,9 +205,7 @@ const NewRSB = ({ urlcity }) => {
     );
   };
 
-  // Places API
-  const placesAPILibraries = useMemo(() => ["places"], []);
-  const placesAPIKey = import.meta.env.VITE_PLACES_API_KEY;
+ 
 
   const extractCityFromComponents = (components) => {
     const cityTypesPriority = [
@@ -180,6 +253,7 @@ const NewRSB = ({ urlcity }) => {
     }
   };
 
+ 
   const getCurrentLocation = () => {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
@@ -396,31 +470,43 @@ const NewRSB = ({ urlcity }) => {
         {/* Input Fields */}
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 mb-4 mx-auto w-full max-w-[90%] md:max-w-[80%]">
           {/* Location Input */}
-          <LoadScriptNext
-            googleMapsApiKey={placesAPIKey}
-            libraries={placesAPILibraries}
-          >
-            <div className="flex items-center border border-gray-500 bg-[#212121] rounded-md px-4 py-2 w-full overflow-hidden">
+        <LoadScriptNext
+        googleMapsApiKey={placesAPIKey}
+        libraries={placesAPILibraries}
+        version="beta" // ✅ REQUIRED
+      >
+            <div className="flex items-center border border-gray-500 bg-[#212121] rounded-md px-4 py-2 w-full ">
               {/* Icon */}
               <MapPinIcon className="w-5 h-5 text-gray-400 mr-2 flex-shrink-0" />
 
               {/* Input Field */}
-              <Autocomplete
-                onLoad={(autocompleteInstance) =>
-                  setAutocomplete(autocompleteInstance)
-                }
-                onPlaceChanged={handlePlaceSelect}
-                options={{ componentRestrictions: { country: "IN" } }}
-              >
-                <input
-                  type="text"
-                  placeholder="Enter a location"
-                  className="bg-transparent text-white outline-none w-full placeholder-gray-400 flex-grow truncate"
-                  value={placeInput}
-                  onChange={(e) => setPlaceInput(e.target.value)}
-                  // onFocus={(e) => e.target.select()} // Ensures re-selection
-                />
-              </Autocomplete>
+              <div className="relative w-full"> {/* Wrapper is now relative */}
+  <input
+    type="text"
+    placeholder="Enter a location"
+    className="bg-transparent text-white outline-none w-full placeholder-gray-400 flex-grow truncate"
+    value={placeInput}
+    onChange={(e) => setPlaceInput(e.target.value)}
+  />
+
+<ul className="absolute left-0 right-0 top-full mt-1 z-50 bg-white text-black rounded-lg shadow-lg max-h-60 overflow-y-auto border border-gray-300">
+  {suggestions.map((sugg, idx) => (
+ <li
+ key={idx}
+ onClick={() => handleSuggestionClick(sugg)}
+ className="px-4 py-2 hover:bg-gray-100 cursor-pointer text-sm break-words"
+ title={sugg.displayName || sugg.fullAddress}
+>
+ {sugg.displayName || sugg.fullAddress}
+</li>
+  ))}
+</ul>
+
+</div>
+
+
+
+
 
               {/* Current Location Button */}
               <button
