@@ -108,7 +108,7 @@ const FeaturedIn = () => {
             <h2 className="text-center text-xl font-bold mb-6">
                 Featured In
             </h2>
-            <div className="bg-darkGrey2 rounded-lg p-6 py-8 mx-auto max-w-4xl overflow-hidden">
+            <div className="bg-darkGrey2 rounded-lg p-6 py-8 mx-auto max-w-7xl overflow-hidden">
                 <div
                     ref={scrollRef}
                     className="flex space-x-6 overflow-hidden whitespace-nowrap scroll-container"
