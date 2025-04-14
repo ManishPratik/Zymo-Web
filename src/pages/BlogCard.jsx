@@ -2,6 +2,7 @@ import React from "react";
 
 const BlogCard = ({ blog }) => {
   // Slug
+ 
   let urlTitle = blog.title
     .toLowerCase()
     .replace(/[^a-z0-9\s-]/g, "")
@@ -9,6 +10,7 @@ const BlogCard = ({ blog }) => {
     .split(/\s+/)
     .slice(0, 7)
     .join("-");
+
 
   const goToBlog = () => {
     localStorage.setItem("selectedBlogTitle", blog.title);

@@ -18,6 +18,8 @@ const AgentBookingList = ({title}) => {
   const [refundTitle, setRefundTitle] = useState('');
   const [refundValue, setRefundValue] = useState('');
   const [showDeductionOptions, setShowDeductionOptions] = useState(false);
+  const [showBookingDetails, setShowBookingDetails] = useState(false);
+  const [bookingDetails, setBookingDetails] = useState(null);
 
   const colorScheme = {
     appColor: "#edff8d", // Light yellow
@@ -212,6 +214,41 @@ const AgentBookingList = ({title}) => {
 
     return <span style={{ color: '#edff8d' }}>{value.toString()}</span>;
   };
+  const handleGetZoomDetails = async (bookingId, uid) => {
+    //const url = import.meta.env.VITE_FUNCTIONS_API_URL;
+    const url = "http://127.0.0.1:5001/zymo-prod/us-central1/api";
+
+    // Fetch Firebase Cars
+  
+    try {
+      const response = await fetch(`${url}/zoomcar/bookings/details`, {
+        method: "POST",
+        body: JSON.stringify({
+          data: {
+            booking_id: bookingId,
+            uid: uid,
+          },
+        }),
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+  
+      if (!response.ok) {
+        throw new Error("Failed to fetch Zoomcar booking details");
+      }
+  
+      const data = await response.json();
+      setBookingDetails(data);
+      setShowBookingDetails(true);
+      console.log("Zoom Details:", data);
+    } catch (error) {
+      console.error("Error getting Zoom details:", error);
+    }
+  };
+  
+  
+  
 
   return (
     <>
@@ -412,28 +449,40 @@ const AgentBookingList = ({title}) => {
               </h2>
 
               <div className="flex justify-between gap-4 mb-8 w-full">
-                <button
-                  onClick={() => setShowCancelConfirm(true)}
-                  className="px-4 py-2 rounded text-white font-bold flex-1"
-                  style={{ backgroundColor: '#FF0000' }}
-                >
-                  Cancel Booking
-                </button>
-                <button
-                  onClick={() => setShowDocuments(true)}
-                  className="px-4 py-2 rounded text-white font-bold flex-1"
-                  style={{ backgroundColor: '#007BFF' }}
-                >
-                  Show Documents
-                </button>
-                <button
-                  onClick={() => setShowAddRefund(true)}
-                  className="px-4 py-2 rounded text-white font-bold flex-1"
-                  style={{ backgroundColor: '#28A745' }}
-                >
-                  Add Refund Data
-                </button>
-              </div>
+  <button
+    onClick={() => setShowCancelConfirm(true)}
+    className="px-4 py-2 rounded text-white font-bold flex-1"
+    style={{ backgroundColor: '#FF0000' }}
+  >
+    Cancel Booking
+  </button>
+    
+  <button
+  onClick={() => handleGetZoomDetails(selectedBooking.bookingId, selectedBooking.UserId)}
+  className="px-4 py-2 rounded text-white font-bold flex-1"
+  style={{ backgroundColor: '#6C63FF' }}
+>
+  Get Zoom Details
+</button>
+
+  <button
+    onClick={() => setShowDocuments(true)}
+    className="px-4 py-2 rounded text-white font-bold flex-1"
+    style={{ backgroundColor: '#007BFF' }}
+  >
+    Show Documents
+  </button>
+  <button
+    onClick={() => setShowAddRefund(true)}
+    className="px-4 py-2 rounded text-white font-bold flex-1"
+    style={{ backgroundColor: '#28A745' }}
+  >
+    Add Refund Data
+  </button>
+
+
+</div>
+
 
               <div className="w-full space-y-6">
                 <table className="w-full divide-y divide-gray-700">
@@ -518,6 +567,61 @@ const AgentBookingList = ({title}) => {
             </div>
           </div>
         )}
+
+{showBookingDetails && bookingDetails && (
+  <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+    <div className="w-full h-full flex flex-col">
+      <div
+        className="rounded-lg p-6 flex-1 overflow-y-auto"
+        style={{ 
+          backgroundColor: colorScheme.darkGrey2, 
+          border: `2px solid ${colorScheme.appColor}` 
+        }}
+      >
+        <button
+          className="flex items-center gap-2 hover:scale-105 transition-transform mb-4 p-4"
+          style={{ color: colorScheme.appColor }}
+          onClick={() => setShowBookingDetails(false)}
+        >
+          <FiArrowLeft className="text-3xl" />
+          <span className="text-xl">Back</span>
+        </button>
+
+        <h1 className="text-3xl font-bold mb-4 text-center -mt-8" style={{ color: colorScheme.appColor }}>
+          Booking Details
+        </h1>
+
+        <table className="w-full text-left border-collapse">
+          <tbody>
+            {Object.entries(bookingDetails).map(([key, value]) => (
+              key !== 'bookingId' && key !== 'refundData' && key !== 'cancelOrder' && (
+                <tr key={key} style={{ backgroundColor: colorScheme.darkGrey2 }} className="border-b border-gray-700">
+                  <td className="px-6 py-4 text-xl font-bold uppercase" style={{ color: colorScheme.appColor, width: '50%' }}>
+                    {key}
+                  </td>
+                  <td className="px-6 py-4 text-lg" style={{ width: '50%' }}>
+                    <RenderValue value={value} />
+                  </td>
+                  <td className="px-6 py-4 text-lg text-right" style={{ width: '10%' }}>
+                    <button onClick={() => handleCopyId(value)}>
+                      {copiedId === value ? (
+                        <FiCheck style={{ color: '#4CAF50', fontSize: '1.5rem' }} />
+                      ) : (
+                        <FiCopy style={{ color: colorScheme.appColor, fontSize: '1.5rem' }} />
+                      )}
+                    </button>
+                  </td>
+                </tr>
+              )
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+)}
+
+
 
         {showDocuments && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">

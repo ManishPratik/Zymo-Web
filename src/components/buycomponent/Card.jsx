@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 
-const Card = ( {car} ) => {
-    
+const Card = ({ car }) => {
+
     return (
 
         <div className="flex flex-col md:flex-row bg-[#303030] border border-gray-500 rounded-2xl p-4 py-1 text-white mx-auto w-full max-w-[900px] min-h-[300px] md:items-center">
@@ -34,13 +34,28 @@ const Card = ( {car} ) => {
             <div className="relative flex items-center justify-center rounded-xl p-1 w-full md:w-auto mt-4 md:mt-0">
 
                 <img
-                loading='lazy'
-                    src="/images/Cars/newtnexcar.png"  //add newtnexcar.png image here
+                    loading='lazy'
+                    src={car.image}  //add newtnexcar.png image here
                     alt={car.name}
                     className="h-auto object-contain rounded-xl w-full md:w-auto max-h-50 p-2 hover:scale-100 transition-transform duration-700"
                 />
 
-            </div>
+            </div> 
+       
+       {/* <div className="relative w-[320px] h-[360px]   rounded-xl   p-2">
+
+<div className="absolute top-[30px] left-[30px] w-full h-full bg-[#faffa4] rounded-[30px] z-0" />
+
+<div className="absolute top-0 left-0 w-full h-full bg-[#faffa4] rounded-[30px] z-10" />
+
+<img
+  src={car.image}
+  alt="Car"
+  className="relative z-20 w-full h-full object-contain p-6"
+/>
+</div> */}
+    
+
 
 
 
@@ -55,11 +70,16 @@ const Card = ( {car} ) => {
 
 
                 </div>
-                <Link to={`/buy/car-details/${car.carId}`} className="mt-3">
+                <Link
+                    to={`/buy/car-details/${car.carId}`}
+                    state={{ car }}  // <-- this is important
+                    className="mt-3"
+                >
                     <button className="w-20 h-10 rounded-lg bg-[#faffa4] flex items-center justify-center hover:bg-[#dff566] transition-colors">
                         <i className="fa-solid fa-arrow-right text-darkGrey2"></i>
                     </button>
                 </Link>
+
             </div>
         </div>
 

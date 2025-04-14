@@ -25,7 +25,7 @@ const ChatBotButton = () => {
     };
 
     return (
-        <div className='icon-main'>
+        <div className='icon-main bottom-5 lg:bottom-10'>
             <button
                 className="chatbot-toggle-button"
                 onClick={handleClick}

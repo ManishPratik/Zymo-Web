@@ -1,4 +1,12 @@
-import { ArrowLeft, RotateCw, ChevronDown ,ChevronUp , ArrowRight ,Armchair ,LocateFixed } from "lucide-react";
+import {
+  ArrowLeft,
+  RotateCw,
+  ChevronDown,
+  ChevronUp,
+  ArrowRight,
+  Armchair,
+  LocateFixed,
+} from "lucide-react";
 import { useEffect, useState, useRef } from "react";
 import { FiMapPin } from "react-icons/fi";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
@@ -11,6 +19,7 @@ import {
 import {
   formatDate,
   formatFare,
+  getVendorDetails,
   retryFunction,
   toPascalCase,
 } from "../utils/helperFunctions";
@@ -18,8 +27,7 @@ import { collection, collectionGroup, getDocs } from "firebase/firestore";
 import { appDB } from "../utils/firebase";
 import useTrackEvent from "../hooks/useTrackEvent";
 import { Helmet } from "react-helmet-async";
-import { motion } from 'framer-motion';
-
+import { motion } from "framer-motion";
 
 const Listing = ({ title }) => {
   const location = useLocation();
@@ -54,39 +62,47 @@ const Listing = ({ title }) => {
   const [carCount, setCarCount] = useState("");
   const [expandedStates, setExpandedStates] = useState({});
 
-
-
-
   const toggleDeals = (key) => {
-    setExpandedStates(prev => ({
+    setExpandedStates((prev) => ({
       ...prev,
-      [key]: !prev[key] // Toggle only the clicked car's state
+      [key]: !prev[key], // Toggle only the clicked car's state
     }));
   };
 
   const renderStarRating = (rating) => {
     const maxStars = 5;
-    const numericRating = parseFloat(rating) || 0; 
-    const fullStars = Math.floor(numericRating); 
-    const decimal = numericRating % 1; 
-    const emptyStars = maxStars - fullStars - (decimal > 0 ? 1 : 0); 
-  
+    const numericRating = parseFloat(rating) || 0;
+    const fullStars = Math.floor(numericRating);
+    const decimal = numericRating % 1;
+    const emptyStars = maxStars - fullStars - (decimal > 0 ? 1 : 0);
+
     return (
       <span className="flex items-center gap-1">
-        {Array(fullStars).fill().map((_, i) => (
-          <span key={`full-${i}`} className="text-[#eeff87]">★</span>
-        ))}
+        {Array(fullStars)
+          .fill()
+          .map((_, i) => (
+            <span key={`full-${i}`} className="text-[#eeff87]">
+              ★
+            </span>
+          ))}
         {decimal > 0 && (
           <span className="relative inline-block text-[#eeff87]">
-            <span className="absolute top-0 left-0 overflow-hidden" style={{ width: `${decimal * 100}%` }}>
-             ⯪ 
+            <span
+              className="absolute top-0 left-0 overflow-hidden"
+              style={{ width: `${decimal * 100}%` }}
+            >
+              ⯪
             </span>
             <span className="text-gray-400">☆</span>
           </span>
         )}
-        {Array(emptyStars).fill().map((_, i) => (
-          <span key={`empty-${i}`} className="text-gray-400">☆</span>
-        ))}
+        {Array(emptyStars)
+          .fill()
+          .map((_, i) => (
+            <span key={`empty-${i}`} className="text-gray-400">
+              ☆
+            </span>
+          ))}
       </span>
     );
   };
@@ -114,7 +130,13 @@ const Listing = ({ title }) => {
 
     // Group cars by name
     const groupedCars = carsArray.reduce((acc, car) => {
-      if (!car || !car.name || !car.brand || !car.fare || typeof car.fare !== "string") {
+      if (
+        !car ||
+        !car.name ||
+        !car.brand ||
+        !car.fare ||
+        typeof car.fare !== "string"
+      ) {
         return acc;
       }
       const key = `${car.name}|${car.brand}`;
@@ -133,20 +155,20 @@ const Listing = ({ title }) => {
     // Transform groups and find the minimun fare
     return Object.values(groupedCars).map((group) => {
       const minFare = group.cars.reduce((min, car) => {
-        const currentFare = parseInt(car.fare.replace(/[^0-9]/g, ''));
+        const currentFare = parseInt(car.fare.replace(/[^0-9]/g, ""));
         if (isNaN(currentFare)) return min;
-        const minFareNum = parseInt(min.replace(/[^0-9]/g, ''));
+        const minFareNum = parseInt(min.replace(/[^0-9]/g, ""));
         return currentFare < minFareNum ? car.fare : min;
-      }, group.cars[0].fare);  
+      }, group.cars[0].fare);
 
-      const minFareCar = group.cars.find(car => car.fare === minFare);
-      const seat = minFareCar.options.find(opt => opt.includes("Seats")) ;
+      const minFareCar = group.cars.find((car) => car.fare === minFare);
+      const seat = minFareCar.options.find((opt) => opt.includes("Seats"));
 
       return {
         brand: group.brand,
         name: group.name,
         fare: minFare,
-        seat:seat,
+        seat: seat,
         cars: group.cars,
       };
     });
@@ -266,7 +288,7 @@ const Listing = ({ title }) => {
                 address: car.pickupLocations[toPascalCase(city)] || "",
                 images: car.images,
                 fare: formatFare(hourlyRate(car) * tripDurationHours),
-                actual_fare: hourlyRate(car) * tripDurationHours,
+                inflated_fare: hourlyRate(car) * tripDurationHours,
                 hourly_amount: hourlyRate(car),
                 extrakm_charge: car.hourlyRental.limited.extraKmRate || 0,
                 extrahour_charge:
@@ -281,7 +303,7 @@ const Listing = ({ title }) => {
                 yearOfRegistration: car.yearOfRegistration,
                 ratingData: { text: "No ratings available" },
                 trips: "N/A",
-                source: "Local Owner",
+                source: "Zymo",
                 sourceImg: null,
                 // rateBasis: car.hourlyRental.limit === "Limited" ? ,
               }));
@@ -360,6 +382,8 @@ const Listing = ({ title }) => {
             ]);
 
           if (zoomData.status === "fulfilled" && zoomData.value) {
+            const vendorData = await getVendorDetails("zoomcar");
+
             const zoomCarData = zoomData.value.sections[
               zoomData.value.sections.length - 1
             ].cards.map((car) => ({
@@ -374,9 +398,9 @@ const Listing = ({ title }) => {
               lat: car.car_data.location.lat,
               lng: car.car_data.location.lng,
               fare: `₹${car.car_data.pricing.revenue}`,
-              actual_fare: car.car_data.pricing.fare_breakup
-                ? car.car_data.pricing.fare_breakup[0].fare_item[0].value
-                : "000",
+              inflated_fare: `₹${parseInt(
+                vendorData?.CurrentrateSd * car.car_data.pricing.revenue
+              )}`,
               pricing_id: car.car_data.pricing.id,
               hourly_amount: car.car_data.pricing.payable_amount,
               images: car.car_data.image_urls,
@@ -386,14 +410,12 @@ const Listing = ({ title }) => {
               sourceImg: "/images/ServiceProvider/zoomcarlogo.png",
               rateBasis: "DR",
             }));
-            console.log("Zoomcar Data:", zoomCarData);
             allCarData = [...allCarData, ...zoomCarData];
           } else {
             console.error("Zoomcar API failed:", zoomData.reason);
           }
 
           if (mychoizeData.status === "fulfilled" && mychoizeData.value) {
-            console.log("MyChoize Data:", mychoizeData.value);
             allCarData = [...allCarData, ...mychoizeData.value];
           } else {
             console.error(
@@ -417,13 +439,13 @@ const Listing = ({ title }) => {
             autoClose: 5000,
           });
         }
-        console.log("All Cars:", allCarData);
         const groupCarList = clubCarsByName(allCarData);
-        console.log("Grouped Cars:", groupCarList);
 
         setCarList(allCarData);
         setClubbedCarList(groupCarList);
-        setCarCount(groupCarList.reduce((count, group) => count + group.cars.length, 0));
+        setCarCount(
+          groupCarList.reduce((count, group) => count + group.cars.length, 0)
+        );
         setLoading(false);
 
         localStorage.setItem("carList", JSON.stringify(allCarData));
@@ -449,69 +471,76 @@ const Listing = ({ title }) => {
     setSeats("");
     setFuel("");
     setFilteredList(clubbedCarList);
-    setCarCount(clubbedCarList.reduce((count, group) => count + group.cars.length, 0));
+    setCarCount(
+      clubbedCarList.reduce((count, group) => count + group.cars.length, 0)
+    );
   };
 
   const applyFiltersToGroupedCars = () => {
-      if (!Array.isArray(clubbedCarList)) {
-        noCarsFound();
-        return [];
-      }
+    if (!Array.isArray(clubbedCarList)) {
+      noCarsFound();
+      return [];
+    }
 
-      let filteredGroups = clubbedCarList.map(group => {
-          // Filter cars within the group
-          const filteredCars = group.cars.filter(car => {
-            const transmissionFilter =
-                !transmission || car.options.some(opt => opt.includes(transmission));
-            const seatsFilter =
-                !seats || car.options.some(opt => opt.includes(seats));
-            const fuelFilter =
-                !fuel || car.options.some(opt => opt.includes(fuel));
-            return transmissionFilter && seatsFilter && fuelFilter;
-          });
+    let filteredGroups = clubbedCarList
+      .map((group) => {
+        // Filter cars within the group
+        const filteredCars = group.cars.filter((car) => {
+          const transmissionFilter =
+            !transmission ||
+            car.options.some((opt) => opt.includes(transmission));
+          const seatsFilter =
+            !seats || car.options.some((opt) => opt.includes(seats));
+          const fuelFilter =
+            !fuel || car.options.some((opt) => opt.includes(fuel));
+          return transmissionFilter && seatsFilter && fuelFilter;
+        });
 
-          // If no cars remain, return null to exclude the group
-          if (filteredCars.length === 0) {
-              return null;
-          }
+        // If no cars remain, return null to exclude the group
+        if (filteredCars.length === 0) {
+          return null;
+        }
 
-          // Recalculate minimum fare for the filtered cars
-          const minFare = filteredCars.reduce((min, car) => {
-            const currentFare = parseInt(car.fare.replace(/[^0-9]/g, ''));
-            const minFareNum = parseInt(min.replace(/[^0-9]/g, ''));
-            return currentFare < minFareNum ? car.fare : min;
-          }, filteredCars[0].fare);
-          
-          const minFareCar = filteredCars.find(car => car.fare === minFare);
-          const seat = minFareCar.options.find(opt => opt.includes("Seats")) || "Unknown";
+        // Recalculate minimum fare for the filtered cars
+        const minFare = filteredCars.reduce((min, car) => {
+          const currentFare = parseInt(car.fare.replace(/[^0-9]/g, ""));
+          const minFareNum = parseInt(min.replace(/[^0-9]/g, ""));
+          return currentFare < minFareNum ? car.fare : min;
+        }, filteredCars[0].fare);
 
-          return {
-              name: group.name,
-              brand: group.brand,
-              seat: seat,
-              fare: minFare,
-              cars: filteredCars
-          };
-      }).filter(group => group !== null);
+        const minFareCar = filteredCars.find((car) => car.fare === minFare);
+        const seat =
+          minFareCar.options.find((opt) => opt.includes("Seats")) || "Unknown";
 
-      // Handle no results
-      if (filteredGroups.length === 0) {
-          noCarsFound();
-          return;
-      }
+        return {
+          name: group.name,
+          brand: group.brand,
+          seat: seat,
+          fare: minFare,
+          cars: filteredCars,
+        };
+      })
+      .filter((group) => group !== null);
 
-      // Sort groups by minimum fare if priceRange is specified
-      if (priceRange) {
-          filteredGroups = filteredGroups.sort((a, b) => {
-              const priceA = parseInt(a.fare.replace(/[^0-9]/g, ""));
-              const priceB = parseInt(b.fare.replace(/[^0-9]/g, ""));
-              return priceRange === "lowToHigh" ? priceA - priceB : priceB - priceA;
-          });
-      }
-      console.log("Filtered CarClubbing List:", filteredGroups);
-      console.log("Filtered Cars Count:", filteredGroups.reduce((count, group) => count + group.cars.length, 0));
-      setFilteredList(filteredGroups);
-      setCarCount(filteredGroups.reduce((count, group) => count + group.cars.length, 0));
+    // Handle no results
+    if (filteredGroups.length === 0) {
+      noCarsFound();
+      return;
+    }
+
+    // Sort groups by minimum fare if priceRange is specified
+    if (priceRange) {
+      filteredGroups = filteredGroups.sort((a, b) => {
+        const priceA = parseInt(a.fare.replace(/[^0-9]/g, ""));
+        const priceB = parseInt(b.fare.replace(/[^0-9]/g, ""));
+        return priceRange === "lowToHigh" ? priceA - priceB : priceB - priceA;
+      });
+    }
+
+    setFilteredList(filteredGroups);
+    setCarCount(
+      filteredGroups.reduce((count, group) => count + group.cars.length, 0)
+    );
   };
 
   const handleSelectedCar = (label) => {
@@ -695,208 +724,233 @@ const Listing = ({ title }) => {
             ))}
           </div>
         ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-2 gap-4 w-full max-w-5xl items-start">
-              {filteredList.map((car) => {
-                const uniqueKey = `${car.name}-${car.brand}`;
-                return (
-                  <div
-                    key={uniqueKey}
-                    className="bg-[#404040] p-0 rounded-lg shadow-lg cursor-pointer transition-transform duration-300 hover:-translate-y-[2%] mb-5"
-                  >
-                    {/* Small Screens Layout */}
-                    <div className="block md:hidden p-3">
-                      <img
-                        loading="lazy"
-                        src={car.cars[0].images[0]}
-                        alt={car.name}
-                        className="w-full h-45 object-cover bg-[#353535] rounded-lg p-1"
-                      />
-                      <div className="mt-3 flex justify-between items-start">
-                        <div>
-                          <h3 className="text-md font-semibold">
-                            {car.cars[0].source === "zoomcar"
-                              ? car.brand.split(" ")[0]
-                              : car.brand}{" "}
-                            {car.cars[0].source === "zoomcar"
-                              ? car.name.split(" ")[0]
-                              : car.name}
-                          </h3>
-                          <p className="text-sm text-gray-400">{car.cars[0].options[2]}</p>
-                          <div className="img-container">
-                            <img
-                              loading="lazy"
-                              src={car.cars[0].sourceImg}
-                              alt={car.cars[0].source}
-                              className="h-6 rounded-sm mt-2 bg-white p-1 text-black"
-                            />
-                          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-2 gap-4 w-full max-w-5xl items-start">
+            {filteredList.map((car) => {
+              const uniqueKey = `${car.name}-${car.brand}`;
+              return (
+                <div
+                  key={uniqueKey}
+                  className="bg-[#404040] p-0 rounded-lg shadow-lg cursor-pointer transition-transform duration-300 hover:-translate-y-[2%] mb-5"
+                >
+                  {/* Small Screens Layout */}
+                  <div className="block md:hidden p-3">
+                    <img
+                      loading="lazy"
+                      src={car.cars[0].images[0]}
+                      alt={car.name}
+                      className="w-full h-45 object-cover bg-[#353535] rounded-lg p-1"
+                    />
+                    <div className="mt-3 flex justify-between items-start">
+                      <div>
+                        <h3 className="text-md font-semibold">
+                          {car.cars[0].source === "zoomcar"
+                            ? car.brand.split(" ")[0]
+                            : car.brand}{" "}
+                          {car.cars[0].source === "zoomcar"
+                            ? car.name.split(" ")[0]
+                            : car.name}
+                        </h3>
+                        <p className="text-sm text-gray-400">
+                          {car.cars[0].options[2]}
+                        </p>
+                        <div className="img-container">
+                          <img
+                            loading="lazy"
+                            src={car.cars[0].sourceImg}
+                            alt={car.cars[0].source}
+                            className="h-6 rounded-sm mt-2 bg-white p-1 text-black"
+                          />
                         </div>
-                        <div className="text-right">
-                          <p className="text-sm text-gray-400">Starts at</p>
-                          <p className="font-semibold text-md">{car.fare}</p>
-                          <p className="text-[10px] text-gray-400">
-                            {car.cars[0].source === "zoomcar" ? "(GST incl)" : "(GST not incl)"}
+                      </div>
+                      <div className="text-right">
+                        <p className="text-sm text-gray-400">Starts at</p>
+                        <p className="text-sm text-gray-500 line-through">
+                          {car.cars[0].inflated_fare}
+                        </p>
+                        <p className="font-semibold text-md">{car.fare}</p>
+                        <p className="text-[10px] text-gray-400">(GST incl)</p>
+                      </div>
+                    </div>
+                    <div className="flex justify-between items-center mt-3">
+                      <p className="text-sm text-[#faffa4]">
+                        {car.cars[0].location_est}
+                      </p>
+                      <button
+                        style={{
+                          backgroundColor: "#faffa4",
+                          padding: "3px 5px",
+                        }}
+                        onClick={() => toggleDeals(`${car.name}-${car.brand}`)}
+                        className="bg-[#faffa4] flex items-center rounded-lg text-black text-xs font-semibold h-8 w-[30%] sm:w-[120px]"
+                      >
+                        {expandedStates[`${car.name}-${car.brand}`] ? (
+                          <>
+                            <span className="ml-2">Hide</span>
+                            <ChevronUp className="text-black w-4 h-4" />
+                          </>
+                        ) : (
+                          <>
+                            <span>View Deals</span>
+                            <ChevronDown className="text-black w-4 h-4" />
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Medium and Larger Screens Layout */}
+                  <div className="hidden md:flex items-center px-4 py-2 rounded-xl shadow-xl w-full h-52">
+                    <div className="flex items-stretch justify-between w-full">
+                      {/* Left Side Info */}
+                      <div className="flex flex-col text-white w-1/4 justify-between">
+                        <div>
+                          <h3 className="text-xl font-semibold mb-1">
+                            {car.brand} {car.name}
+                          </h3>
+                        </div>
+                        <div>
+                          <img
+                            loading="lazy"
+                            src={car.cars[0].sourceImg}
+                            alt={car.cars[0].source}
+                            className="h-5 rounded-sm bg-white p-1 text-black"
+                          />
+                          <p className="text-xs text-gray-400 ">
+                            {car.cars[0].options[2]}
+                          </p>
+                          <p className="text-xs text-[#faffa4]">
+                            {car.cars[0].location_est}
                           </p>
                         </div>
                       </div>
-                      <div className="flex justify-between items-center mt-3">
-                        <p className="text-sm text-[#faffa4]">{car.cars[0].location_est}</p>
-                        <button
-                          style={{ backgroundColor: "#faffa4", padding: "3px 5px" }}
-                          onClick={() => toggleDeals(`${car.name}-${car.brand}`)}
-                          className="bg-[#faffa4] flex items-center rounded-lg text-black text-xs font-semibold h-8 w-[30%] sm:w-[120px]"
-                        >
-                          {expandedStates[`${car.name}-${car.brand}`] ? (
-                            <>
-                              <span className="ml-2">Hide</span>
-                              <ChevronUp className="text-black w-4 h-4" />
-                            </>
-                          ) : (
-                            <>
-                              <span>View Deals</span>
-                              <ChevronDown className="text-black w-4 h-4" />
-                            </>
-                          )}
-                        </button>
+
+                      {/* Middle Car Image */}
+                      <div className="w-2/4 flex justify-center items-center">
+                        <img
+                          loading="lazy"
+                          src={car.cars[0].images[0]}
+                          alt={car.cars[0].name}
+                          className="w-full max-w-60 h-36 object-contain bg-[#353535] rounded-md p-1"
+                        />
+                      </div>
+
+                      {/* Right Side Info */}
+                      <div className="flex flex-col justify-between text-right w-1/4 border-l border-gray-400 pl-4">
+                        <div>
+                          <p className="text-xs text-gray-400">Starts at</p>
+                          <p className="text-md text-gray-300 line-through">
+                            {car.cars[0].inflated_fare}
+                          </p>
+                          <p className="text-xl font-semibold text-white">
+                            {car.fare}
+                          </p>
+                          <p className="text-xs text-gray-400">(GST incl)</p>
+                        </div>
+                        <div className="flex flex-col items-end">
+                          <button
+                            style={{ backgroundColor: "#faffa4" }}
+                            className="bg-[#faffa4] flex items-center justify-center rounded-lg text-black text-xs font-semibold h-8 w-[90px] mt-4"
+                            onClick={() =>
+                              toggleDeals(`${car.name}-${car.brand}`)
+                            }
+                          >
+                            {expandedStates[`${car.name}-${car.brand}`] ? (
+                              <>
+                                <span>Hide</span>
+                                <ChevronUp className="text-black w-4 h-4" />
+                              </>
+                            ) : (
+                              <>
+                                <span>View Deals</span>
+                                <ChevronDown className="text-black w-4 h-4" />
+                              </>
+                            )}
+                          </button>
+                          <p className="text-xs text-[#eeff87] mt-2">
+                            {car.cars.length} deals
+                          </p>
+                        </div>
                       </div>
                     </div>
+                  </div>
 
-                    {/* Medium and Larger Screens Layout */}
-                    <div className="hidden md:flex items-center px-4 py-2 rounded-xl shadow-xl w-full h-52">
-                      <div className="flex items-stretch justify-between w-full">
-                        {/* Left Side Info */}
-                        <div className="flex flex-col text-white w-1/4 justify-between">
-                          <div>
-                            <h3 className="text-xl font-semibold mb-1">
-                              {car.brand} {car.name}
-                            </h3>
-                          </div>
-                          <div>
-                            <img
-                              loading="lazy"
-                              src={car.cars[0].sourceImg}
-                              alt={car.cars[0].source}
-                              className="h-5 rounded-sm bg-white p-1 text-black"
-                            />
-                            <p className="text-xs text-gray-400 ">{car.cars[0].options[2]}</p>
-                            <p className="text-xs text-[#faffa4]">{car.cars[0].location_est}</p>
-                          </div>
-                        </div>
-
-                        {/* Middle Car Image */}
-                        <div className="w-2/4 flex justify-center items-center">
-                          <img
-                            loading="lazy"
-                            src={car.cars[0].images[0]}
-                            alt={car.cars[0].name}
-                            className="w-full max-w-60 h-36 object-contain bg-[#353535] rounded-md p-1"
-                          />
-                        </div>
-
-                        {/* Right Side Info */}
-                        <div className="flex flex-col justify-between text-right w-1/4 border-l border-gray-400 pl-4">
-                          <div>
-                            <p className="text-xs text-gray-400">Starts at</p>
-                            <p className="text-xl font-semibold text-white">{car.fare}</p>
-                            <p className="text-xs text-gray-400">
-                              {car.cars[0].source === "zoomcar" ? "(GST incl)" : "(GST not incl)"}
+                  {/* Deals Card */}
+                  <motion.div
+                    initial={{ height: 0 }}
+                    animate={{ height: expandedStates[uniqueKey] ? "auto" : 0 }}
+                    transition={{ duration: 0.3, ease: "easeInOut" }}
+                    className="bg-[#353535] rounded-b-lg shadow-md overflow-hidden"
+                  >
+                    <div className="p-4">
+                      {car.cars.map((individualCar) => (
+                        <div
+                          key={individualCar.id}
+                          className="flex justify-between items-center py-2 border-b border-gray-700 last:border-b-0"
+                        >
+                          <div className="text-left">
+                            <div className="img-container">
+                              <img
+                                loading="lazy"
+                                src={individualCar.sourceImg}
+                                alt={individualCar.source}
+                                className="h-6 rounded-sm mt-2 bg-white p-1 text-black"
+                              />
+                            </div>
+                            <p className="text-xs text-[#eeff87] flex items-center gap-1">
+                              Rating:{" "}
+                              {renderStarRating(
+                                individualCar?.ratingData?.rating
+                              )}
                             </p>
-                          </div>
-                          <div className="flex flex-col items-end">
-                            <button
-                              style={{ backgroundColor: "#faffa4" }}
-                              className="bg-[#faffa4] flex items-center justify-center rounded-lg text-black text-xs font-semibold h-8 w-[90px] mt-4"
-                              onClick={() => toggleDeals(`${car.name}-${car.brand}`)}
-                            >
-                              {expandedStates[`${car.name}-${car.brand}`] ? (
+                            <p className="text-xs text-[#eeff87] flex items-center gap-1">
+                              <Armchair className="w-3 h-3" />
+                              {individualCar?.options?.find((opt) =>
+                                opt.includes("Seats")
+                              ) || "N/A"}
+                            </p>
+                            <p className="text-xs text-[#eeff87] flex items-center gap-1">
+                              {individualCar?.location_est ? (
                                 <>
-                                  <span>Hide</span>
-                                  <ChevronUp className="text-black w-4 h-4" />
+                                  <LocateFixed className="w-3 h-3" />
+                                  {individualCar.location_est}
                                 </>
                               ) : (
-                                <>
-                                  <span>View Deals</span>
-                                  <ChevronDown className="text-black w-4 h-4" />
-                                </>
+                                ""
                               )}
-                            </button>
-                            <p className="text-xs text-[#eeff87] mt-2">{car.cars.length} deals</p>
+                            </p>
+                          </div>
+                          <div className="text-center flex flex-col items-center gap-3">
+                            <p className="text-xl sm:text-md font-semibold ml-3">
+                              {individualCar.fare}
+                            </p>
+                            <div className="flex items-center">
+                              <button
+                                style={{ backgroundColor: "#faffa4" }}
+                                className="bg-[#faffa4] flex items-center px-4 py-1 rounded-lg text-black text-xs font-semibold h-8 w-[calc(95%-0.25rem)] sm:w-[calc(90%-0.25rem)] ml-2"
+                                onClick={() => {
+                                  if (car.cars[0].source === "zoomcar") {
+                                    goToDetails(individualCar);
+                                  } else if (activeTab === "subscribe") {
+                                    goToDetails(individualCar);
+                                  } else {
+                                    goToPackages(individualCar);
+                                  }
+                                }}
+                              >
+                                Select{" "}
+                                <ArrowRight className="w-4 h-4 text-black" />
+                              </button>
+                            </div>
                           </div>
                         </div>
-                      </div>
+                      ))}
                     </div>
-
-                    {/* Deals Card */}
-                    <motion.div
-                      initial={{ height: 0 }}
-                      animate={{ height: expandedStates[uniqueKey] ? 'auto' : 0 }}
-                      transition={{ duration: 0.3, ease: 'easeInOut' }}
-                      className="bg-[#353535] rounded-b-lg shadow-md overflow-hidden"
-                    >
-                      <div className="p-4">
-                        {car.cars.map((individualCar) => (
-                          <div
-                            key={individualCar.id}
-                            className="flex justify-between items-center py-2 border-b border-gray-700 last:border-b-0"
-                          >
-                            <div className="text-left">
-                              <div className="img-container">
-                                <img
-                                  loading="lazy"
-                                  src={individualCar.sourceImg}
-                                  alt={individualCar.source}
-                                  className="h-6 rounded-sm mt-2 bg-white p-1 text-black"
-                                />
-                              </div>
-                              <p className="text-xs text-[#eeff87] flex items-center gap-1">
-                                Rating: {renderStarRating(individualCar?.ratingData?.rating)}
-                              </p>
-                              <p className="text-xs text-[#eeff87] flex items-center gap-1">
-                                <Armchair className="w-3 h-3" />
-                                {individualCar?.options?.find(opt => opt.includes("Seats")) || "N/A"}
-                              </p>
-                              <p className="text-xs text-[#eeff87] flex items-center gap-1">
-                                {individualCar?.location_est ? (
-                                  <>
-                                    <LocateFixed className="w-3 h-3" />
-                                    {individualCar.location_est}
-                                  </>
-                                ) : (
-                                  ''
-                                )}
-                              </p>
-                            </div>
-                            <div className="text-center flex flex-col items-center gap-3">
-                              <p className="text-xl sm:text-md font-semibold ml-3">{individualCar.fare}</p>
-                              <div className="flex items-center">
-                                <button
-                                  style={{ backgroundColor: "#faffa4" }}
-                                  className="bg-[#faffa4] flex items-center px-4 py-1 rounded-lg text-black text-xs font-semibold h-8 w-[calc(95%-0.25rem)] sm:w-[calc(90%-0.25rem)] ml-2"
-                                  onClick={() => {
-                                    if (car.cars[0].source === "zoomcar") {
-                                      goToDetails(individualCar);
-                                    } else if (activeTab === "subscribe") {
-                                      goToDetails(individualCar);
-                                    } else {
-                                      goToPackages(individualCar);
-                                    }
-                                  }}
-                                >
-                                  Select <ArrowRight className="w-4 h-4 text-black" />
-                                </button>
-                              </div>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </motion.div>
-
-
-                  </div>
-                );
-              })}
-            </div>        
-          )}
+                  </motion.div>
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
     </>
   );

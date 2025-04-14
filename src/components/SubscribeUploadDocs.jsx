@@ -220,9 +220,6 @@ const SubscriptionUploadDocuments = ({ title }) => {
             try {
               const data = { ...response };
 
-              // console.log("Order ID:", response.razorpay_order_id);
-              // console.log("Payment ID:", response.razorpay_payment_id);
-
               const res = await axios.post(
                 `${functionsUrl}/payment/verifyPayment`,
                 data

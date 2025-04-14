@@ -1,4 +1,6 @@
 import { toast } from "react-toastify";
+import { appDB } from "./firebase";
+import { collection, doc, getDoc, getDocs } from "firebase/firestore";
 
 // Date Formatting
 const formatDate = (date) => {
@@ -13,7 +15,6 @@ const formatDate = (date) => {
         })
         .replace(" at", "");
 };
-
 
 // 24hr to 12hr format
 const formatTo12 = (time) => {
@@ -45,6 +46,7 @@ const formatFare = (fare) => {
 
     return `₹${formatter.format(fare)}`;
 };
+
 // Retry functions
 const retryFunction = async (fn, args = [], maxRetries = 3, delay = 100) => {
     let retry = 0;
@@ -70,6 +72,24 @@ const retryFunction = async (fn, args = [], maxRetries = 3, delay = 100) => {
     }
 };
 
-export { formatDate, toPascalCase, formatFare, formatTo12, retryFunction };
+// Vendor details function
+const fetchAllVendors = async () => {
+    const querySnapshot = await getDocs(collection(appDB, "carvendors"));
+    const vendors = [];
 
+    querySnapshot.forEach((doc) => {
+      vendors.push({ id: doc.id, ...doc.data() });
+    });
 
+    return vendors;
+  };
+
+const getVendorDetails = async (vendorName) => {
+    const allVendors = await fetchAllVendors();
+    const vendorData = allVendors.find(
+        (vendor) => vendor.vendor.toLowerCase() === vendorName.toLowerCase()
+    );
+    return vendorData;
+};
+
+export { formatDate, toPascalCase, formatFare, formatTo12, retryFunction, getVendorDetails };

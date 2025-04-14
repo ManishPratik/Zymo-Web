@@ -9,6 +9,8 @@ import { Helmet } from "react-helmet-async";
 
 import useTrackEvent from '../../hooks/useTrackEvent';
 
+import carData from '../../api/NewCarData';
+
 const ExtendedTestDriveSummary = ({ title }) => {
   const navigate = useNavigate();
   const { id } = useParams();
@@ -16,9 +18,11 @@ const ExtendedTestDriveSummary = ({ title }) => {
   const [openIndex, setOpenIndex] = useState(null);
   const [faqs, setFaqs] = useState([]); 
   const trackEvent = useTrackEvent();
-  const { car } = location.state || {};
+  console.log("location.state:", location.state);
+   const { car } = location.state || {};
+  // const car = carData;
   
-  // console.log("car data:"car);
+  console.log("car data:",carData);
   useEffect(() => {
     document.title = title;
   }, [title]);
@@ -85,8 +89,8 @@ const ExtendedTestDriveSummary = ({ title }) => {
             <div className="mt-4">
                 <div className="mt-4 flex justify-center">
                     <img 
-                    src="/images/Cars/tnex.jpeg" 
-                    alt="Nexon EV"
+                    src={car.image}
+                    alt={car.alt}
                     className="w-3/4 border border-white/10 rounded-lg"
                     />
                 </div>            

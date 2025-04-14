@@ -72,7 +72,7 @@ const [hour, setHour] = useState(get12HourFormat(currHours)); // Initialize with
                 </div>
 
                 {/* Time Picker */}
-                <div className="flex flex-col w-full sm:w-auto md:border-l-2 border-gray-500 ">
+                <div className="flex flex-col w-full sm:w-auto md:border-l-2 border-gray-500 z-10">
                     <label className="text-gray-300 text-sm mb-1">
                         Select Time
                     </label>

@@ -14,7 +14,7 @@ body.chatbot-open {
     flex-direction: row-reverse;
     gap: 10px;
     position: fixed;
-    bottom: 50px;
+    /* bottom: 50px; */
     right: 20px;
     z-index: 1000;
     justify-content: center;

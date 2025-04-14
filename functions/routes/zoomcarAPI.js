@@ -58,6 +58,7 @@ async function getUserToken(token, uid) {
         const response = await axios.post(authURL, body, { headers: header });
         return response.data.user_token;
     } catch (error) {
+        console.log("Error in getUserToken:", error.response.data);
         console.error("User token error:", error.response.data);
     }
 }
@@ -124,21 +125,43 @@ router.post("/bookings/create-booking", async (req, res) => {
 
 router.post("/bookings/details", async (req, res) => {
     try {
-        const bookingDetailsURL = `${zoomApiUrl}${apiVer}bookings/${req.body.data.booking_id}`;
-        const header = await userTokenHeader();
-        const response = await axios.get(bookingDetailsURL, {
-            headers: header,
-        });
-
-        res.json(response.data);
+      const { booking_id, uid } = req.body.data;
+  
+      console.log("🔍 Incoming booking details request:", req.body.data);
+  
+      const bookingDetailsURL = `${zoomApiUrl}${apiVer}bookings/${booking_id}`;
+      console.log("📦 Booking Details URL:", bookingDetailsURL);
+  
+      const header = await userTokenHeader(uid);
+  
+      console.log("🧾 Request Headers:", header);
+  
+      const response = await axios.get(bookingDetailsURL, {
+        headers: header,
+      });
+  
+      console.log("✅ Booking Details Response:", response.data);
+      res.json(response.data);
     } catch (error) {
-        res.status(error.response?.status || 500).json({
-            error: error.response?.data,
-        });
+      console.error("❌ Error while fetching booking details");
+  
+      if (error.response) {
+        console.error("📬 Response Data:", error.response.data);
+      } else if (error.request) {
+        console.error("📡 No response received:", error.request);
+      } else {
+        console.error("💥 Setup error:", error.message);
+      }
+  
+      res.status(error.response?.status || 500).json({
+        error: error.response?.data || "Unknown error",
+      });
     }
-});
+  });
+  
+  
 
-router.post("/payments", async (req, res) => {
+  router.post("/payments", async (req, res) => {
     try {
         const { customer, city, bookingData } = req.body;
         const paymentsURL = `${zoomApiUrl}${apiVer}payments?city=${city}&platform=web`;
