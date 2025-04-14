@@ -53,7 +53,7 @@ const [hour, setHour] = useState(get12HourFormat(currHours)); // Initialize with
     };
 
     return (
-        <div className="absolute top-full mt-2 bg-[#212121] shadow-lg border border-gray-500 p-4 rounded-md z-50 w-80 sm:w-96 md:w-auto">
+        <div className="absolute top-full mt-2 bg-[#212121] shadow-lg border border-gray-500 p-4 rounded-md z-50 w-[282px] sm:w-96 md:w-auto">
             <div className="flex flex-col sm:flex-row justify-center items-center gap-4">
                 {/* Date Picker */}
                 <div className="flex flex-col w-full sm:w-auto">

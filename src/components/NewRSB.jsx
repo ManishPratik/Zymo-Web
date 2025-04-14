@@ -356,7 +356,8 @@ const NewRSB = ({ urlcity }) => {
   return (
     <>
       {/* Header */}
-      <div className="bg-[#303030] rounded-full p-3 mx-auto mb-6 w-full max-w-md sm:w-[60%] md:max-w-xl lg:max-w-2xl">
+      {/* <div className="bg-[#303030] rounded-full p-3 mx-auto mb-6 w-full max-w-md sm:w-[60%] md:max-w-xl lg:max-w-2xl"> */}
+      <div className="bg-black rounded-full p-3 mx-auto mb-6 w-full max-w-md sm:w-[60%] md:max-w-xl lg:max-w-2xl z-20">
         <h1
           className={`text-white text-center text-md transition-opacity duration-500 ${
             fade ? "opacity-0" : "opacity-100"
@@ -369,15 +370,16 @@ const NewRSB = ({ urlcity }) => {
       </div>
 
       {/* Book Now Section */}
-      <div className="text-center">
+      <div className="text-center z-20">
         <div className="flex items-center justify-center gap-4 mb-2">
-          <div className="w-24 h-[1px] bg-gray-500"></div>
-          <h2 className="text-gray-400 font-normal">BOOK NOW</h2>
-          <div className="w-24 h-[1px] bg-gray-500"></div>
+          <div className="w-24 h-[1px] bg-white"></div>
+          <h2 className="text-white font-normal">BOOK NOW</h2>
+          <div className="w-24 h-[1px] bg-white"></div>
+          {/* <div className="w-24 h-[1px] bg-gray-500"></div> //This is for previous reference  */}
         </div>
 
         {/* Tabs */}
-        <div className="flex justify-center gap-8 mb-6">
+        <div className="flex justify-center gap-8 mb-6 text-white">
           {["rent", "subscribe", "buy"].map((tab) => (
             <button
               key={tab}
@@ -385,7 +387,7 @@ const NewRSB = ({ urlcity }) => {
               className={`text-lg ${
                 activeTab === tab
                   ? "text-white border-b-2 border-gray-200"
-                  : "text-gray-400"
+                  : "text-white"
               }`}
             >
               {tab.charAt(0).toUpperCase() + tab.slice(1)}
@@ -400,9 +402,12 @@ const NewRSB = ({ urlcity }) => {
             googleMapsApiKey={placesAPIKey}
             libraries={placesAPILibraries}
           >
-            <div className="flex items-center border border-gray-500 bg-[#212121] rounded-md px-4 py-2 w-full overflow-hidden">
+            {/* <div className="flex items-center border border-gray-500 bg-[#212121] rounded-md px-4 py-2 w-full overflow-hidden"> */}
+            <div className={`flex items-center border border-gray-500 bg-[#000000] rounded-md px-4 py-2 w-full overflow-hidden
+              ${placeInput ? "bg-[#faffa4] text-black" : "bg-transparent text-white"}`}>
               {/* Icon */}
-              <MapPinIcon className="w-5 h-5 text-gray-400 mr-2 flex-shrink-0" />
+              {/* <MapPinIcon className="w-5 h-5 text-gray-400 mr-2 flex-shrink-0" /> */}
+              <MapPinIcon className="w-5 h-5 mr-2 flex-shrink-0" />
 
               {/* Input Field */}
               <Autocomplete
@@ -415,23 +420,25 @@ const NewRSB = ({ urlcity }) => {
                 <input
                   type="text"
                   placeholder="Enter a location"
-                  className="bg-transparent text-white outline-none w-full placeholder-gray-400 flex-grow truncate"
                   value={placeInput}
                   onChange={(e) => setPlaceInput(e.target.value)}
+                  className="bg-transparent  outline-none w-full placeholder-white flex-grow truncate"
                   // onFocus={(e) => e.target.select()} // Ensures re-selection
                 />
               </Autocomplete>
 
               {/* Current Location Button */}
               <button
-                className="flex items-center text-gray-300 hover:text-[#faffa4] ml-2 flex-shrink-0"
+                className={`flex items-center ml-2 flex-shrink-0
+                  ${placeInput ? "text-black" : "text-gray-300 hover:text-[#faffa4]"}`}
                 onClick={() => getCurrentLocation()}
               >
-                <img
-                  src="/images/Benefits/Group_1-removebg-preview.png"
-                  alt="Current Location"
-                  className="w-5 h-5 mr-1"
-                />
+                {/* <img
+                    src="/images/Benefits/Group_1-removebg-preview.png"
+                    alt="Current Location"
+                    className="w-5 h-5 mr-1"
+                /> */}
+                <LocateFixed className="w-5 h-5 mr-1" />
                 <span className="text-xs hidden sm:inline">Get Location</span>
               </button>
             </div>
@@ -440,15 +447,16 @@ const NewRSB = ({ urlcity }) => {
           {/* Start Date Picker */}
           <div className="relative w-full">
             <div
-              className="rounded-lg p-1 py-2 flex items-center relative cursor-pointer text-sm border border-gray-500 w-full h-10"
+              className={`rounded-lg p-1 py-2 flex items-center relative cursor-pointer text-sm border border-gray-500 w-full h-10
+                ${startDate ? "bg-[#faffa4] text-black" : "bg-transparent text-gray-400"}`}
               onClick={() => {
                 setIsStartPickerOpen(true);
                 setIsEndPickerOpen(false);
                 handleRSBFunctionClicks("Start Date Selected");
               }}
             >
-              <CalendarIcon className="w-6 h-4 text-gray-400 absolute left-4" />
-              <span className="text-gray-200 pl-10">
+              <CalendarIcon className="w-6 h-4 absolute left-4" />
+              <span className="pl-10 z-10">
                 {startDate
                   ? new Intl.DateTimeFormat("en-US", {
                       month: "short",
@@ -478,14 +486,14 @@ const NewRSB = ({ urlcity }) => {
           {/* End Date Picker */}
           {}
           <div
-            className={` ${
-              activeTab == "subscribe" ? "hidden" : "relative w-full"
+            className={` ${(
+              activeTab == "subscribe") ? "hidden" : "relative w-full"
             }`}
           >
             <div
-              className={`rounded-lg p-1 flex items-center relative cursor-pointer text-sm border border-gray-500 w-full h-10  ${
-                activeTab === "subscribe" ? "opacity-50 cursor-not-allowed" : ""
-              }`}
+              className={`rounded-lg p-1 flex items-center relative cursor-pointer text-sm border border-gray-500 w-full h-10  
+                ${activeTab === "subscribe" ? "opacity-50 cursor-not-allowed" : ""}
+                ${endDate ? "bg-[#faffa4] text-black" : "bg-transparent text-gray-400"}`}
               onClick={() => {
                 if (activeTab !== "subscribe") {
                   setIsEndPickerOpen(true);
@@ -495,8 +503,8 @@ const NewRSB = ({ urlcity }) => {
               }}
               disabled={activeTab === "subscribe"}
             >
-              <CalendarIcon className="w-6 h-4 text-gray-400 absolute left-4" />
-              <span className="text-gray-200 pl-10">
+              <CalendarIcon className={`w-6 h-4 absolute left-4 `} />
+              <span className="pl-10">
                 {endDate
                   ? new Intl.DateTimeFormat("en-US", {
                       month: "short",
@@ -536,8 +544,7 @@ const NewRSB = ({ urlcity }) => {
             <button
               disabled
               onClick={handleSearch}
-              className="w-full bg-[#faffa4] opacity-50 cursor-not-allowed
- text-black font-medium py-3 rounded-lg transition-colors"
+              className="w-full bg-[#faffa4] opacity-50 cursor-not-allowed text-black font-medium py-3 rounded-lg transition-colors"
             >
               Search
             </button>

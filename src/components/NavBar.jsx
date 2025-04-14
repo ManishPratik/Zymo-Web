@@ -1,8 +1,12 @@
-import { useState } from "react";
+// import { useState } from "react";
 import { Menu, X } from "lucide-react";
 import { Link } from "react-router-dom";
 import { IoPersonCircleOutline } from "react-icons/io5";
 import useTrackEvent from "../hooks/useTrackEvent";
+import { FaWhatsapp } from "react-icons/fa";
+import chatBotIcon from './Chatbot/images/assistant.png';
+import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
 
 const NavBar = ({ city }) => {
     const [isOpen, setIsOpen] = useState(false);
@@ -22,6 +26,32 @@ const NavBar = ({ city }) => {
         trackEvent("Navigation Bar", "Navbar Link Clicked", label);
 
     }
+    // Whatsapp Icon Click Tracking
+    const handleWhatsappClicks = (label) => {
+        trackEvent("Whatsapp Icon", "Icon Clicks", label);
+    };
+
+    // CHatbot Icon Event Handling
+    const [message, setMessage] = useState('');
+    const [showMessage, setShowMessage] = useState(false);
+    const navigate = useNavigate();
+
+    useEffect(() => {
+        const intervalId = setInterval(() => {
+            setMessage('Ask me!');
+            setShowMessage(true);
+            setTimeout(() => {
+                setShowMessage(false);
+            }, 1000);
+        }, 3000);
+
+        return () => clearInterval(intervalId);
+    }, []);
+
+    const handleClick = (e) => {
+        e.preventDefault();
+        navigate('/ZymoAI');
+    };
 
     return (
         <nav className="bg-[#212121] text-white p-4 relative z-50 w-full">
@@ -40,7 +70,7 @@ const NavBar = ({ city }) => {
                     className="md:hidden z-50"
                     onClick={() => setIsOpen(!isOpen)}
                 >
-                    {isOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+                    {isOpen ? <X className="w-6 h-6 fixed right-4 top-8" /> : <Menu className="w-6 h-6" />}
                 </button>
 
                 {/* Mobile Menu (Sidebar) */}
@@ -72,9 +102,36 @@ const NavBar = ({ city }) => {
                             </li>
                         ))}
                         <li>
-                            <Link to="/profile" onClick={() => handleNavClick("Profile")}>
-                                <IoPersonCircleOutline size={24} className="text-[#faffa4] cursor-pointer" />
-                            </Link>
+                            <a
+                                href="https://wa.me/919987933348"
+                                className=" text-[#faffa4] shadow-lg hover:text-[#faffa4] transition duration-300"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                onClick={() => handleWhatsappClicks("Whatsapp Icon")}
+                                >
+                                {/* <FaWhatsapp className="text-3xl" size={30}/> */}
+                                <FaWhatsapp size={24}/>
+                            </a>
+                        </li>
+                        <li className="inline-flex gap-2">
+                            <button
+                                // className="chatbot-toggle-button"
+                                className="w-6"
+                                onClick={handleClick}
+                                aria-label="Toggle chat"
+                                style={{ display: 'flex', alignItems: 'center' }}
+                            >
+                                <img className="bot-icon max-w-6" style={{ width: '24px' }} src={chatBotIcon} alt="Chatbot icon" />
+                            </button>
+                            {showMessage && <span className="ask-me-message text-[#faffa4]">Hey👋</span>}
+                        </li>
+                        <li>
+                            <div className="inline-flex gap-2">
+                                <Link to="/profile" onClick={() => handleNavClick("Profile")}>
+                                    <IoPersonCircleOutline size={24} className="text-[#faffa4] cursor-pointer" />
+                                </Link>
+                                My Profile
+                            </div>
                         </li>
                     </ul>
                 </div>

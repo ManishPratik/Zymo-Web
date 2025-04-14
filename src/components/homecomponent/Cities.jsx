@@ -69,7 +69,7 @@ const Cities = () => {
         <>
  
             <section className="text-black py-10">
-                <div className="bg-[#faffa4] mx-auto p-6 rounded-lg max-w-6xl">
+                <div className="bg-[#faffa4] mx-auto p-6 rounded-lg max-w-8xl">
                     <h2 className="text-xl font-bold mb-4 text-center">
                         Service Available In Cities
                     </h2>
