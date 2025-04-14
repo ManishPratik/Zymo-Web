@@ -120,7 +120,7 @@ const Reviews = () => {
                 <h2 className="text-2xl font-bold">Our Customers Love Us</h2>
                 <p className="text-gray-400">We love hearing from happy customers</p>
             </div>
-            <div className="bg-darkGrey2 rounded-lg p-6 py-8 mx-auto max-w-4xl overflow-hidden">
+            <div className="bg-darkGrey2 rounded-lg p-6 py-8 mx-auto max-w-7xl overflow-hidden">
                 <div ref={scrollRef} className="flex space-x-6 overflow-hidden  scroll-container">
                     {[...testimonials, ...testimonials].map((testimonial, index) => (
                         <div

@@ -25,14 +25,14 @@ const ChatBotButton = () => {
     };
 
     return (
-        <div className='icon-main'>
+        <div className='icon-main bottom-5 lg:bottom-10'>
             <button
                 className="chatbot-toggle-button"
                 onClick={handleClick}
                 aria-label="Toggle chat"
                 style={{ display: 'flex', alignItems: 'center' }}
             >
-                <img className="bot-icon" style={{ width: '28px' }} src={chatBotIcon} alt="Chatbot icon" />
+                <img className="bot-icon" style={{ width: '20px' }} src={chatBotIcon} alt="Chatbot icon" />
             </button>
             {showMessage && <span className="ask-me-message text-[#faffa4]">Hey there👋</span>}
         </div>

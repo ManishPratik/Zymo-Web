@@ -210,7 +210,7 @@ const Listing = ({ title }) => {
       setLoading(true);
       try {
         const url = import.meta.env.VITE_FUNCTIONS_API_URL;
-        //const url = "http://127.0.0.1:5001/zymo-prod/us-central1/api";
+        // const url = "http://127.0.0.1:5001/zymo-prod/us-central1/api";
 
         // Fetch Firebase Cars
         const fetchFirebaseCars = async () => {
@@ -448,7 +448,6 @@ const Listing = ({ title }) => {
         }
         /*console.log("All Cars:", allCarData);*/
         const groupCarList = clubCarsByName(allCarData);
-        console.log("Grouped Cars:", groupCarList);
 
         setCarList(allCarData);
         setClubbedCarList(groupCarList);
@@ -545,11 +544,7 @@ const Listing = ({ title }) => {
         return priceRange === "lowToHigh" ? priceA - priceB : priceB - priceA;
       });
     }
-    console.log("Filtered CarClubbing List:", filteredGroups);
-    console.log(
-      "Filtered Cars Count:",
-      filteredGroups.reduce((count, group) => count + group.cars.length, 0)
-    );
+
     setFilteredList(filteredGroups);
     setCarCount(
       filteredGroups.reduce((count, group) => count + group.cars.length, 0)

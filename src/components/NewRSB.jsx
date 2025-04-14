@@ -85,7 +85,7 @@ const NewRSB = ({ urlcity }) => {
           };
         }) || [];
 /*
-        console.log("Raw suggestions:", response); // Optional for debugging
+        console.log("Raw suggestions:", response); // Optional for <debugging></debugging>
         console.log("Formatted suggestions:", formatted);*/
 
         setSuggestions(formatted);
@@ -343,9 +343,9 @@ const extractCityFromDetails = (place) => {
                   tripDurationHours,
                   activeTab,
               };
-              console.log(formattedCity);
+              //console.log(formattedCity);
       
-              console.log("Navigating with:", stateData); // Debugging
+              //console.log("Navigating with:", stateData); // Debugging
       
               handleRSBFunctionClicks("Search");
               sessionStorage.setItem("fromSearch", true);
@@ -382,7 +382,8 @@ const extractCityFromDetails = (place) => {
   return (
     <>
       {/* Header */}
-      <div className="bg-[#303030] rounded-full p-3 mx-auto mb-6 w-full max-w-md sm:w-[60%] md:max-w-xl lg:max-w-2xl">
+      {/* <div className="bg-[#303030] rounded-full p-3 mx-auto mb-6 w-full max-w-md sm:w-[60%] md:max-w-xl lg:max-w-2xl"> */}
+      <div className="bg-black rounded-full p-3 mx-auto mb-6 w-full max-w-md sm:w-[60%] md:max-w-xl lg:max-w-2xl z-20">
         <h1
           className={`text-white text-center text-md transition-opacity duration-500 ${
             fade ? "opacity-0" : "opacity-100"
@@ -395,11 +396,11 @@ const extractCityFromDetails = (place) => {
       </div>
 
       {/* Book Now Section */}
-      <div className="text-center">
+      <div className="text-center z-20">
         <div className="flex items-center justify-center gap-4 mb-2">
-          <div className="w-24 h-[1px] bg-gray-500"></div>
-          <h2 className="text-gray-400 font-normal">BOOK NOW</h2>
-          <div className="w-24 h-[1px] bg-gray-500"></div>
+          <div className="w-24 h-[1px] bg-white"></div>
+          <h2 className="text-white font-normal">BOOK NOW</h2>
+          <div className="w-24 h-[1px] bg-white"></div>
         </div>
 
         {/* Tabs */}
@@ -411,7 +412,7 @@ const extractCityFromDetails = (place) => {
               className={`text-lg ${
                 activeTab === tab
                   ? "text-white border-b-2 border-gray-200"
-                  : "text-gray-400"
+                  : "text-white"
               }`}
             >
               {tab.charAt(0).toUpperCase() + tab.slice(1)}
@@ -422,25 +423,32 @@ const extractCityFromDetails = (place) => {
         {/* Input Fields */}
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 mb-4 mx-auto w-full max-w-[90%] md:max-w-[80%]">
           {/* Location Input */}
-        <LoadScriptNext
-        googleMapsApiKey={placesAPIKey}
-        libraries={placesAPILibraries}
-        version="beta" // ✅ REQUIRED
-      >
-            <div className="flex items-center border border-gray-500 bg-[#212121] rounded-md px-4 py-2 w-full ">
-              {/* Icon */}
-              <MapPinIcon className="w-5 h-5 text-gray-400 mr-2 flex-shrink-0" />
+          <LoadScriptNext
+  googleMapsApiKey={placesAPIKey}
+  libraries={placesAPILibraries}
+  version="beta"
+>
+  <div
+    className={`flex items-center border border-gray-500 rounded-md px-4 py-2 w-full 
+      ${placeInput ? "bg-[#faffa4] text-black" : "bg-[#000000] text-white"}`}
+  >
+    {/* Map Pin Icon */}
+    <MapPinIcon className="w-5 h-5 mr-2 flex-shrink-0" />
 
-              {/* Input Field */}
-              <div className="relative w-full"> {/* Wrapper is now relative */}
-  <input
-    type="text"
-    placeholder="Enter a location"
-    className="bg-transparent text-white outline-none w-full placeholder-gray-400 flex-grow truncate"
-    value={placeInput}
-    onChange={(e) => setPlaceInput(e.target.value)}
-  />
+    {/* Input Field */}
+    <div className="relative w-full">
+      <input
+        type="text"
+        placeholder="Enter a location"
+        className={`bg-transparent outline-none w-full placeholder-white truncate ${
+          placeInput ? "text-black placeholder-black" : "text-white"
+        }`}
+        value={placeInput}
+        onChange={(e) => setPlaceInput(e.target.value)}
+      />
 
+      {/* Suggestions Dropdown */}
+      
 <ul className="absolute left-0 right-0 top-full mt-1 z-50 bg-white text-black rounded-lg shadow-lg max-h-60 overflow-y-auto border border-gray-300">
   {suggestions.map((sugg, idx) => (
  <li
@@ -456,37 +464,34 @@ const extractCityFromDetails = (place) => {
 
 </div>
 
+    {/* Get Current Location Button */}
+    <button
+      className={`flex items-center ml-2 flex-shrink-0 ${
+        placeInput ? "text-black" : "text-gray-300 hover:text-[#faffa4]"
+      }`}
+      onClick={getCurrentLocation}
+      type="button"
+    >
+      <LocateFixed className="w-5 h-5 mr-1" />
+      <span className="text-xs hidden sm:inline">Get Location</span>
+    </button>
+  </div>
+</LoadScriptNext>
 
-
-
-
-              {/* Current Location Button */}
-              <button
-                className="flex items-center text-gray-300 hover:text-[#faffa4] ml-2 flex-shrink-0"
-                onClick={() => getCurrentLocation()}
-              >
-                <img
-                  src="/images/Benefits/Group_1-removebg-preview.png"
-                  alt="Current Location"
-                  className="w-5 h-5 mr-1"
-                />
-                <span className="text-xs hidden sm:inline">Get Location</span>
-              </button>
-            </div>
-          </LoadScriptNext>
 
           {/* Start Date Picker */}
           <div className="relative w-full">
             <div
-              className="rounded-lg p-1 py-2 flex items-center relative cursor-pointer text-sm border border-gray-500 w-full h-10"
+              className={`rounded-lg p-1 py-2 flex items-center relative cursor-pointer text-sm border border-gray-500 w-full h-10
+                ${startDate ? "bg-[#faffa4] text-black" : "bg-transparent text-gray-400"}`}
               onClick={() => {
                 setIsStartPickerOpen(true);
                 setIsEndPickerOpen(false);
                 handleRSBFunctionClicks("Start Date Selected");
               }}
             >
-              <CalendarIcon className="w-6 h-4 text-gray-400 absolute left-4" />
-              <span className="text-gray-200 pl-10">
+              <CalendarIcon className="w-6 h-4 absolute left-4" />
+              <span className="pl-10 z-10">
                 {startDate
                   ? new Intl.DateTimeFormat("en-US", {
                       month: "short",
@@ -521,8 +526,9 @@ const extractCityFromDetails = (place) => {
             }`}
           >
             <div
-              className={`rounded-lg p-1 flex items-center relative cursor-pointer text-sm border border-gray-500 w-full h-10  ${
-                activeTab === "subscribe" ? "opacity-50 cursor-not-allowed" : ""
+              className={`rounded-lg p-1 flex items-center relative cursor-pointer text-sm border border-gray-500 w-full h-10  
+                ${activeTab === "subscribe" ? "opacity-50 cursor-not-allowed" : ""}
+                ${endDate ? "bg-[#faffa4] text-black" : "bg-transparent text-gray-400"
               }`}
               onClick={() => {
                 if (activeTab !== "subscribe") {
@@ -533,8 +539,8 @@ const extractCityFromDetails = (place) => {
               }}
               disabled={activeTab === "subscribe"}
             >
-              <CalendarIcon className="w-6 h-4 text-gray-400 absolute left-4" />
-              <span className="text-gray-200 pl-10">
+              <CalendarIcon className="w-6 h-4 absolute left-4" />
+              <span className="pl-10">
                 {endDate
                   ? new Intl.DateTimeFormat("en-US", {
                       month: "short",
