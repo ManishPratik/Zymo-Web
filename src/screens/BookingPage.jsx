@@ -266,7 +266,7 @@ function BookingPage() {
     const bookingDataStructure = {
       Balance: 0,
       CarImage: car.images[0],
-      CarName: car.name,
+      CarName: `${car.brand} ${car.name}`,
       City: city,
       DateOfBirth: formData?.dob || "",
       DateOfBooking: Date.now(),
@@ -291,7 +291,7 @@ function BookingPage() {
       UserId: userData.uid,
       Vendor: vendor,
       Zipcode: "",
-      actualPrice: parseInt(car.fare.slice(1)),
+      actualPrice: parseInt(car.inflated_fare.slice(1)),
       bookingId,
       deliveryType: selectedPickupLocation?.LocationName?.includes("Doorstep")
         ? "Doorstep Delivery"

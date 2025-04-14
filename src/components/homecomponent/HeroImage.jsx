@@ -19,7 +19,8 @@ const HeroImage = () => {
   const navigate = useNavigate();
 
   return (
-    <div className="relative w-[100%] max-w-5xl mx-auto overflow-hidden rounded-lg z-10 ">
+    <div className="relative w-[100%] max-w-5xl mx-auto overflow-hidden rounded-lg z-0">
+      <div className="w-screen h-10"></div>
       <div
         className="flex transition-transform duration-700 ease-in-out"
         style={{ transform: `translateX(-${currentIndex * 100}%)` }}
