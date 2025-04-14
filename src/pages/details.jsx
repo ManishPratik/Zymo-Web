@@ -1,16 +1,13 @@
 import { useState, useEffect } from "react";
-import { FaCamera, FaImages, FaTrash } from "react-icons/fa";
-import { IoIosCheckbox } from "react-icons/io";
-import { IoMdRefreshCircle } from "react-icons/io";
+import { FaTrash } from "react-icons/fa";
 import Footer from "../components/Footer";
 import { ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { webDB, webStorage, appAuth } from "../utils/firebase";
-import { collection, addDoc, doc, setDoc, getDoc } from "firebase/firestore"; // Updated imports
+import { doc, setDoc, getDoc } from "firebase/firestore"; // Updated imports
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { Helmet } from "react-helmet-async";
 import NavBar from "../components/NavBar";
-import WebcamCapture from "../components/buycomponent/WebcamCapture";
 import UploadSection from "../components/buycomponent/UploadSection";
 import ReactGA from "react-ga4";
 import Webcam from "react-webcam";
@@ -19,9 +16,6 @@ import { X } from "lucide-react";
 // Analytics event for user navigation
 function UserNavigation(label) {
   ReactGA.event({
-    category: "User Interaction",
-    action: "User Dashboard",
-    label: label,
     category: "User Interaction",
     action: "User Dashboard",
     label: label,
@@ -73,7 +67,6 @@ export default function YourDetails({ title }) {
 
   useEffect(() => {
     document.title = title;
-  }, [title]);
   }, [title]);
 
   // Fetch user data on component mount
@@ -151,7 +144,6 @@ export default function YourDetails({ title }) {
     setCurrentPage(page);
 
     if (type === "camera") {
-      setCameraOpen(true);
       setCameraOpen(true);
     } else {
       const input = document.createElement("input");
@@ -310,9 +302,7 @@ export default function YourDetails({ title }) {
       </button>
       <div className="min-h-screen bg-[#212121] p-4 flex justify-center items-center">
         <div className="w-full max-w-lg bg-[#424242] p-6 rounded-lg shadow-lg text-white font-sans">
-          <h2 className="text-xl font-semibold mb-4 flex justify-center items-center">
-            Profile Details
-          </h2>
+          <h2 className="text-xl font-semibold mb-4 flex justify-center items-center">Profile Details</h2>
 
           {isSaved && (
             <div className="mb-4 p-3 bg-green-500 text-white rounded-lg text-center">
@@ -333,9 +323,6 @@ export default function YourDetails({ title }) {
 
           <label className="block mb-2">Phone</label>
           <input
-            type="tel"
-            pattern="[0-9]{10}"
-            maxLength={10}
             type="tel"
             pattern="[0-9]{10}"
             maxLength={10}
@@ -375,29 +362,13 @@ export default function YourDetails({ title }) {
                 image={drivingFrontImage}
                 onUpload={(type) => handleImageUpload(type, "front", "driving")}
               />
-            <div className="space-y-8">
-              <UploadSection
-                title="Upload Driving License Front Page"
-                image={drivingFrontImage}
-                onUpload={(type) => handleImageUpload(type, "front", "driving")}
-              />
 
               <UploadSection
                 title="Upload Driving License Back Page"
                 image={drivingBackImage}
                 onUpload={(type) => handleImageUpload(type, "back", "driving")}
               />
-              <UploadSection
-                title="Upload Driving License Back Page"
-                image={drivingBackImage}
-                onUpload={(type) => handleImageUpload(type, "back", "driving")}
-              />
 
-              <UploadSection
-                title="Upload Aadhar Card Front Page"
-                image={aadharFrontImage}
-                onUpload={(type) => handleImageUpload(type, "front", "aadhar")}
-              />
               <UploadSection
                 title="Upload Aadhar Card Front Page"
                 image={aadharFrontImage}
@@ -458,9 +429,7 @@ export default function YourDetails({ title }) {
 
           <button
             className={`w-full bg-[#edff8d] text-black p-2 rounded-lg mt-4 flex items-center justify-center gap-2 ${
-              !isFormValid() || isSaving
-                ? "opacity-50 cursor-not-allowed"
-                : "hover:bg-[#d4e07d]"
+              !isFormValid() || isSaving ? "opacity-50 cursor-not-allowed" : "hover:bg-[#d4e07d]"
             }`}
             onClick={handleSave}
             disabled={!isFormValid() || isSaving}
