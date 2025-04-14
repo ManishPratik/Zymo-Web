@@ -120,9 +120,9 @@ const handleSuggestionClick = async (sugg) => {
       lng,
       addressComponents: placeDetails.addressComponents || [],
     });
-
+/*
     console.log("City:", cityName);
-    console.log("Lat:", lat, "Lng:", lng);
+    console.log("Lat:", lat, "Lng:", lng);*/
   }
 };
 
@@ -140,7 +140,7 @@ const getPlaceDetails = async (placeId) => {
     await place.fetchFields({
       fields: ["addressComponents", "displayName", "formattedAddress", "location"],
     });
-    console.log("Fetched place details:", place); // Debugging log
+    //console.log("Fetched place details:", place); // Debugging log
 
     return place; // `place` now contains the fetched fields
   } catch (error) {
@@ -172,7 +172,7 @@ const extractCityFromDetails = (place) => {
 
     if (match) {
       const name = match.long_name || match.Fg || match.Gg || "";
-      console.log("Matched city type:", type, "→", name);
+      //console.log("Matched city type:", type, "→", name);
       return name;
     }
   }
@@ -205,55 +205,7 @@ const extractCityFromDetails = (place) => {
     );
   };
 
- 
 
-  const extractCityFromComponents = (components) => {
-    const cityTypesPriority = [
-      "locality",
-      "sublocality_level_1",
-      "sublocality",
-      "neighborhood",
-      "administrative_area_level_3",
-      "administrative_area_level_2",
-      "administrative_area_level_1",
-    ];
-
-    for (let type of cityTypesPriority) {
-      const match = components.find((c) => c.types.includes(type));
-      if (match) {
-        console.log("Matched city type:", type, "→", match.long_name);
-        return match.long_name;
-      }
-    }
-
-    console.warn("No suitable city component found.");
-    return "";
-  };
-
-  const handlePlaceSelect = () => {
-    if (autocomplete) {
-      const placeDetails = autocomplete.getPlace();
-      if (placeDetails.geometry) {
-        const lat = placeDetails.geometry.location.lat();
-        const lng = placeDetails.geometry.location.lng();
-        setPlace({ name: placeDetails.name, lat, lng });
-
-        const address = placeDetails.formatted_address.split(",");
-        setAddress(
-          address.length > 2
-            ? `${address[0]}, ${address[1]}, ${address.at(-2)}`
-            : address
-        );
-        const city = extractCityFromComponents(placeDetails.address_components);
-        setCity(city);
-
-        // Update placeInput with the selected place's formatted address
-        setPlaceInput(placeDetails.formatted_address);
-      }
-    }
-  };
-
- 
   const getCurrentLocation = () => {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
