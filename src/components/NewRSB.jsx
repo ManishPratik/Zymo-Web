@@ -514,6 +514,8 @@ const extractCityFromDetails = (place) => {
                   setIsStartPickerOpen(false);
                 }}
                 onClose={() => setIsStartPickerOpen(false)}
+                minDate={new Date()}
+
               />
             )}
           </div>
@@ -563,6 +565,8 @@ const extractCityFromDetails = (place) => {
                   setIsEndPickerOpen(false);
                 }}
                 onClose={() => setIsEndPickerOpen(false)}
+                minDate={startDate}
+
               />
             )}
           </div>
