@@ -244,7 +244,7 @@ const extractCityFromGeocodingResult = (place) => {
           )
             .then((response) => response.json())
             .then((data) => {
-              if (data.status === "OK") {
+              if (data.status === "OK" && data.results && data.results[0])  {
                 const placeDetails = data.results[0];
                 const lat = latitude;
                 const lng = longitude;

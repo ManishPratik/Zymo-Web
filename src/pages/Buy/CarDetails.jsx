@@ -21,7 +21,6 @@ const CarDetails = ({ title }) => {
   const [error, setError] = useState(null);
 
   
-  console.log("location.state:", location.state);
   const { car } = location.state || {};
   useEffect(() => {
     document.title = title;
