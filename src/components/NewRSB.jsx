@@ -204,6 +204,32 @@ const extractCityFromDetails = (place) => {
       `${label} - ${activeTab}`
     );
   };
+const extractCityFromGeocodingResult = (place) => {
+  const components = place?.address_components || [];
+
+  const cityTypesPriority = [
+    "locality",
+    "sublocality_level_1",
+    "sublocality",
+    "neighborhood",
+    "administrative_area_level_3",
+    "administrative_area_level_2",
+    "administrative_area_level_1",
+  ];
+
+  for (let type of cityTypesPriority) {
+    const match = components.find((component) => {
+      return component.types?.includes(type);
+    });
+
+    if (match) {
+      return match.long_name || "";
+    }
+  }
+
+  console.warn("No suitable city found in Geocoding API response");
+  return "";
+};
 
 
   const getCurrentLocation = () => {
@@ -231,10 +257,9 @@ const extractCityFromDetails = (place) => {
                     : address
                 );
 
-                const city = extractCityFromComponents(
-                  placeDetails.address_components
-                );
-                setCity(city);
+                const cityName = extractCityFromGeocodingResult(placeDetails);
+                setCity(cityName);
+                console.log(city);
 
                 // Update the input field with the current location
                 setPlaceInput(placeDetails.formatted_address);
