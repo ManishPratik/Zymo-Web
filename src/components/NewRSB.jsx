@@ -546,6 +546,8 @@ const NewRSB = ({ urlcity }) => {
                   setIsStartPickerOpen(false);
                 }}
                 onClose={() => setIsStartPickerOpen(false)}
+                minDate={new Date()}
+
               />
             )}
           </div>
@@ -602,6 +604,8 @@ const NewRSB = ({ urlcity }) => {
                   setIsEndPickerOpen(false);
                 }}
                 onClose={() => setIsEndPickerOpen(false)}
+                minDate={startDate}
+
               />
             )}
           </div>

@@ -54,7 +54,7 @@ const Listing = ({ title }) => {
   const [loading, setLoading] = useState(true);
   const [carList, setCarList] = useState([]);
   const [clubbedCarList, setClubbedCarList] = useState([]);
-  const [priceRange, setPriceRange] = useState("");
+  const [priceRange, setPriceRange] = useState("lowToHigh");
   const [seats, setSeats] = useState("");
   const [fuel, setFuel] = useState("");
   const [transmission, setTransmission] = useState("");
@@ -639,7 +639,6 @@ const Listing = ({ title }) => {
                 <option value="">Transmission</option>
                 <option value="Automatic">Automatic</option>
                 <option value="Manual">Manual</option>
-                <option value="Hybrid">Hybrid</option>
               </select>
               <ChevronDown className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
             </div>
