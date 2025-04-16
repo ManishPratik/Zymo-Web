@@ -94,8 +94,6 @@ const DateTimeOverlay = ({
                                 ? minDate.toISOString().split("T")[0]
                                 : undefined
                         } />
-
-
                 </div>
 
                 {/* Time Picker */}
