@@ -69,6 +69,9 @@ const Listing = ({ title }) => {
     }));
   };
 
+  //lowtoHigh filter sets as default
+ 
+
   const renderStarRating = (rating) => {
     const maxStars = 5;
     const numericRating = parseFloat(rating) || 0;
