@@ -435,8 +435,8 @@ const NewRSB = ({ urlcity }) => {
                             key={tab}
                             onClick={() => handleTabClick(tab)}
                             className={`text-lg ${activeTab === tab
-                                    ? "text-white border-b-2 border-gray-200"
-                                    : "text-white"
+                                ? "text-white border-b-2 border-gray-200"
+                                : "text-white"
                                 }`}
                         >
                             {tab.charAt(0).toUpperCase() + tab.slice(1)}
@@ -466,7 +466,7 @@ const NewRSB = ({ urlcity }) => {
                                     placeholder="Enter a location"
                                     className={`bg-transparent w-full placeholder-white truncate outline-none border-none focus:ring-0 focus:outline-none ${placeInput ? "text-black placeholder-black" : "text-white"
                                         }`}
-                                        style={{ textDecoration: 'none' }}
+                                    style={{ textDecoration: 'none' }}
                                     value={placeInput}
                                     onChange={(e) => setPlaceInput(e.target.value)}
                                     autoComplete="off"
@@ -477,18 +477,18 @@ const NewRSB = ({ urlcity }) => {
 
                                 <ul className="absolute left-0  top-full mt-1 z-50 bg-[#252525] text-gray-200 rounded-lg shadow-md max-h-60 overflow-y-auto  w-full min-w-[300px]  no-underline ">
                                     {suggestions.map((sugg, idx) => (
-                                       <li
-                                       key={idx}
-                                       onClick={() => handleSuggestionClick(sugg)}
-                                       className="flex items-center px-3 py-2 sm:px-4 sm:py-2.5 hover:bg-[#faffa4] hover:text-[#212121] cursor-pointer text-xs sm:text-sm break-words border border-[#303030] transition-all duration-200 ease-in-out"
-                                       title={sugg.displayName || sugg.fullAddress}
-                                     >
-                                       <MapPinIcon className="w-4 h-4 sm:w-5 sm:h-5 mr-2 shrink-0 " />
-                                       <span className="truncate max-w-[calc(100%-1.5rem)]">
-                                         {sugg.displayName || sugg.fullAddress}
-                                       </span>
-                                     </li>
-                                     
+                                        <li
+                                            key={idx}
+                                            onClick={() => handleSuggestionClick(sugg)}
+                                            className="flex items-center px-3 py-2 sm:px-4 sm:py-2.5 hover:bg-[#faffa4] hover:text-[#212121] cursor-pointer text-xs sm:text-sm break-words border border-[#303030] transition-all duration-200 ease-in-out"
+                                            title={sugg.displayName || sugg.fullAddress}
+                                        >
+                                            <MapPinIcon className="w-4 h-4 sm:w-5 sm:h-5 mr-2 shrink-0 " />
+                                            <span className="truncate max-w-[calc(100%-1.5rem)]">
+                                                {sugg.displayName || sugg.fullAddress}
+                                            </span>
+                                        </li>
+
                                     ))}
                                 </ul>
                             </div>
@@ -496,8 +496,8 @@ const NewRSB = ({ urlcity }) => {
                             {/* Get Current Location Button */}
                             <button
                                 className={`flex items-center ml-2 flex-shrink-0 ${placeInput
-                                        ? "text-black"
-                                        : "text-gray-300 hover:text-[#faffa4]"
+                                    ? "text-black"
+                                    : "text-gray-300 hover:text-[#faffa4]"
                                     }`}
                                 onClick={getCurrentLocation}
                                 type="button"

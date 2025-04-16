@@ -9,22 +9,22 @@ const DateTimeOverlay = ({
     minDate,
 }) => {
 
-    
+
     const now = new Date(getCurrentTime());
     let currHours = now.getHours();
-    let currMinutes = now.getMinutes() ; // Round minutes to 0 or 30
-   
-  // Convert currHours to 12-hour format
-  const get12HourFormat = (hours) => {
-    return hours % 12 || 12; // Converts 0 to 12
-};
+    let currMinutes = now.getMinutes(); // Round minutes to 0 or 30
 
-const getInitialAmpm = () => {
-    let isPM = currHours >= 12;
-    return isPM ? "PM" : "AM"; // Corrected logic
-};
+    // Convert currHours to 12-hour format
+    const get12HourFormat = (hours) => {
+        return hours % 12 || 12; // Converts 0 to 12
+    };
 
-const [hour, setHour] = useState(get12HourFormat(currHours)); // Initialize with 12-hour format
+    const getInitialAmpm = () => {
+        let isPM = currHours >= 12;
+        return isPM ? "PM" : "AM"; // Corrected logic
+    };
+
+    const [hour, setHour] = useState(get12HourFormat(currHours)); // Initialize with 12-hour format
     const [minute, setMinute] = useState(currMinutes);
     const [ampm, setAmpm] = useState(getInitialAmpm());
 
@@ -70,7 +70,7 @@ const [hour, setHour] = useState(get12HourFormat(currHours)); // Initialize with
                         }
                         min={selectedDate.toISOString().split("T")[0]} 
                     /> */}
-                     <input
+                    <input
                         type="date"
                         className="p-2 rounded bg-[#404040] text-white w-full sm:w-auto"
                         value={
@@ -93,9 +93,9 @@ const [hour, setHour] = useState(get12HourFormat(currHours)); // Initialize with
                             minDate instanceof Date && !isNaN(minDate)
                                 ? minDate.toISOString().split("T")[0]
                                 : undefined
-                        }/>
-     
-                    
+                        } />
+
+
                 </div>
 
                 {/* Time Picker */}
