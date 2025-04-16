@@ -118,6 +118,7 @@ const FeaturedIn = () => {
                             key={index}
                             className="flex flex-col items-center justify-center flex-shrink-0 w-32 h-32"
                         >
+                              <a href={featured.url} target="_blank">
                             <div className="w-24 h-24 flex items-center justify-center bg-white rounded-lg">
                                 <img
                                     src={featured.image}
@@ -125,6 +126,7 @@ const FeaturedIn = () => {
                                     className="w-full h-full object-contain"
                                 />
                             </div>
+                            </a>
                             <span className="text-sm mt-2">{featured.name}</span>
                         </div>
                     ))}
