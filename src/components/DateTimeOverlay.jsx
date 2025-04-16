@@ -9,22 +9,22 @@ const DateTimeOverlay = ({
     minDate,
 }) => {
 
-
+    
     const now = new Date(getCurrentTime());
     let currHours = now.getHours();
-    let currMinutes = now.getMinutes(); // Round minutes to 0 or 30
+    let currMinutes = now.getMinutes() ; // Round minutes to 0 or 30
+   
+  // Convert currHours to 12-hour format
+  const get12HourFormat = (hours) => {
+    return hours % 12 || 12; // Converts 0 to 12
+};
 
-    // Convert currHours to 12-hour format
-    const get12HourFormat = (hours) => {
-        return hours % 12 || 12; // Converts 0 to 12
-    };
+const getInitialAmpm = () => {
+    let isPM = currHours >= 12;
+    return isPM ? "PM" : "AM"; // Corrected logic
+};
 
-    const getInitialAmpm = () => {
-        let isPM = currHours >= 12;
-        return isPM ? "PM" : "AM"; // Corrected logic
-    };
-
-    const [hour, setHour] = useState(get12HourFormat(currHours)); // Initialize with 12-hour format
+const [hour, setHour] = useState(get12HourFormat(currHours)); // Initialize with 12-hour format
     const [minute, setMinute] = useState(currMinutes);
     const [ampm, setAmpm] = useState(getInitialAmpm());
 
@@ -54,7 +54,7 @@ const DateTimeOverlay = ({
     };
 
     return (
-        <div className="absolute top-full mt-2 bg-[#212121] shadow-lg border border-gray-500 p-4 rounded-md z-50 w-80 sm:w-96 md:w-auto">
+        <div className="absolute top-full mt-2 bg-[#212121] shadow-lg border border-gray-500 p-4 rounded-md z-50 w-[282px] sm:w-96 md:w-auto">
             <div className="flex flex-col sm:flex-row justify-center items-center gap-4">
                 {/* Date Picker */}
                 <div className="flex flex-col w-full sm:w-auto">
@@ -93,7 +93,7 @@ const DateTimeOverlay = ({
                             minDate instanceof Date && !isNaN(minDate)
                                 ? minDate.toISOString().split("T")[0]
                                 : undefined
-                        } />
+                        }/>
                 </div>
 
                 {/* Time Picker */}
