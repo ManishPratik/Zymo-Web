@@ -54,7 +54,7 @@ const Listing = ({ title }) => {
   const [loading, setLoading] = useState(true);
   const [carList, setCarList] = useState([]);
   const [clubbedCarList, setClubbedCarList] = useState([]);
-  const [priceRange, setPriceRange] = useState("");
+  const [priceRange, setPriceRange] = useState("lowToHigh");
   const [seats, setSeats] = useState("");
   const [fuel, setFuel] = useState("");
   const [transmission, setTransmission] = useState("");
@@ -68,6 +68,9 @@ const Listing = ({ title }) => {
       [key]: !prev[key], // Toggle only the clicked car's state
     }));
   };
+
+  //lowtoHigh filter sets as default
+ 
 
   const renderStarRating = (rating) => {
     const maxStars = 5;
@@ -381,7 +384,12 @@ const Listing = ({ title }) => {
               firebasePromise ? firebasePromise : Promise.resolve(null),
             ]);
 
-          if (zoomData.status === "fulfilled" && zoomData.value) {
+          if (
+            zoomData.status === "fulfilled" &&
+            zoomData.value &&
+            Array.isArray(zoomData.value.sections) &&
+            zoomData.value.sections.length > 0
+          ) {
             const vendorData = await getVendorDetails("zoomcar");
 
             const zoomCarData = zoomData.value.sections[
@@ -410,12 +418,14 @@ const Listing = ({ title }) => {
               sourceImg: "/images/ServiceProvider/zoomcarlogo.png",
               rateBasis: "DR",
             }));
+            /*console.log("Zoomcar Data:", zoomCarData);*/
             allCarData = [...allCarData, ...zoomCarData];
           } else {
             console.error("Zoomcar API failed:", zoomData.reason);
           }
 
           if (mychoizeData.status === "fulfilled" && mychoizeData.value) {
+            /*console.log("MyChoize Data:", mychoizeData.value);*/
             allCarData = [...allCarData, ...mychoizeData.value];
           } else {
             console.error(
@@ -439,6 +449,7 @@ const Listing = ({ title }) => {
             autoClose: 5000,
           });
         }
+        /*console.log("All Cars:", allCarData);*/
         const groupCarList = clubCarsByName(allCarData);
 
         setCarList(allCarData);
@@ -631,7 +642,6 @@ const Listing = ({ title }) => {
                 <option value="">Transmission</option>
                 <option value="Automatic">Automatic</option>
                 <option value="Manual">Manual</option>
-                <option value="Hybrid">Hybrid</option>
               </select>
               <ChevronDown className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
             </div>

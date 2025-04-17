@@ -18,6 +18,7 @@ const NewRSB = ({ urlcity }) => {
   const [activeTab, setActiveTab] = useState("rent");
   const [placeInput, setPlaceInput] = useState(urlcity || "");
   const [place, setPlace] = useState(null);
+  const [suggestions, setSuggestions] = useState([]);
   const [autocomplete, setAutocomplete] = useState(null);
   const [city, setCity] = useState("");
   const [address, setAddress] = useState("");
@@ -43,70 +44,144 @@ const NewRSB = ({ urlcity }) => {
   ];
   const [headerIndex, setHeaderIndex] = useState(0);
 
-  const fetchAutocompleteDetails = (inputCity) => {
-    if (!inputCity || !window.google) return;
+ // Places API
+ const placesAPILibraries = useMemo(() => ["places"], []);
+ const placesAPIKey = import.meta.env.VITE_PLACES_API_KEY;
+ 
+ useEffect(() => {
+  if (!placeInput) {
+    setSuggestions([]); // Clear suggestions if input is empty
+    return;
+  }
 
-    const autocompleteService =
-      new window.google.maps.places.AutocompleteService();
-    autocompleteService.getPlacePredictions(
-      { input: inputCity, componentRestrictions: { country: "IN" } },
-      (predictions, status) => {
-        if (
-          status === window.google.maps.places.PlacesServiceStatus.OK &&
-          predictions?.length > 0
-        ) {
-          const placeId = predictions[0].place_id;
-          const placesService = new window.google.maps.places.PlacesService(
-            document.createElement("div")
-          );
+  const fetchSuggestions = async () => {
+    try {
+      if (window.google?.maps?.places?.AutocompleteSuggestion) {
+        const sessionToken = new window.google.maps.places.AutocompleteSessionToken();
 
-          placesService.getDetails({ placeId }, (placeDetails, status) => {
-            if (
-              status === window.google.maps.places.PlacesServiceStatus.OK &&
-              placeDetails?.geometry
-            ) {
-              setAutocomplete(placeDetails);
-              setPlace({
-                name: placeDetails.name,
-                lat: placeDetails.geometry.location.lat(),
-                lng: placeDetails.geometry.location.lng(),
-              });
-              setPlaceInput(placeDetails.formatted_address);
+        const response = await window.google.maps.places.AutocompleteSuggestion.fetchAutocompleteSuggestions({
+          input: placeInput,
+          includedRegionCodes: ["IN"], // Limit to India
+          language: "en",
+          sessionToken: sessionToken,
+        });
 
-              const address = placeDetails.formatted_address.split(",");
-              setAddress(
-                address.length > 2
-                  ? `${address[0]}, ${address[1]}, ${address.at(-2)}`
-                  : address
-              );
+        // Map the new nested structure
+        const formatted = response?.suggestions?.map((item) => {
+          const prediction = item?.placePrediction;
+          const placeId = prediction?.placeId || "";
+          const fullText = prediction?.text?.text || "";
+          const mainText = prediction?.mainText?.text || "";
+          const secondaryText = prediction?.secondaryText?.text || "";
 
-              const city = extractCityFromComponents(
-                placeDetails.address_components
-              );
-              setCity(city);
-            } else {
-              console.error("Failed to fetch place details.");
-            }
-          });
-        } else {
-          console.error("No place predictions found.");
-        }
+          // Extract city if available
+          let cityName = secondaryText; // Assuming secondaryText contains the city or region
+
+          return {
+            placeId,
+            fullAddress: fullText,
+            displayName: `${mainText}${secondaryText ? ", " + secondaryText : ""}`,
+            city: cityName, // Add the city to the formatted data
+          };
+        }) || [];
+/*
+        console.log("Raw suggestions:", response); // Optional for <debugging></debugging>
+        console.log("Formatted suggestions:", formatted);*/
+
+        setSuggestions(formatted);
       }
-    );
+    } catch (error) {
+      console.error("Error fetching autocomplete suggestions:", error);
+    }
   };
 
-  // Effect to trigger autocomplete on page load when `urlcity` changes
-  useEffect(() => {
-    if (!urlcity) return;
+  const debounce = setTimeout(fetchSuggestions, 300); // Debounce API calls
+  return () => clearTimeout(debounce); // Cleanup
+}, [placeInput]);
 
-    // Ensure we have a short delay before calling autocomplete (after city is set)
-    const timer = setTimeout(() => {
-      fetchAutocompleteDetails(urlcity);
-    }, 1000); // 1-second delay to ensure the input field is populated
+const handleSuggestionClick = async (sugg) => {
+  setPlaceInput(sugg.fullAddress);
+  setSuggestions([]);
 
-    return () => clearTimeout(timer); // Clean up timeout
-  }, [urlcity]); // Re-run the effect when the `urlcity` changes
+  const placeDetails = await getPlaceDetails(sugg.placeId);
+  if (placeDetails) {
+    const cityName = extractCityFromDetails(placeDetails);
 
+    setCity(cityName);
+
+    const location = placeDetails.Eg.location || {};
+    const lat = location.lat ?? "";
+    const lng = location.lng ?? "";
+
+    // Attach relevant data to a single object (assuming `setPlace`)
+    setPlace({
+      name: placeDetails.displayName || sugg.fullAddress,
+      lat,
+      lng,
+      addressComponents: placeDetails.addressComponents || [],
+    });
+/*
+    console.log("City:", cityName);
+    console.log("Lat:", lat, "Lng:", lng);*/
+  }
+};
+
+
+
+const getPlaceDetails = async (placeId) => {
+  try {
+    const { Place } = await window.google.maps.importLibrary("places");
+
+    const place = new Place({
+      id: placeId,
+      requestedLanguage: "en", // optional
+    });
+
+    await place.fetchFields({
+      fields: ["addressComponents", "displayName", "formattedAddress", "location"],
+    });
+    //console.log("Fetched place details:", place); // Debugging log
+
+    return place; // `place` now contains the fetched fields
+  } catch (error) {
+    console.error("Error fetching place details:", error);
+    return null;
+  }
+};
+
+
+// Function to extract the city from the place details
+const extractCityFromDetails = (place) => {
+  const components = place?.addressComponents || [];
+
+  const cityTypesPriority = [
+    "locality",
+    "sublocality_level_1",
+    "sublocality",
+    "neighborhood",
+    "administrative_area_level_3",
+    "administrative_area_level_2",
+    "administrative_area_level_1",
+  ];
+
+  for (let type of cityTypesPriority) {
+    const match = components.find((c) => {
+      const types = c.types || c.Eg || [];
+      return types.includes(type);
+    });
+
+    if (match) {
+      const name = match.long_name || match.Fg || match.Gg || "";
+      //console.log("Matched city type:", type, "→", name);
+      return name;
+    }
+  }
+
+  console.warn("No suitable city component found.");
+  return "";
+};
+
+ 
   useEffect(() => {
     const interval = setInterval(() => {
       setFade(true);
@@ -129,56 +204,33 @@ const NewRSB = ({ urlcity }) => {
       `${label} - ${activeTab}`
     );
   };
+const extractCityFromGeocodingResult = (place) => {
+  const components = place?.address_components || [];
 
-  // Places API
-  const placesAPILibraries = useMemo(() => ["places"], []);
-  const placesAPIKey = import.meta.env.VITE_PLACES_API_KEY;
+  const cityTypesPriority = [
+    "locality",
+    "sublocality_level_1",
+    "sublocality",
+    "neighborhood",
+    "administrative_area_level_3",
+    "administrative_area_level_2",
+    "administrative_area_level_1",
+  ];
 
-  const extractCityFromComponents = (components) => {
-    const cityTypesPriority = [
-      "locality",
-      "sublocality_level_1",
-      "sublocality",
-      "neighborhood",
-      "administrative_area_level_3",
-      "administrative_area_level_2",
-      "administrative_area_level_1",
-    ];
+  for (let type of cityTypesPriority) {
+    const match = components.find((component) => {
+      return component.types?.includes(type);
+    });
 
-    for (let type of cityTypesPriority) {
-      const match = components.find((c) => c.types.includes(type));
-      if (match) {
-        console.log("Matched city type:", type, "→", match.long_name);
-        return match.long_name;
-      }
+    if (match) {
+      return match.long_name || "";
     }
+  }
 
-    console.warn("No suitable city component found.");
-    return "";
-  };
+  console.warn("No suitable city found in Geocoding API response");
+  return "";
+};
 
-  const handlePlaceSelect = () => {
-    if (autocomplete) {
-      const placeDetails = autocomplete.getPlace();
-      if (placeDetails.geometry) {
-        const lat = placeDetails.geometry.location.lat();
-        const lng = placeDetails.geometry.location.lng();
-        setPlace({ name: placeDetails.name, lat, lng });
-
-        const address = placeDetails.formatted_address.split(",");
-        setAddress(
-          address.length > 2
-            ? `${address[0]}, ${address[1]}, ${address.at(-2)}`
-            : address
-        );
-        const city = extractCityFromComponents(placeDetails.address_components);
-        setCity(city);
-
-        // Update placeInput with the selected place's formatted address
-        setPlaceInput(placeDetails.formatted_address);
-      }
-    }
-  };
 
   const getCurrentLocation = () => {
     if (navigator.geolocation) {
@@ -192,7 +244,7 @@ const NewRSB = ({ urlcity }) => {
           )
             .then((response) => response.json())
             .then((data) => {
-              if (data.status === "OK") {
+              if (data.status === "OK" && data.results && data.results[0])  {
                 const placeDetails = data.results[0];
                 const lat = latitude;
                 const lng = longitude;
@@ -205,10 +257,9 @@ const NewRSB = ({ urlcity }) => {
                     : address
                 );
 
-                const city = extractCityFromComponents(
-                  placeDetails.address_components
-                );
-                setCity(city);
+                const cityName = extractCityFromGeocodingResult(placeDetails);
+                setCity(cityName);
+                console.log(city);
 
                 // Update the input field with the current location
                 setPlaceInput(placeDetails.formatted_address);
@@ -317,9 +368,9 @@ const NewRSB = ({ urlcity }) => {
                   tripDurationHours,
                   activeTab,
               };
-              console.log(formattedCity);
+              //console.log(formattedCity);
       
-              console.log("Navigating with:", stateData); // Debugging
+              //console.log("Navigating with:", stateData); // Debugging
       
               handleRSBFunctionClicks("Search");
               sessionStorage.setItem("fromSearch", true);
@@ -398,49 +449,60 @@ const NewRSB = ({ urlcity }) => {
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 mb-4 mx-auto w-full max-w-[90%] md:max-w-[80%]">
           {/* Location Input */}
           <LoadScriptNext
-            googleMapsApiKey={placesAPIKey}
-            libraries={placesAPILibraries}
-          >
-            {/* <div className="flex items-center border border-gray-500 bg-[#212121] rounded-md px-4 py-2 w-full overflow-hidden"> */}
-            <div className={`flex items-center border border-gray-500 bg-[#000000] rounded-md px-4 py-2 w-full overflow-hidden
-              ${placeInput ? "bg-[#faffa4] text-black" : "bg-transparent text-white"}`}>
-              {/* Icon */}
-              <MapPinIcon className="w-5 h-5 mr-2 flex-shrink-0" />
+  googleMapsApiKey={placesAPIKey}
+  libraries={placesAPILibraries}
+  version="beta"
+>
+  <div
+    className={`flex items-center border border-gray-500 rounded-md px-4 py-2 w-full 
+      ${placeInput ? "bg-[#faffa4] text-black" : "bg-[#000000] text-white"}`}
+  >
+    {/* Map Pin Icon */}
+    <MapPinIcon className="w-5 h-5 mr-2 flex-shrink-0" />
 
-              {/* Input Field */}
-              <Autocomplete
-                onLoad={(autocompleteInstance) =>
-                  setAutocomplete(autocompleteInstance)
-                }
-                onPlaceChanged={handlePlaceSelect}
-                options={{ componentRestrictions: { country: "IN" } }}
-              >
-                <input
-                  type="text"
-                  placeholder="Enter a location"
-                  value={placeInput}
-                  onChange={(e) => setPlaceInput(e.target.value)}
-                  className="bg-transparent outline-none w-full placeholder-white flex-grow truncate"
-                  // onFocus={(e) => e.target.select()} // Ensures re-selection
-                />
-              </Autocomplete>
+    {/* Input Field */}
+    <div className="relative w-full">
+      <input
+        type="text"
+        placeholder="Enter a location"
+        className={`bg-transparent outline-none w-full placeholder-white truncate ${
+          placeInput ? "text-black placeholder-black" : "text-white"
+        }`}
+        value={placeInput}
+        onChange={(e) => setPlaceInput(e.target.value)}
+      />
 
-              {/* Current Location Button */}
-              <button
-                className={`flex items-center ml-2 flex-shrink-0
-                  ${placeInput ? "text-black" : "text-gray-300 hover:text-[#faffa4]"}`}
-                onClick={() => getCurrentLocation()}
-              >
-                {/* <img
-                  src="/images/Benefits/Group_1-removebg-preview.png"
-                  alt="Current Location"
-                  className="w-5 h-5 mr-1"
-                /> */}
-                <LocateFixed className="w-5 h-5 mr-1" />
-                <span className="text-xs hidden sm:inline">Get Location</span>
-              </button>
-            </div>
-          </LoadScriptNext>
+      {/* Suggestions Dropdown */}
+      
+<ul className="absolute left-0 right-0 top-full mt-1 z-50 bg-white text-black rounded-lg shadow-lg max-h-60 overflow-y-auto border border-gray-300">
+  {suggestions.map((sugg, idx) => (
+ <li
+ key={idx}
+ onClick={() => handleSuggestionClick(sugg)}
+ className="px-4 py-2 hover:bg-gray-100 cursor-pointer text-sm break-words"
+ title={sugg.displayName || sugg.fullAddress}
+>
+ {sugg.displayName || sugg.fullAddress}
+</li>
+  ))}
+</ul>
+
+</div>
+
+    {/* Get Current Location Button */}
+    <button
+      className={`flex items-center ml-2 flex-shrink-0 ${
+        placeInput ? "text-black" : "text-gray-300 hover:text-[#faffa4]"
+      }`}
+      onClick={getCurrentLocation}
+      type="button"
+    >
+      <LocateFixed className="w-5 h-5 mr-1" />
+      <span className="text-xs hidden sm:inline">Get Location</span>
+    </button>
+  </div>
+</LoadScriptNext>
+
 
           {/* Start Date Picker */}
           <div className="relative w-full">
@@ -477,6 +539,8 @@ const NewRSB = ({ urlcity }) => {
                   setIsStartPickerOpen(false);
                 }}
                 onClose={() => setIsStartPickerOpen(false)}
+                minDate={new Date()}
+
               />
             )}
           </div>
@@ -526,6 +590,8 @@ const NewRSB = ({ urlcity }) => {
                   setIsEndPickerOpen(false);
                 }}
                 onClose={() => setIsEndPickerOpen(false)}
+                minDate={startDate}
+
               />
             )}
           </div>

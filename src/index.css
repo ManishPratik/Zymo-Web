@@ -1,7 +1,9 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
+*{
+    text-decoration: none !important;
+}
 body {
     @apply bg-darkGrey;
     font-family: "Noto Sans", sans-serif;
@@ -14,6 +16,10 @@ input[type="date"]::-webkit-calendar-picker-indicator {
     filter: invert(100%);
 }
 
+input:-webkit-autofill {
+  box-shadow: 0 0 0px 1000px transparent inset !important;
+  -webkit-text-fill-color: inherit !important;
+}
 
 
 /* Hide the calendar picker icon */

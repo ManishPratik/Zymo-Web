@@ -6,6 +6,7 @@ const DateTimeOverlay = ({
     setSelectedDate,
     onSave,
     onClose,
+    minDate,
 }) => {
 
     
@@ -53,14 +54,14 @@ const [hour, setHour] = useState(get12HourFormat(currHours)); // Initialize with
     };
 
     return (
-        <div className="absolute top-full mt-2 bg-[#212121] shadow-lg border border-gray-500 p-4 rounded-md z-50 w-80 sm:w-96 md:w-auto">
+        <div className="absolute top-full mt-2 bg-[#212121] shadow-lg border border-gray-500 p-4 rounded-md z-50 w-[282px] sm:w-96 md:w-auto">
             <div className="flex flex-col sm:flex-row justify-center items-center gap-4">
                 {/* Date Picker */}
                 <div className="flex flex-col w-full sm:w-auto">
                     <label className="text-gray-300 text-sm mb-1">
                         Select Date
                     </label>
-                    <input
+                    {/* <input
                         type="date"
                         className=" p-2 rounded bg-[#404040]  text-white w-full sm:w-auto"
                         value={selectedDate.toLocaleDateString("en-CA")}
@@ -68,7 +69,31 @@ const [hour, setHour] = useState(get12HourFormat(currHours)); // Initialize with
                             setSelectedDate(new Date(e.target.value))
                         }
                         min={selectedDate.toISOString().split("T")[0]} 
-                    />
+                    /> */}
+                    <input
+                        type="date"
+                        className="p-2 rounded bg-[#404040] text-white w-full sm:w-auto"
+                        value={
+                            selectedDate instanceof Date && !isNaN(selectedDate)
+                                ? selectedDate.toISOString().split("T")[0]
+                                : ""
+                        }
+                        onChange={(e) => {
+                            const value = e.target.value;
+                            if (value) {
+                                const newDate = new Date(value);
+                                if (!isNaN(newDate)) {
+                                    setSelectedDate(newDate);
+                                }
+                            } else {
+                                setSelectedDate(null);
+                            }
+                        }}
+                        min={
+                            minDate instanceof Date && !isNaN(minDate)
+                                ? minDate.toISOString().split("T")[0]
+                                : undefined
+                        }/>
                 </div>
 
                 {/* Time Picker */}

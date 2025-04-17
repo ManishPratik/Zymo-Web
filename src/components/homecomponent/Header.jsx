@@ -4,7 +4,6 @@ import { useParams } from "react-router-dom";
 
 const Header = () => {
     const { city } = useParams();
-      console.log(city);
     return (     
         <>
             <section
