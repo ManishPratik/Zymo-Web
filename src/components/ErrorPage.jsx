@@ -15,10 +15,20 @@ const ErrorPage = ({ title }) => {
     <>
       <Helmet>
         <title>{title}</title>
-        <meta name="description" content="Oops! The page you are looking for does not exist." />
-        <link rel="canonical" href="https://zymo.app/404" />
-        <meta property="og:title" content={title} />
-        <meta property="og:description" content="Oops! The page you're trying to access isn't available." />
+        <meta
+  name="description"
+  content="Oops! The page you're looking for doesn't exist. It might have been moved or deleted. Please check the URL or return to the homepage."
+/>
+<link rel="canonical" href="https://zymo.app/404" />
+<meta
+  property="og:title"
+  content="Page Not Found | Zymo"
+/>
+<meta
+  property="og:description"
+  content="We're sorry, but the page you're trying to reach isn’t available. Try checking the URL or head back to the Zymo homepage."
+/>
+
       </Helmet>
 
 
