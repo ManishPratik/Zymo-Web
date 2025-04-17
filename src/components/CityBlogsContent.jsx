@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { collection, getDocs } from "firebase/firestore";
 import { webDB } from "../utils/firebase";
-
+import { Link } from "react-router-dom";
 const blogsCollection = collection(webDB, "blogs");
 
 const CityBlogsContent = ({ cityName }) => {
@@ -118,28 +118,44 @@ const CityBlogsContent = ({ cityName }) => {
                                     alt="Blog"
                                     className="rounded-lg mb-4 w-full h-40 sm:h-44 md:h-48 lg:h-52 object-cover"
                                 />
-                                <h3 className="text-base sm:text-lg md:text-xl font-bold">
-                                    {blog.title}
-                                </h3>
-                                <h4 className="text-xs sm:text-sm font-semibold mb-1 sm:mb-2">
-                                    {blog.category}
-                                </h4>
-                                <p className="mb-4 text-xs sm:text-sm px-1 sm:px-2 md:px-4">
-                                    {blog.metaDescription}
-                                </p>
-                                <a
-                                    href={`/blogs/${blog.title
+
+                                <Link
+                                    to={`/blogs/${blog.title
                                         .toLowerCase()
                                         .replace(/[^a-z0-9\s-]/g, "")
                                         .trim()
                                         .split(/\s+/)
                                         .slice(0, 7)
                                         .join("-")}/${blog.id}`}
-                                    target="_blank"
+                                    className=" text-gray-200  px-3 py-2 text-sm rounded-lg  hover:text-[#faffa4]"
+                                >
+                                    <h3 className="text-base sm:text-lg md:text-xl font-bold">
+
+                                        {blog.title}
+
+                                    </h3>
+                                </Link>
+
+                                <h4 className="text-xs sm:text-sm font-semibold mb-1 sm:mb-2">
+                                    {blog.category}
+                                </h4>
+                                <p className="mb-4 text-xs sm:text-sm px-1 sm:px-2 md:px-4">
+                                    {blog.metaDescription}
+                                </p>
+                                <Link
+                                    to={`/blogs/${blog.title
+                                        .toLowerCase()
+                                        .replace(/[^a-z0-9\s-]/g, "")
+                                        .trim()
+                                        .split(/\s+/)
+                                        .slice(0, 7)
+                                        .join("-")}/${blog.id}`}
                                     className="bg-[#faffa4] text-black px-3 py-2 text-sm rounded-lg hover:bg-[#1e1e1e] hover:text-[#faffa4]"
                                 >
-                                    View Details
-                                </a>
+                                    <button>
+                                        View Details
+                                    </button>
+                                </Link>
                             </div>
                         ))}
                 </div>

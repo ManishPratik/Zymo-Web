@@ -539,6 +539,8 @@ const extractCityFromGeocodingResult = (place) => {
                   setIsStartPickerOpen(false);
                 }}
                 onClose={() => setIsStartPickerOpen(false)}
+                minDate={new Date()}
+
               />
             )}
           </div>
@@ -588,6 +590,8 @@ const extractCityFromGeocodingResult = (place) => {
                   setIsEndPickerOpen(false);
                 }}
                 onClose={() => setIsEndPickerOpen(false)}
+                minDate={startDate}
+
               />
             )}
           </div>
