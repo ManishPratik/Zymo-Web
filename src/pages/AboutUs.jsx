@@ -1,40 +1,52 @@
-import React from "react";
+import React, { useEffect } from "react";
 import NavBar from "../components/NavBar";
 import Footer from "../components/Footer";
 import { ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { useEffect } from "react";
 import { Helmet } from "react-helmet-async";
+import CarAnimation from "../components/CarAnimation";
+
 const AboutUs = ({ title }) => {
-    const navigate = useNavigate();
-    useEffect(() => {
-  
-        document.title = title;  // Ensures title changes instantly
-      }, [title]);
-    return (
-        <>
-         <Helmet>
-                <title>{title}</title>
-                <meta name="description" content="Learn about Zymo’s mission to simplify car rentals with reliable, affordable, and convenient self-drive options." />
-                <meta property="og:title" content={title} />
-        <meta property="og:description" content="Learn about Zymo’s mission to simplify car rentals with reliable, affordable, and convenient self-drive options." />
-                <link rel="canonical" href="https://zymo.app/about-us" />
-            </Helmet>
-            <NavBar />
-            <button
-                onClick={() => navigate("/")}
-                className="text-white m-5 cursor-pointer"
-            >
-                <ArrowLeft className="w-6 h-6" />
-            </button>
-            <div className="flex justify-center items-center min-h-screen bg-[darkGrey2] text-white p-6">
-                <div className="max-w-4xl  p-8">
-                    <h1 className="text-2xl font-bold text-[#faffa4] mb-6">
-                        About Us
-                    </h1>
-                    <hr />
-                    <br />
-                    <p className=" mb-4">
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    document.title = title;
+  }, [title]);
+
+  return (
+    <>
+      <Helmet>
+        <title>{title}</title>
+        <meta
+          name="description"
+          content="Learn about Zymo's mission to simplify car rentals with reliable, affordable, and convenient self-drive options."
+        />
+        <meta property="og:title" content={title} />
+        <meta
+          property="og:description"
+          content="Learn about Zymo's mission to simplify car rentals with reliable, affordable, and convenient self-drive options."
+        />
+        <link rel="canonical" href="https://zymo.app/about-us" />
+      </Helmet>
+
+      <NavBar />
+
+      <button
+        onClick={() => navigate("/")}
+        className="text-white m-5 cursor-pointer flex items-center"
+        aria-label="Back to home"
+      >
+        <ArrowLeft className="w-6 h-6" />
+        <span className="sr-only">Back</span>
+      </button>
+
+      <div className="flex justify-center items-center min-h-screen bg-gray-900 text-white p-6">
+        <div className="max-w-4xl p-8">
+          <h1 className="text-2xl font-bold text-yellow-400 mb-6">About Us</h1>
+          <CarAnimation width="100%" height="300px" /> {/* Moving Car Component */}
+          <hr />
+          <br />
+          <p className=" mb-4">
                         Welcome to Zymo, India's largest aggregator for
                         self-drive car rentals. With over 30,000 cars listed on
                         our platform, we are the go-to destination for
@@ -90,11 +102,13 @@ const AboutUs = ({ title }) => {
                         Thank you for choosing Zymo. We look forward to serving
                         you soon.
                     </p>
-                </div>
-            </div>
-            <Footer />
-        </>
-    );
+          
+        </div>
+      </div>
+
+      <Footer />
+    </>
+  );
 };
 
 export default AboutUs;
