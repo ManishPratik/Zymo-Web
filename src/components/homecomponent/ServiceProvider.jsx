@@ -11,21 +11,35 @@ const ServiceProvider = () => {
     ];
 
     const scrollRef = useRef(null);
-
+    let currentScroll = 0;
     useEffect(() => {
         const scrollContainer = scrollRef.current;
-        let scrollAmount = 0;
+        // let scrollAmount = 0;
 
         const scrollInterval = setInterval(() => {
             if (scrollContainer) {
-                scrollAmount += 1;
-                scrollContainer.scrollLeft = scrollAmount;
+                // scrollAmount += 1;
+                // scrollContainer.scrollLeft = scrollAmount;
+                const itemWidth = scrollContainer.querySelector("div").offsetWidth || 0;
+                const scrollBy = itemWidth * 2.5;
+                const maxScroll = scrollContainer.scrollWidth - scrollContainer.clientWidth;
 
-                if (scrollAmount >= scrollContainer.scrollWidth / 2) {
-                    scrollAmount = 0; // Reset scroll
+                currentScroll+=scrollBy;
+
+                // if (scrollAmount >= scrollContainer.scrollWidth / 2) {
+                //     scrollAmount = 0; // Reset scroll
+                // }
+                if(currentScroll >= maxScroll)
+                {
+                    currentScroll = 0;
                 }
+
+                scrollContainer.scrollTo({
+                    left: currentScroll,
+                    behavior: "smooth"
+                });
             }
-        }, 30); // Adjust speed
+        }, 3000); // Adjust speed
 
         return () => clearInterval(scrollInterval);
     }, []);
@@ -43,7 +57,7 @@ const ServiceProvider = () => {
                     {[...brands, ...brands].map((brand, index) => (
                         <div
                             key={index}
-                            className="flex flex-col items-center justify-center flex-shrink-0 w-32 h-32"
+                            className="flex flex-col items-center justify-center flex-shrink-0 w-1/4 h-32"
                         >
                             <div className="w-24 h-24 flex items-center justify-center bg-white rounded-lg">
                                 <img

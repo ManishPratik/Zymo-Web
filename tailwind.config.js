@@ -13,6 +13,7 @@ export default {
         darkGrey2: "#424242", // Corresponds to Colors.grey[800]
         black: "#000000",    // Black color
         white: "#ffffff",    // White color
+        
       },
 
     },

@@ -188,7 +188,7 @@ const RSB = () => {
                             className={`text-lg px-4 py-1 rounded-lg transition-colors duration-200 ${
                                 activeTab === "rent"
                                     ? "bg-yellow-300 text-black"
-                                    : "text-gray-400 hover:bg-yellow-300 hover:text-black"
+                                    : "text-gray-400"
                             }`}
                         >
                             Rent
@@ -198,18 +198,19 @@ const RSB = () => {
                             className={`text-sm px-4 py-1 rounded-lg transition-colors duration-200 ${
                                 activeTab === "subscribe"
                                     ? "bg-yellow-300 text-black"
-                                    : "text-gray-400 hover:bg-yellow-300 hover:text-black"
+                                    : "text-gray-400"
                             }`}
                         >
                             Subscribe
                         </button>
                         <button
                             onClick={() => setActiveTab("buy")}
-                            className={`text-sm px-4 py-1 rounded-lg transition-colors duration-200 ${
-                                activeTab === "buy"
+                            className={`text-sm px-4 py-1 rounded-lg transition-colors duration-200 hover:bg-yellow-300 hover:text-black
+                             ${activeTab === "subscribe"
                                     ? "bg-yellow-300 text-black"
-                                    : "text-gray-400 hover:bg-yellow-300 hover:text-black"
-                            }`}
+                                    : "text-gray-400"
+                            }      
+                            `}
                         >
                             Buy
                         </button>
@@ -254,10 +255,9 @@ const RSB = () => {
                                      ref={startInputRef}
                                     value={startDate}
                                     onChange={handleStartDateChange}
-                                    className="bg-[#303030] text-white outline-none pl-8 pr-2 w-full h-full rounded-full cursor-text"
-/>
+                                    className="bg-[#303030] text-white outline-none pl-8 pr-2 w-full h-full rounded-full cursor-text z-10"/>
 
-                            <span className="text-white pl-8">
+<span className="text-white pl-8">
                                 {startDate
                                     ? new Intl.DateTimeFormat("en-US", {
                                           month: "short",
@@ -283,11 +283,11 @@ const RSB = () => {
     ref={endInputRef}
     value={endDate}
     onChange={handleEndDateChange}
-    className="bg-[#303030] text-white outline-none pl-8 pr-2 w-full h-full rounded-full cursor-text"
+    className="bg-[#303030] text-white outline-none pl-8 pr-2 w-full h-full rounded-full cursor-text z-10"
 />
 
 
-                            <span className="text-white pl-8">
+<span className="text-white pl-8">
                                 {endDate
                                     ? new Intl.DateTimeFormat("en-US", {
                                           month: "short",
@@ -299,6 +299,7 @@ const RSB = () => {
                                       }).format(new Date(endDate))
                                     : "Select End Date"}
                             </span>
+
                         </div>
                     </div>
 

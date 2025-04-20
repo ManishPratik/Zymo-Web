@@ -96,20 +96,34 @@ const testimonials = [
 const Reviews = () => {
     const scrollRef = useRef(null);
 
+    let currentScroll = 0;
     useEffect(() => {
-        const scrollContainer = scrollRef.current;
-        let scrollAmount = 0;
+        const scrollContainer = scrollRef.current; //This is meant for having a ref to scrollable div of DOM in a js var
+        // let scrollAmount = 0;
 
         const scrollInterval = setInterval(() => {
             if (scrollContainer) {
-                scrollAmount += 1;
-                scrollContainer.scrollLeft = scrollAmount;
+                // scrollAmount += 1;
+                // scrollContainer.scrollLeft = scrollAmount;
+               const itemWidth = scrollContainer.querySelector("div").offsetWidth || 0;
+               const ScrollBy = itemWidth * 2.15;
+               const maxScroll = scrollContainer.scrollWidth - scrollContainer.clientWidth;
 
-                if (scrollAmount >= scrollContainer.scrollWidth / 2) {
-                    scrollAmount = 0; // Reset scroll
-                }
+               currentScroll+=ScrollBy;
+
+               if(currentScroll > maxScroll)
+               {
+                currentScroll = 0;
+               }
+                // if (scrollAmount >= scrollContainer.scrollWidth / 2) {
+                //     scrollAmount = 0; // Reset scroll
+                // }
+                scrollContainer.scrollTo({
+                    left: currentScroll,
+                    behavior: "smooth"
+                });
             }
-        }, 10); // Adjust speed for smoother scrolling
+        }, 3000); // Adjust speed for smoother scrolling
 
         return () => clearInterval(scrollInterval);
     }, []);
@@ -121,11 +135,11 @@ const Reviews = () => {
                 <p className="text-gray-400">We love hearing from happy customers</p>
             </div>
             <div className="bg-darkGrey2 rounded-lg p-6 py-8 mx-auto max-w-4xl overflow-hidden">
-                <div ref={scrollRef} className="flex space-x-6 overflow-hidden  scroll-container">
+                <div ref={scrollRef} className="flex space-x-6 overflow-hidden  scroll-container px-6">
                     {[...testimonials, ...testimonials].map((testimonial, index) => (
                         <div
                             key={index}
-                            className="border border-[#faffa4] p-6 rounded-lg w-[300px] md:w-[350px] text-center flex-shrink-0"
+                            className="border border-[#faffa4] p-6 rounded-lg w-full md:w-1/2 text-center flex-shrink-0"
                         >
                             <p className="text-sm italic mb-4">"{testimonial.quote}"</p>
                             <div className="flex items-center gap-3 mt-4">

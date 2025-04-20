@@ -18,18 +18,32 @@ const BrandsAvailable = () => {
 
     useEffect(() => {
         const scrollContainer = scrollRef.current;
-        let scrollAmount = 0;
+        let currentScroll = 0;
 
         const scrollInterval = setInterval(() => {
+            
             if (scrollContainer) {
-                scrollAmount += 1;
-                scrollContainer.scrollLeft = scrollAmount;
 
-                if (scrollAmount >= scrollContainer.scrollWidth / 2) {
-                    scrollAmount = 0; // Reset scroll
+                const itemWidth = scrollContainer.querySelector("div")?.offsetWidth || 0;
+            const scrollBy = itemWidth * 2.4;
+            const maxScroll = scrollContainer.scrollWidth - scrollContainer.clientWidth;
+
+                currentScroll+=scrollBy;
+                // scrollContainer.scrollLeft = scrollAmount;
+
+                // if (scrollAmount >= scrollContainer.scrollWidth / 2) {
+                //     scrollAmount = 0; // Reset scroll
+                // }
+                if (currentScroll > maxScroll) {
+                    currentScroll = 0;
                 }
+
+                scrollContainer.scrollTo({
+                    left: currentScroll,
+                    behavior: "smooth"
+                });
             }
-        }, 30); // Adjust speed
+        }, 3000); // Adjust speed
 
         return () => clearInterval(scrollInterval);
     }, []);
@@ -41,13 +55,14 @@ const BrandsAvailable = () => {
             </h2>
             <div className="bg-darkGrey2 rounded-lg p-6 py-8 mx-auto max-w-4xl overflow-hidden">
                 <div
-                    ref={scrollRef}
+                   ref={scrollRef}
                     className="flex space-x-6 overflow-hidden whitespace-nowrap scroll-container"
                 >
                     {[...brands, ...brands].map((brand, index) => (
                         <div
                             key={index}
-                            className="flex flex-col items-center flex-shrink-0 w-32"
+                            
+                            className="flex flex-col items-center flex-shrink-0 w-1/4 px-4 justify-center"
                         >
                             <img
                                 src={brand.logo}
