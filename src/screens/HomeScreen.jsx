@@ -39,8 +39,8 @@ const HomeScreen = ({ title, canonical }) => {
   const canonicalLink = canonical
     ? `https://zymo.app${canonical}`
     : city
-    ? `https://zymo.app/self-drive-car-rentals/${city.toLowerCase()}`
-    : "https://zymo.app/";
+      ? `https://zymo.app/self-drive-car-rentals/${city.toLowerCase()}`
+      : "https://zymo.app/";
 
   useEffect(() => {
     document.title = pageTitle;
@@ -73,10 +73,12 @@ const HomeScreen = ({ title, canonical }) => {
 
           <ServiceProvider />
           <FeaturedIn />
+
+          <CompareAndChoice />
+          <CityBenefits />
           {city && (
             <>
-              <CompareAndChoice />
-              <CityBenefits />
+
               <div
                 className="px-4 md:px-12 py-12 mb-12 bg-[#404040] text-white font-poppins rounded-2xl max-w-screen-lg mx-auto border border-[#505050]"
                 style={{
