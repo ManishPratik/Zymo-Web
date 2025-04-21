@@ -42,7 +42,12 @@ const BrandsAvailable = () => {
                 <div
                     ref={scrollRef}
                     className="flex space-x-10 md:space-x-16 overflow-hidden whitespace-nowrap"
-
+                    style={{
+                        maskImage:
+                            "linear-gradient(to right, transparent 0%, black 10%, black 90%, transparent 100%)",
+                        WebkitMaskImage:
+                            "linear-gradient(to right, transparent 0%, black 10%, black 90%, transparent 100%)",
+                    }}
                 >
                     {[...brands, ...brands].map((brand, index) => (
                         <div key={index} className="flex flex-col justify-between items-center flex-shrink-0 w-24 sm:w-28 md:w-32">
