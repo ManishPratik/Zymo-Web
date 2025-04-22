@@ -14,21 +14,21 @@ const CityBenefits = () => {
             className="mx-auto mb-4 w-20 md:w-24"
           /> */}
           <FaTruckPickup className="text-3xl sm:text-4xl md:text-5xl mx-auto mb-4 opacity-90" />
-          <h3 className="text-base md:text-lg font-semibold opacity-90">
+          <h3 className="text-base md:text-md font-semibold opacity-90">
             Self PickUp Or Get it Delivered
           </h3>
         </div>
 
         <div>
           <FaMapLocationDot className="text-3xl sm:text-4xl md:text-5xl mx-auto mb-4 opacity-90" />
-          <h3 className="text-base md:text-lg font-semibold opacity-90">
+          <h3 className="text-base md:text-md font-semibold opacity-90">
             2000+ Locations in 59 Cities
           </h3>
         </div>
 
         <div>
           <FaRegSquareCheck className="text-3xl sm:text-4xl md:text-5xl mx-auto mb-4 opacity-90" />
-          <h3 className="text-base md:text-lg font-semibold opacity-90">
+          <h3 className="text-base md:text-md font-semibold opacity-90">
             Select from Limited Or Unlimited Kms Packages
           </h3>
         </div>
