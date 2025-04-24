@@ -23,12 +23,14 @@ const zoomcarRoutes = require("./routes/zoomcarAPI");
 const paymentRoutes = require("./routes/paymentAPI");
 const messageRoutes = require("./routes/messageAPI");
 const mychoizeRoutes = require("./routes/mychoizeAPI");
+const otpRoutes = require("./routes/otpAPI");
 
 
 app.use("/zoomcar", zoomcarRoutes);
 app.use("/payment", paymentRoutes);
 app.use("/message", messageRoutes);
 app.use("/mychoize", mychoizeRoutes);
+app.use("/otp", otpRoutes);
 
 app.get("/health", (req, res) => {
     res.status(200).json({ message: "API is running smoothly!" });
