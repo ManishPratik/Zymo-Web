@@ -3,8 +3,8 @@ import { FaTrash } from "react-icons/fa";
 import Footer from "../components/Footer";
 import { ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { webDB, webStorage, appAuth } from "../utils/firebase";
-import { doc, setDoc, getDoc } from "firebase/firestore"; // Updated imports
+import { appAuth, appDB, appStorage } from "../utils/firebase";
+import { doc, setDoc, getDoc } from "firebase/firestore"; 
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { Helmet } from "react-helmet-async";
 import NavBar from "../components/NavBar";
@@ -75,27 +75,58 @@ export default function YourDetails({ title }) {
       if (user) {
         try {
           // Fetch user profile using UID
-          const profileRef = doc(webDB, "webUserProfiles", user.uid);
+          const profileRef = doc(
+            appDB,
+            "users",
+            user.uid
+          );
           const profileSnap = await getDoc(profileRef);
 
           if (profileSnap.exists()) {
             const docData = profileSnap.data();
-            setFormData({
-              name: docData.name,
-              phone: docData.phone,
-              email: docData.email,
-              dob: docData.dob,
-              licenseFront: docData.licenseFront,
-              licenseBack: docData.licenseBack,
-              aadhaarFront: docData.aadhaarFront,
-              aadhaarBack: docData.aadhaarBack,
-              uploaded: docData.uploaded,
-            });
+            console.log("User Profile Data:", docData);
+
+            const mappedData = {
+              name: docData.name || docData.firstname || "",
+              phone:
+                docData.phone || docData.mobileNumber?.replace("+91", "") || "",
+              email: docData.email || "",
+              dob: docData.dob || docData.DateOfBirth || "",
+              licenseFront:
+                docData.licenseFront ||
+                docData.front_page_driving_license ||
+                null,
+              licenseBack:
+                docData.licenseBack ||
+                docData.back_page_driving_license ||
+                null,
+              aadhaarFront:
+                docData.aadhaarFront || docData.front_page_aadhaar_card || null,
+              aadhaarBack:
+                docData.aadhaarBack || docData.back_page_aadhaar_card || null,
+              uploaded: docData.uploaded || {
+                licenseFront: !!(
+                  docData.licenseFront || docData.front_page_driving_license
+                ),
+                licenseBack: !!(
+                  docData.licenseBack || docData.back_page_driving_license
+                ),
+                aadhaarFront: !!(
+                  docData.aadhaarFront || docData.front_page_aadhaar_card
+                ),
+                aadhaarBack: !!(
+                  docData.aadhaarBack || docData.back_page_aadhaar_card
+                ),
+              },
+            };
+
+            setFormData(mappedData);
+
             // Update image states for display
-            setDrivingFrontImage(docData.licenseFront);
-            setDrivingBackImage(docData.licenseBack);
-            setAadharFrontImage(docData.aadhaarFront);
-            setAadharBackImage(docData.aadhaarBack);
+            setDrivingFrontImage(mappedData.licenseFront);
+            setDrivingBackImage(mappedData.licenseBack);
+            setAadharFrontImage(mappedData.aadhaarFront);
+            setAadharBackImage(mappedData.aadhaarBack);
           } else {
             // Prefill name and email from authenticated user
             setFormData((prev) => ({
@@ -122,16 +153,24 @@ export default function YourDetails({ title }) {
 
   // Check if all fields are filled
   const isFormValid = () => {
-    return (
-      formData.name.trim() &&
-      formData.phone.trim() &&
-      formData.email.trim() &&
-      formData.dob.trim() &&
-      formData.licenseFront &&
-      formData.licenseBack &&
-      formData.aadhaarFront &&
-      formData.aadhaarBack
-    );
+    // Check each field individually to handle edge cases
+    try {
+      // Required fields
+      const nameValid = formData?.name && formData.name.trim() !== '';
+      const phoneValid = formData?.phone && formData.phone.trim() !== '';
+      const emailValid = formData?.email && formData.email.trim() !== '';
+      const dobValid = formData?.dob && formData.dob.trim() !== '';
+ 
+      return (
+        nameValid &&
+        phoneValid &&
+        emailValid &&
+        dobValid
+      );
+    } catch (error) {
+      console.error("Error in form validation:", error);
+      return false; // Return false on any error
+    }
   };
 
   const handleChange = (e) => {
@@ -187,7 +226,10 @@ export default function YourDetails({ title }) {
 
   // Capture Photo
   const capturePhoto = (imageSrc) => {
-    const file = dataURLtoFile(imageSrc, `${currentDocType}_${currentPage}.jpg`);
+    const file = dataURLtoFile(
+      imageSrc,
+      `${currentDocType}_${currentPage}.jpg`
+    );
     if (currentDocType === "driving") {
       if (currentPage === "front") {
         setDrivingFrontImage(imageSrc);
@@ -208,9 +250,10 @@ export default function YourDetails({ title }) {
     setCameraOpen(false);
   };
 
-  // Function to upload a file to Firebase Storage and return its download URL
-  const uploadFile = async (file, path) => {
-    const storageRef = ref(webStorage, path);
+  // Upload Files into APP DB project Firebase Datastore
+  const uploadFile = async (file, path, filename) => {
+    // Create a reference with the specific filename
+    const storageRef = ref(appStorage, `${path}${filename}`);
     await uploadBytes(storageRef, file);
     return getDownloadURL(storageRef);
   };
@@ -228,34 +271,62 @@ export default function YourDetails({ title }) {
       const user = appAuth.currentUser;
       if (!user) throw new Error("User not authenticated");
 
-      // Upload files to Firebase Storage if they are new File objects
+      // Create a folder path for this user's documents
+      const basePath = `userImages/${user.uid}/`;
+      
+      // Upload files to Firebase Storage with the correct standard names
       const licenseFrontURL =
         formData.licenseFront instanceof File
-          ? await uploadFile(formData.licenseFront, `documents/${user.uid}/licenseFront`)
+          ? await uploadFile(
+              formData.licenseFront,
+              basePath,
+              "front_page_driving_license.png"
+            )
           : formData.licenseFront;
+      
       const licenseBackURL =
         formData.licenseBack instanceof File
-          ? await uploadFile(formData.licenseBack, `documents/${user.uid}/licenseBack`)
+          ? await uploadFile(
+              formData.licenseBack,
+              basePath,
+              "back_page_driving_license.png"
+            )
           : formData.licenseBack;
+      
       const aadhaarFrontURL =
         formData.aadhaarFront instanceof File
-          ? await uploadFile(formData.aadhaarFront, `documents/${user.uid}/aadhaarFront`)
+          ? await uploadFile(
+              formData.aadhaarFront,
+              basePath,
+              "front_page_aadhaar_card.png"
+            )
           : formData.aadhaarFront;
+      
       const aadhaarBackURL =
         formData.aadhaarBack instanceof File
-          ? await uploadFile(formData.aadhaarBack, `documents/${user.uid}/aadhaarBack`)
+          ? await uploadFile(
+              formData.aadhaarBack,
+              basePath,
+              "back_page_aadhaar_card.png"
+            )
           : formData.aadhaarBack;
 
-      // Create user profile object
+      // Create user profile object with field names that match the backend structure
       const userProfile = {
         name: formData.name,
-        phone: formData.phone,
+        phone: null, // Keep as null to match your API structure
         email: formData.email,
-        dob: formData.dob,
-        licenseFront: licenseFrontURL,
-        licenseBack: licenseBackURL,
-        aadhaarFront: aadhaarFrontURL,
-        aadhaarBack: aadhaarBackURL,
+        mobileNumber: formData.phone ? `${formData.phone}` : null,
+        DateOfBirth: formData.dob,
+        front_page_driving_license: licenseFrontURL,
+        back_page_driving_license: licenseBackURL,
+        front_page_aadhaar_card: aadhaarFrontURL,
+        back_page_aadhaar_card: aadhaarBackURL,
+        city: "",
+        street1: "",
+        street2: "",
+        zipcode: "",
+        // Keep the uploaded tracking for frontend use
         uploaded: {
           licenseFront: !!licenseFrontURL,
           licenseBack: !!licenseBackURL,
@@ -265,7 +336,7 @@ export default function YourDetails({ title }) {
       };
 
       // Save or update user-specific document using UID
-      const profileRef = doc(webDB, "webUserProfiles", user.uid);
+      const profileRef = doc(appDB, "users", user.uid);
       await setDoc(profileRef, userProfile);
 
       setIsSaved(true);
@@ -288,10 +359,16 @@ export default function YourDetails({ title }) {
     <>
       <Helmet>
         <title>{title}</title>
-        <meta name="description" content="Enter your personal details for a seamless experience with Zymo." />
+        <meta
+          name="description"
+          content="Enter your personal details for a seamless experience with Zymo."
+        />
         <link rel="canonical" href="https://zymo.app/your-details" />
         <meta property="og:title" content={title} />
-        <meta property="og:description" content="Keep your personal details up to date on Zymo." />
+        <meta
+          property="og:description"
+          content="Keep your personal details up to date on Zymo."
+        />
       </Helmet>
       <NavBar />
       <button
@@ -302,7 +379,9 @@ export default function YourDetails({ title }) {
       </button>
       <div className="min-h-screen bg-[#212121] p-4 flex justify-center items-center">
         <div className="w-full max-w-lg bg-[#424242] p-6 rounded-lg shadow-lg text-white font-sans">
-          <h2 className="text-xl font-semibold mb-4 flex justify-center items-center">Profile Details</h2>
+          <h2 className="text-xl font-semibold mb-4 flex justify-center items-center">
+            Profile Details
+          </h2>
 
           {isSaved && (
             <div className="mb-4 p-3 bg-green-500 text-white rounded-lg text-center">
@@ -314,7 +393,7 @@ export default function YourDetails({ title }) {
           <input
             type="text"
             name="name"
-            value={formData.name}
+            value={formData.name || ""}
             onChange={handleChange}
             className="w-full p-2 border rounded mb-3 bg-white text-black"
             placeholder="Enter name"
@@ -327,7 +406,7 @@ export default function YourDetails({ title }) {
             pattern="[0-9]{10}"
             maxLength={10}
             name="phone"
-            value={formData.phone}
+            value={formData.phone || ""}
             onChange={handleChange}
             className="w-full p-2 border rounded mb-3 bg-white text-black"
             placeholder="Enter phone"
@@ -338,7 +417,7 @@ export default function YourDetails({ title }) {
           <input
             type="email"
             name="email"
-            value={formData.email}
+            value={formData.email || ""}
             onChange={handleChange}
             className="w-full p-2 border rounded mb-3 bg-white text-black"
             placeholder="Enter email"
@@ -349,7 +428,7 @@ export default function YourDetails({ title }) {
           <input
             type="date"
             name="dob"
-            value={formData.dob}
+            value={formData.dob || ""}
             onChange={handleChange}
             className="w-full p-2 border rounded mb-3 bg-white text-black"
             required
@@ -429,11 +508,14 @@ export default function YourDetails({ title }) {
 
           <button
             className={`w-full bg-[#edff8d] text-black p-2 rounded-lg mt-4 flex items-center justify-center gap-2 ${
-              !isFormValid() || isSaving ? "opacity-50 cursor-not-allowed" : "hover:bg-[#d4e07d]"
+              !isFormValid() || isSaving
+                ? "opacity-50 cursor-not-allowed"
+                : "hover:bg-[#d4e07d]"
             }`}
             onClick={handleSave}
             disabled={!isFormValid() || isSaving}
           >
+            {console.log("Form Valid:", isFormValid())}
             {isSaving ? "Saving..." : "Save"}
           </button>
         </div>

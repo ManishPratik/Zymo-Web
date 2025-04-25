@@ -16,8 +16,8 @@ function UserNavigation(label) {
   });
 }
 import { Helmet } from "react-helmet-async";
-import { appAuth, webDB } from "../utils/firebase";
-import { collection, doc, getDoc, getDocs } from "firebase/firestore";
+import { appAuth, appDB } from "../utils/firebase";
+import { collection, getDocs, query, where } from "firebase/firestore";
 export default function MyBookings({ title }) {
   const [activeTab, setActiveTab] = useState("upcoming");
   const navigate = useNavigate();
@@ -29,36 +29,44 @@ export default function MyBookings({ title }) {
   const [bookings, setBookings] = useState([]);
   const [upcomingBookings, setUpcomingBookings] = useState([]);
   const [pastBookings, setPastBookings] = useState([]);
-  const [cancelledBookings, setCancelledBookings] = useState([]);
+  const [, setCancelledBookings] = useState([]);
 
   useEffect(() => {
     const getUserBookings = appAuth.onAuthStateChanged(async (user) => {
-      try {
-        const userDocRef = doc(webDB, "webUserProfiles", user.uid);
-        const userDocSnap = await getDoc(userDocRef);
+      if (!user) {
+        setDataUnavailable(true);
+        return;
+      }
 
-        if (!userDocSnap.exists()) {
+      try {
+        const bookingsQuery = query(
+          collection(appDB, "CarsPaymentSuccessDetails"),
+          where("UserId", "==", user.uid)
+        );
+        
+        const querySnapshot = await getDocs(bookingsQuery);
+        
+        if (querySnapshot.empty) {
           setDataUnavailable(true);
           return;
         }
 
-        const bookingsCollectionRef = collection(userDocRef, "bookings");
+        const bookings = querySnapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
 
-        getDocs(bookingsCollectionRef).then((querySnapshot) => {
-          const bookings = querySnapshot.docs.map((doc) => ({
-            id: doc.id,
-            ...doc.data(),
-          }));
-
-          if (bookings.length > 0) {
-            setDataUnavailable(false);
-            setBookings(bookings);
-          }
-        });
+        if (bookings.length > 0) {
+          setDataUnavailable(false);
+          setBookings(bookings);
+          console.log("Bookings:", bookings);
+        }
       } catch (error) {
-        console.error("Error retrieving booking from user collection:", error);
+        console.error("Error retrieving bookings:", error);
+        setDataUnavailable(true);
       }
     });
+    
     return () => getUserBookings();
   }, []);
 
@@ -168,8 +176,8 @@ export default function MyBookings({ title }) {
                 {activeTab === "upcoming" && (
                   <>
                     {upcomingBookings.length > 0 ? (
-                      upcomingBookings.map((booking) => (
-                        <UpcomingBookingCard bookingData={booking} />
+                      upcomingBookings.map((booking, index) => (
+                        <UpcomingBookingCard key={booking.bookingId || index} bookingData={booking} />
                       ))
                     ) : (
                       <div className="w-full flex items-center justify-center min-h-[200px]">
@@ -183,8 +191,8 @@ export default function MyBookings({ title }) {
                 {activeTab === "past" && (
                   <>
                     {pastBookings.length > 0 ? (
-                      pastBookings.map((booking) => (
-                        <PastBookings bookingData={booking} />
+                      pastBookings.map((booking, index) => (
+                        <PastBookings key={booking.bookingId || index} bookingData={booking} />
                       ))
                     ) : (
                       <div className="w-full flex items-center justify-center min-h-[200px]">

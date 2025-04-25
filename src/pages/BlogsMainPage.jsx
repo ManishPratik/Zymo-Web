@@ -22,6 +22,7 @@ const BlogsMainPage = ({ title }) => {
             ...doc.data(),
         }));
 
+
         setBlogs(blogsData);
         sessionStorage.setItem("blogs", JSON.stringify(blogsData));
         setLoading(false);
@@ -31,6 +32,8 @@ const BlogsMainPage = ({ title }) => {
         document.title = title;
     }, [title]);
 
+
+      
     useEffect(() => {
         if (sessionStorage.getItem("blogs")) {
             setBlogs(JSON.parse(sessionStorage.getItem("blogs")));
@@ -38,6 +41,7 @@ const BlogsMainPage = ({ title }) => {
             return;
         }
         getBlogs();
+
     }, []);
 
     const refreshBlogs = () => {

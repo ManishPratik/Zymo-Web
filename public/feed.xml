@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<rss version="2.0">
+  <channel>
+    <title>Zymo Updates</title>
+    <link>https://www.zymo.app</link>
+    <description>Latest news and updates from Zymo</description>
+    <language>en-us</language>
+    <item>
+      <title>New Feature: Instant Car Booking</title>
+      <link>https://www.zymo.app/blog/instant-booking</link>
+      <description>We just launched instant booking for self-drive cars in Delhi NCR!</description>
+      <pubDate>Tue, 16 Apr 2025 08:00:00 +0000</pubDate>
+      <guid>https://www.zymo.app/blog/instant-booking</guid>
+    </item>
+    <!-- Add more <item> entries here -->
+  </channel>
+</rss>

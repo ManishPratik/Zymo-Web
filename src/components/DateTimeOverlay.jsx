@@ -6,6 +6,7 @@ const DateTimeOverlay = ({
     setSelectedDate,
     onSave,
     onClose,
+    minDate,
 }) => {
 
     
@@ -60,7 +61,7 @@ const [hour, setHour] = useState(get12HourFormat(currHours)); // Initialize with
                     <label className="text-gray-300 text-sm mb-1">
                         Select Date
                     </label>
-                    <input
+                    {/* <input
                         type="date"
                         className=" p-2 rounded bg-[#404040]  text-white w-full sm:w-auto"
                         value={selectedDate.toLocaleDateString("en-CA")}
@@ -68,7 +69,31 @@ const [hour, setHour] = useState(get12HourFormat(currHours)); // Initialize with
                             setSelectedDate(new Date(e.target.value))
                         }
                         min={selectedDate.toISOString().split("T")[0]} 
-                    />
+                    /> */}
+                    <input
+                        type="date"
+                        className="p-2 rounded bg-[#404040] text-white w-full sm:w-auto"
+                        value={
+                            selectedDate instanceof Date && !isNaN(selectedDate)
+                                ? selectedDate.toISOString().split("T")[0]
+                                : ""
+                        }
+                        onChange={(e) => {
+                            const value = e.target.value;
+                            if (value) {
+                                const newDate = new Date(value);
+                                if (!isNaN(newDate)) {
+                                    setSelectedDate(newDate);
+                                }
+                            } else {
+                                setSelectedDate(null);
+                            }
+                        }}
+                        min={
+                            minDate instanceof Date && !isNaN(minDate)
+                                ? minDate.toISOString().split("T")[0]
+                                : undefined
+                        }/>
                 </div>
 
                 {/* Time Picker */}

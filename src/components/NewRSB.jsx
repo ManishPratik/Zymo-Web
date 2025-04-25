@@ -204,6 +204,32 @@ const extractCityFromDetails = (place) => {
       `${label} - ${activeTab}`
     );
   };
+const extractCityFromGeocodingResult = (place) => {
+  const components = place?.address_components || [];
+
+  const cityTypesPriority = [
+    "locality",
+    "sublocality_level_1",
+    "sublocality",
+    "neighborhood",
+    "administrative_area_level_3",
+    "administrative_area_level_2",
+    "administrative_area_level_1",
+  ];
+
+  for (let type of cityTypesPriority) {
+    const match = components.find((component) => {
+      return component.types?.includes(type);
+    });
+
+    if (match) {
+      return match.long_name || "";
+    }
+  }
+
+  console.warn("No suitable city found in Geocoding API response");
+  return "";
+};
 
 
   const getCurrentLocation = () => {
@@ -218,7 +244,7 @@ const extractCityFromDetails = (place) => {
           )
             .then((response) => response.json())
             .then((data) => {
-              if (data.status === "OK") {
+              if (data.status === "OK" && data.results && data.results[0])  {
                 const placeDetails = data.results[0];
                 const lat = latitude;
                 const lng = longitude;
@@ -231,10 +257,9 @@ const extractCityFromDetails = (place) => {
                     : address
                 );
 
-                const city = extractCityFromComponents(
-                  placeDetails.address_components
-                );
-                setCity(city);
+                const cityName = extractCityFromGeocodingResult(placeDetails);
+                setCity(cityName);
+                console.log(city);
 
                 // Update the input field with the current location
                 setPlaceInput(placeDetails.formatted_address);
@@ -449,18 +474,16 @@ const extractCityFromDetails = (place) => {
 
       {/* Suggestions Dropdown */}
       
-<ul className="absolute left-0 right-0 top-full mt-1 z-50 bg-white text-black rounded-lg shadow-lg max-h-60 overflow-y-auto border border-gray-300">
-  {suggestions.map((sugg, idx) => (
- <li
- key={idx}
- onClick={() => handleSuggestionClick(sugg)}
- className="px-4 py-2 hover:bg-gray-100 cursor-pointer text-sm break-words"
- title={sugg.displayName || sugg.fullAddress}
->
- {sugg.displayName || sugg.fullAddress}
-</li>
-  ))}
-</ul>
+      <ul className="absolute left-0 top-full mt-1 z-50 bg-[#252525] text-gray-200 rounded-lg shadow-md max-h-60 overflow-y-auto w-full min-w-[300px] no-underline">
+        {suggestions.map((sugg, idx) => (
+            <li key={idx}  
+            onClick={() => handleSuggestionClick(sugg)} 
+            className="flex items-center px-3 py-2 sm:px-4 sm:py-2.5 hover:bg-[#faffa4] hover:text-[#212121] cursor-pointer text-xs sm:text-sm break-words border border-[#303030] transition-all duration-200 ease-in-out">
+                <MapPinIcon className="w-4 h-4 sm:w-5 sm:h-5 mr-2 shrink-0 text-red-400" />
+                {sugg.displayName || sugg.fullAddress}
+            </li>
+        ))}
+    </ul>
 
 </div>
 
@@ -514,6 +537,8 @@ const extractCityFromDetails = (place) => {
                   setIsStartPickerOpen(false);
                 }}
                 onClose={() => setIsStartPickerOpen(false)}
+                minDate={new Date()}
+
               />
             )}
           </div>
@@ -563,6 +588,8 @@ const extractCityFromDetails = (place) => {
                   setIsEndPickerOpen(false);
                 }}
                 onClose={() => setIsEndPickerOpen(false)}
+                minDate={startDate}
+
               />
             )}
           </div>

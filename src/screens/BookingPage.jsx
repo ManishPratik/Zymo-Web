@@ -1,22 +1,21 @@
-import { ArrowLeft, MapPin, Calendar, IndianRupee, Car } from "lucide-react";
+import { ArrowLeft, Calendar, IndianRupee, Car } from "lucide-react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
 import { toast } from "react-toastify";
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import ConfirmPage from "../components/ConfirmPage";
 import {
   formatDate,
   formatFare,
   retryFunction,
-  toPascalCase,
 } from "../utils/helperFunctions";
 import {
   fetchMyChoizeLocationList,
   findPackage,
   formatDateForMyChoize,
 } from "../utils/mychoize";
-import { addDoc, collection, doc, getDoc, setDoc } from "firebase/firestore";
-import { appDB, appStorage, webDB } from "../utils/firebase";
+import { addDoc, collection, doc, getDoc } from "firebase/firestore";
+import { appDB, appStorage } from "../utils/firebase";
 import PickupPopup from "../components/PickupPopup";
 import DropupPopup from "../components/DropupPopup";
 import BookingPageFormPopup from "../components/BookingPageFormPopup";
@@ -305,28 +304,6 @@ function BookingPage() {
       collection(appDB, "CarsPaymentSuccessDetails"),
       bookingDataStructure
     );
-
-    try {
-      // Saving booking into user specific collection (webDB)
-      const userDocRef = doc(webDB, "webUserProfiles", userData.uid);
-      const userDocSnap = await getDoc(userDocRef);
-
-      if (!userDocSnap.exists()) {
-        await setDoc(userDocRef, {
-          uid: userData.uid,
-          email: customerEmail,
-          name: customerName,
-          phone: customerPhone,
-          createdAt: Date.now(),
-        });
-      }
-
-      const bookingsCollectionRef = collection(userDocRef, "bookings");
-
-      await addDoc(bookingsCollectionRef, bookingDataStructure);
-    } catch (error) {
-      console.error("Error saving booking to user collection:", error);
-    }
 
     return bookingId;
   };
