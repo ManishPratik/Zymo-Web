@@ -16,8 +16,10 @@ function UserNavigation(label) {
   });
 }
 import { Helmet } from "react-helmet-async";
-import { appAuth, webDB,appDB } from "../utils/firebase";
-import { collection, doc, getDoc, query, where } from "firebase/firestore";
+
+import { appAuth, appDB } from "../utils/firebase";
+import { collection, getDocs, query, where } from "firebase/firestore";
+
 export default function MyBookings({ title }) {
   const [activeTab, setActiveTab] = useState("upcoming");
   const navigate = useNavigate();
@@ -29,7 +31,10 @@ export default function MyBookings({ title }) {
   const [bookings, setBookings] = useState([]);
   const [upcomingBookings, setUpcomingBookings] = useState([]);
   const [pastBookings, setPastBookings] = useState([]);
+
   // const [cancelledBookings, setCancelledBookings] = useState([]);
+
+
 
   const [showOverlay, setShowOverlay] = useState(false);
   const [vendor, setVendor] = useState("Mychoize"); // Or dynamically set

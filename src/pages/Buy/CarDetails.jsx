@@ -4,8 +4,6 @@ import { ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import ExtendedTestDriveBenefits from '../../components/buycomponent/ExtendedTestDriveBenefits';
 import { Helmet } from 'react-helmet-async';
-import { collection, query, where, getDocs } from 'firebase/firestore';
-import { webDB } from "../../utils/firebase";
 import useTrackEvent from '../../hooks/useTrackEvent';
 
 

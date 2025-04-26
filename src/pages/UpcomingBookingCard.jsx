@@ -1,16 +1,18 @@
 // import { doc, where, query, getDocs, updateDoc, collection } from "firebase/firestore";
 
+
 import React, { useEffect } from "react";
 
 // import { appDB } from "../utils/firebase";
+
 
 // const { VITE_FIREBASE_CANCELLATION_KEY } = import.meta.env;
 
 // Changed to a named function and separated the export
 export default function UpcomingBookingCard({ bookingData }) {
 
-
  // const handleCancelBooking = async (bookingId) => {
+
   //   console.log("Cancelling booking:", bookingId, "for user:", bookingData.UserId);
 
   //   try {
@@ -64,6 +66,7 @@ export default function UpcomingBookingCard({ bookingData }) {
   //   }
   // };
 
+
   // implemented cancel btn logic
     const [showOverlay, setShowOverlay] = useState(false);
     const [vendor, setVendor] = useState("ZoomCar"); // Or dynamically set
@@ -76,6 +79,7 @@ export default function UpcomingBookingCard({ bookingData }) {
       setShowOverlay(false);
     };
   
+
   return (
     <div>
       {/* Booking Card */}
@@ -135,6 +139,7 @@ export default function UpcomingBookingCard({ bookingData }) {
           <button className="bg-[#faffa4] text-black px-4 py-2 rounded-md">
             If Cancelled By Vendor
           </button>
+
           {/* <button className="text-red-500 font-semibold" onClick={handleCancelClick}>Cancel </button> */}
 
           {showOverlay && (
@@ -158,6 +163,7 @@ export default function UpcomingBookingCard({ bookingData }) {
           </div>
         </div>
       )}
+
         </div>
       </div>
     </div>
