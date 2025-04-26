@@ -42,35 +42,43 @@ export default function MyBookings({ title }) {
   const closeOverlay = () => {
     setShowOverlay(false);
   };
-
+  
   useEffect(() => {
     const getUserBookings = appAuth.onAuthStateChanged(async (user) => {
-      try {
-        const userDocRef = doc(webDB, "webUserProfiles", user.uid);
-        const userDocSnap = await getDoc(userDocRef);
+      if (!user) {
+        setDataUnavailable(true);
+        return;
+      }
 
-        if (!userDocSnap.exists()) {
+      try {
+        const bookingsQuery = query(
+          collection(appDB, "CarsPaymentSuccessDetails"),
+          where("UserId", "==", user.uid)
+        );
+        
+        const querySnapshot = await getDocs(bookingsQuery);
+        
+        if (querySnapshot.empty) {
           setDataUnavailable(true);
           return;
         }
 
-        const bookingsCollectionRef = collection(userDocRef, "bookings");
+        const bookings = querySnapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
 
-        getDocs(bookingsCollectionRef).then((querySnapshot) => {
-          const bookings = querySnapshot.docs.map((doc) => ({
-            id: doc.id,
-            ...doc.data(),
-          }));
-
-          if (bookings.length > 0) {
-            setDataUnavailable(false);
-            setBookings(bookings);
-          }
-        });
+        if (bookings.length > 0) {
+          setDataUnavailable(false);
+          setBookings(bookings);
+          console.log("Bookings:", bookings);
+        }
       } catch (error) {
-        console.error("Error retrieving booking from user collection:", error);
+        console.error("Error retrieving bookings:", error);
+        setDataUnavailable(true);
       }
     });
+    
     return () => getUserBookings();
   }, []);
 
