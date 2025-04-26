@@ -102,6 +102,26 @@ export default function UpcomingBookingCard({ bookingData }) {
             <br />
             To: <span className="text-white">{bookingData.EndDate}</span>
           </p>
+
+          {/* Display pickup and drop if vendor is mychoize */}
+          {bookingData["Pickup Location"] && (
+            <p className="text-gray-400">
+              Pickup:{" "}
+              <span className="text-white">
+                {bookingData["Pickup Location"]}
+              </span>
+              <br />
+              {bookingData["Drop Location"] && (
+                <>
+                  Drop:{" "}
+                  <span className="text-white">
+                    {bookingData["Drop Location"]}
+                  </span>
+                </>
+              )}
+            </p>
+          )}
+
           <p className="text-gray-400 mt-1">
             {bookingData["Package Selected"]} | {bookingData.Transmission}
           </p>
