@@ -20,6 +20,7 @@ import CompareAndChoice from "../components/CityContentComponent/CompareAndChoic
 import CityBenefits from "../components/CityContentComponent/CityBenefits";
 import CityContents from "../components/CityContentComponent/CityContents";
 import CityBlogsContent from "../components/CityBlogsContent";
+import NewHeaderCity from "../components/NewHeaderCity";
 //import StepsofZymo from "../components/homecomponent/StepsofZymo.jsx";
 
 const HomeScreen = ({ title, canonical }) => {
@@ -64,18 +65,24 @@ const HomeScreen = ({ title, canonical }) => {
       <NavBar city={city} />
       <div className="container flex flex-col w-full mx-auto">
         <div className="container">
-          <Header />
+
+          {city ? <NewHeaderCity/> : <Header/>}
+          {/* <Header /> */}
           {/* <NewRSB urlcity={city} /> */}
+          <CompareAndChoice />
+          <CityBenefits />
+          
           <HeroImage />
           {/* <RSB /> */}
+         
+
+
           <Benefits />
           <BrandsAvailable />
 
           <ServiceProvider />
           <FeaturedIn />
 
-          <CompareAndChoice />
-          <CityBenefits />
           {city && (
             <>
 

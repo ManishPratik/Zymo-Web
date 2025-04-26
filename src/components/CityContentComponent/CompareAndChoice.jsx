@@ -4,11 +4,11 @@ import { FaHandPointer, FaCar, FaWallet } from "react-icons/fa";
 const CompareAndChoice = () => {
     return (
         <>
-            <h2 className="text-center text-xl font-semibold mb-6 text-white">
+            {/* <h2 className="text-center text-2xl font-bold my-6 text-white">
                 Compare & Choose
-            </h2>
+            </h2> */}
 
-            <div className="bg-darkGrey2 rounded-md px-4 sm:px-6 md:px-8 py-8 mx-auto max-w-[95%] sm:max-w-3xl md:max-w-4xl overflow-hidden">
+            <div className="bg-darkGrey2 my-6 rounded-md px-4 sm:px-6 md:px-8 py-8 mx-auto max-w-[95%] sm:max-w-3xl md:max-w-4xl overflow-hidden">
                
                 {/* <div className="absolute inset-0 bg-gradient-to-br from-white/60 via-purple-100 to-white/60 opacity-50 rounded-xl"></div> */}
 
