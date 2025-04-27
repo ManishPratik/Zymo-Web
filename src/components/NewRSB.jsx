@@ -44,144 +44,152 @@ const NewRSB = ({ urlcity }) => {
   ];
   const [headerIndex, setHeaderIndex] = useState(0);
 
- // Places API
- const placesAPILibraries = useMemo(() => ["places"], []);
- const placesAPIKey = import.meta.env.VITE_PLACES_API_KEY;
- 
- useEffect(() => {
-  if (!placeInput) {
-    setSuggestions([]); // Clear suggestions if input is empty
-    return;
-  }
+  // Places API
+  const placesAPILibraries = useMemo(() => ["places"], []);
+  const placesAPIKey = import.meta.env.VITE_PLACES_API_KEY;
 
-  const fetchSuggestions = async () => {
-    try {
-      if (window.google?.maps?.places?.AutocompleteSuggestion) {
-        const sessionToken = new window.google.maps.places.AutocompleteSessionToken();
+  useEffect(() => {
+    if (!placeInput) {
+      setSuggestions([]); // Clear suggestions if input is empty
+      return;
+    }
 
-        const response = await window.google.maps.places.AutocompleteSuggestion.fetchAutocompleteSuggestions({
-          input: placeInput,
-          includedRegionCodes: ["IN"], // Limit to India
-          language: "en",
-          sessionToken: sessionToken,
-        });
+    const fetchSuggestions = async () => {
+      try {
+        if (window.google?.maps?.places?.AutocompleteSuggestion) {
+          const sessionToken =
+            new window.google.maps.places.AutocompleteSessionToken();
 
-        // Map the new nested structure
-        const formatted = response?.suggestions?.map((item) => {
-          const prediction = item?.placePrediction;
-          const placeId = prediction?.placeId || "";
-          const fullText = prediction?.text?.text || "";
-          const mainText = prediction?.mainText?.text || "";
-          const secondaryText = prediction?.secondaryText?.text || "";
+          const response =
+            await window.google.maps.places.AutocompleteSuggestion.fetchAutocompleteSuggestions(
+              {
+                input: placeInput,
+                includedRegionCodes: ["IN"], // Limit to India
+                language: "en",
+                sessionToken: sessionToken,
+              }
+            );
 
-          // Extract city if available
-          let cityName = secondaryText; // Assuming secondaryText contains the city or region
+          // Map the new nested structure
+          const formatted =
+            response?.suggestions?.map((item) => {
+              const prediction = item?.placePrediction;
+              const placeId = prediction?.placeId || "";
+              const fullText = prediction?.text?.text || "";
+              const mainText = prediction?.mainText?.text || "";
+              const secondaryText = prediction?.secondaryText?.text || "";
 
-          return {
-            placeId,
-            fullAddress: fullText,
-            displayName: `${mainText}${secondaryText ? ", " + secondaryText : ""}`,
-            city: cityName, // Add the city to the formatted data
-          };
-        }) || [];
-/*
+              // Extract city if available
+              let cityName = secondaryText; // Assuming secondaryText contains the city or region
+
+              return {
+                placeId,
+                fullAddress: fullText,
+                displayName: `${mainText}${
+                  secondaryText ? ", " + secondaryText : ""
+                }`,
+                city: cityName, // Add the city to the formatted data
+              };
+            }) || [];
+          /*
         console.log("Raw suggestions:", response); // Optional for <debugging></debugging>
         console.log("Formatted suggestions:", formatted);*/
 
-        setSuggestions(formatted);
+          setSuggestions(formatted);
+        }
+      } catch (error) {
+        console.error("Error fetching autocomplete suggestions:", error);
       }
-    } catch (error) {
-      console.error("Error fetching autocomplete suggestions:", error);
+    };
+
+    const debounce = setTimeout(fetchSuggestions, 300); // Debounce API calls
+    return () => clearTimeout(debounce); // Cleanup
+  }, [placeInput]);
+
+  const handleSuggestionClick = async (sugg) => {
+    setPlaceInput(sugg.fullAddress);
+    setSuggestions([]);
+
+    const placeDetails = await getPlaceDetails(sugg.placeId);
+    if (placeDetails) {
+      const cityName = extractCityFromDetails(placeDetails);
+
+      setCity(cityName);
+
+      const location = placeDetails.Eg.location || {};
+      const lat = location.lat ?? "";
+      const lng = location.lng ?? "";
+
+      // Attach relevant data to a single object (assuming `setPlace`)
+      setPlace({
+        name: placeDetails.displayName || sugg.fullAddress,
+        lat,
+        lng,
+        addressComponents: placeDetails.addressComponents || [],
+      });
+      /*
+    console.log("City:", cityName);
+    console.log("Lat:", lat, "Lng:", lng);*/
     }
   };
 
-  const debounce = setTimeout(fetchSuggestions, 300); // Debounce API calls
-  return () => clearTimeout(debounce); // Cleanup
-}, [placeInput]);
+  const getPlaceDetails = async (placeId) => {
+    try {
+      const { Place } = await window.google.maps.importLibrary("places");
 
-const handleSuggestionClick = async (sugg) => {
-  setPlaceInput(sugg.fullAddress);
-  setSuggestions([]);
+      const place = new Place({
+        id: placeId,
+        requestedLanguage: "en", // optional
+      });
 
-  const placeDetails = await getPlaceDetails(sugg.placeId);
-  if (placeDetails) {
-    const cityName = extractCityFromDetails(placeDetails);
+      await place.fetchFields({
+        fields: [
+          "addressComponents",
+          "displayName",
+          "formattedAddress",
+          "location",
+        ],
+      });
+      //console.log("Fetched place details:", place); // Debugging log
 
-    setCity(cityName);
-
-    const location = placeDetails.Eg.location || {};
-    const lat = location.lat ?? "";
-    const lng = location.lng ?? "";
-
-    // Attach relevant data to a single object (assuming `setPlace`)
-    setPlace({
-      name: placeDetails.displayName || sugg.fullAddress,
-      lat,
-      lng,
-      addressComponents: placeDetails.addressComponents || [],
-    });
-/*
-    console.log("City:", cityName);
-    console.log("Lat:", lat, "Lng:", lng);*/
-  }
-};
-
-
-
-const getPlaceDetails = async (placeId) => {
-  try {
-    const { Place } = await window.google.maps.importLibrary("places");
-
-    const place = new Place({
-      id: placeId,
-      requestedLanguage: "en", // optional
-    });
-
-    await place.fetchFields({
-      fields: ["addressComponents", "displayName", "formattedAddress", "location"],
-    });
-    //console.log("Fetched place details:", place); // Debugging log
-
-    return place; // `place` now contains the fetched fields
-  } catch (error) {
-    console.error("Error fetching place details:", error);
-    return null;
-  }
-};
-
-
-// Function to extract the city from the place details
-const extractCityFromDetails = (place) => {
-  const components = place?.addressComponents || [];
-
-  const cityTypesPriority = [
-    "locality",
-    "sublocality_level_1",
-    "sublocality",
-    "neighborhood",
-    "administrative_area_level_3",
-    "administrative_area_level_2",
-    "administrative_area_level_1",
-  ];
-
-  for (let type of cityTypesPriority) {
-    const match = components.find((c) => {
-      const types = c.types || c.Eg || [];
-      return types.includes(type);
-    });
-
-    if (match) {
-      const name = match.long_name || match.Fg || match.Gg || "";
-      //console.log("Matched city type:", type, "→", name);
-      return name;
+      return place; // `place` now contains the fetched fields
+    } catch (error) {
+      console.error("Error fetching place details:", error);
+      return null;
     }
-  }
+  };
 
-  console.warn("No suitable city component found.");
-  return "";
-};
+  // Function to extract the city from the place details
+  const extractCityFromDetails = (place) => {
+    const components = place?.addressComponents || [];
 
- 
+    const cityTypesPriority = [
+      "locality",
+      "sublocality_level_1",
+      "sublocality",
+      "neighborhood",
+      "administrative_area_level_3",
+      "administrative_area_level_2",
+      "administrative_area_level_1",
+    ];
+
+    for (let type of cityTypesPriority) {
+      const match = components.find((c) => {
+        const types = c.types || c.Eg || [];
+        return types.includes(type);
+      });
+
+      if (match) {
+        const name = match.long_name || match.Fg || match.Gg || "";
+        //console.log("Matched city type:", type, "→", name);
+        return name;
+      }
+    }
+
+    console.warn("No suitable city component found.");
+    return "";
+  };
+
   useEffect(() => {
     const interval = setInterval(() => {
       setFade(true);
@@ -204,33 +212,32 @@ const extractCityFromDetails = (place) => {
       `${label} - ${activeTab}`
     );
   };
-const extractCityFromGeocodingResult = (place) => {
-  const components = place?.address_components || [];
+  const extractCityFromGeocodingResult = (place) => {
+    const components = place?.address_components || [];
 
-  const cityTypesPriority = [
-    "locality",
-    "sublocality_level_1",
-    "sublocality",
-    "neighborhood",
-    "administrative_area_level_3",
-    "administrative_area_level_2",
-    "administrative_area_level_1",
-  ];
+    const cityTypesPriority = [
+      "locality",
+      "sublocality_level_1",
+      "sublocality",
+      "neighborhood",
+      "administrative_area_level_3",
+      "administrative_area_level_2",
+      "administrative_area_level_1",
+    ];
 
-  for (let type of cityTypesPriority) {
-    const match = components.find((component) => {
-      return component.types?.includes(type);
-    });
+    for (let type of cityTypesPriority) {
+      const match = components.find((component) => {
+        return component.types?.includes(type);
+      });
 
-    if (match) {
-      return match.long_name || "";
+      if (match) {
+        return match.long_name || "";
+      }
     }
-  }
 
-  console.warn("No suitable city found in Geocoding API response");
-  return "";
-};
-
+    console.warn("No suitable city found in Geocoding API response");
+    return "";
+  };
 
   const getCurrentLocation = () => {
     if (navigator.geolocation) {
@@ -244,7 +251,7 @@ const extractCityFromGeocodingResult = (place) => {
           )
             .then((response) => response.json())
             .then((data) => {
-              if (data.status === "OK" && data.results && data.results[0])  {
+              if (data.status === "OK" && data.results && data.results[0]) {
                 const placeDetails = data.results[0];
                 const lat = latitude;
                 const lng = longitude;
@@ -341,52 +348,50 @@ const extractCityFromGeocodingResult = (place) => {
     setTripDuration(`${days} Day(s) ${hours} Hour(s)`);
   };
 
-   const handleSearch = () => {
-          if (city && startDate && endDate) {
-              if (!place || !place.lat || !place.lng) {
-                  toast.error("Please select a valid location", {
-                      position: "top-center",
-                      autoClose: 5000,
-                  });
-                  return;
-              }
-      
-              const formattedCity =
-              city === "Bengaluru"
-                ? "bangalore"
-                : ["New Delhi", "Delhi Division", "Delhi"].includes(city)
-                ? "delhi"
-                : city.toLowerCase();
-            
-              const stateData = {
-                  address: address || place.name,  // Ensure the address is included
-                  lat: place.lat,
-                  lng: place.lng,
-                  startDate,
-                  endDate,
-                  tripDuration,
-                  tripDurationHours,
-                  activeTab,
-              };
-              //console.log(formattedCity);
-      
-              //console.log("Navigating with:", stateData); // Debugging
-      
-              handleRSBFunctionClicks("Search");
-              sessionStorage.setItem("fromSearch", true);
-      
-              navigate(`/self-drive-car-rentals/${formattedCity}/cars`, {
-                  state: stateData,
-              });
-          } else {
-              toast.error("Required fields are empty", {
-                  position: "top-center",
-                  autoClose: 5000,
-              });
-          }
-      };
-      
+  const handleSearch = () => {
+    if (city && startDate && endDate) {
+      if (!place || !place.lat || !place.lng) {
+        toast.error("Please select a valid location", {
+          position: "top-center",
+          autoClose: 5000,
+        });
+        return;
+      }
 
+      const formattedCity =
+        city === "Bengaluru"
+          ? "bangalore"
+          : ["New Delhi", "Delhi Division", "Delhi"].includes(city)
+          ? "delhi"
+          : city.toLowerCase();
+
+      const stateData = {
+        address: address || place.name, // Ensure the address is included
+        lat: place.lat,
+        lng: place.lng,
+        startDate,
+        endDate,
+        tripDuration,
+        tripDurationHours,
+        activeTab,
+      };
+      //console.log(formattedCity);
+
+      //console.log("Navigating with:", stateData); // Debugging
+
+      handleRSBFunctionClicks("Search");
+      sessionStorage.setItem("fromSearch", true);
+
+      navigate(`/self-drive-car-rentals/${formattedCity}/cars`, {
+        state: stateData,
+      });
+    } else {
+      toast.error("Required fields are empty", {
+        position: "top-center",
+        autoClose: 5000,
+      });
+    }
+  };
 
   const handleTabClick = (tab) => {
     handleRSBClicks(tab); // RSB clicked
@@ -449,64 +454,70 @@ const extractCityFromGeocodingResult = (place) => {
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 mb-4 mx-auto w-full max-w-[90%] md:max-w-[80%]">
           {/* Location Input */}
           <LoadScriptNext
-  googleMapsApiKey={placesAPIKey}
-  libraries={placesAPILibraries}
-  version="beta"
->
-  <div
-    className={`flex items-center border border-gray-500 rounded-md px-4 py-2 w-full 
+            googleMapsApiKey={placesAPIKey}
+            libraries={placesAPILibraries}
+            version="beta"
+          >
+            <div
+              className={`flex items-center border border-gray-500 rounded-md px-4 py-2 w-full 
       ${placeInput ? "bg-[#faffa4] text-black" : "bg-[#000000] text-white"}`}
-  >
-    {/* Map Pin Icon */}
-    <MapPinIcon className="w-5 h-5 mr-2 flex-shrink-0" />
+            >
+              {/* Map Pin Icon */}
+              <MapPinIcon className="w-5 h-5 mr-2 flex-shrink-0" />
 
-    {/* Input Field */}
-    <div className="relative w-full">
-      <input
-        type="text"
-        placeholder="Enter a location"
-        className={`bg-transparent outline-none w-full placeholder-white truncate ${
-          placeInput ? "text-black placeholder-black" : "text-white"
-        }`}
-        value={placeInput}
-        onChange={(e) => setPlaceInput(e.target.value)}
-      />
+              {/* Input Field */}
+              <div className="relative w-full">
+                <input
+                  type="text"
+                  placeholder="Enter a location"
+                  className={`bg-transparent outline-none w-full placeholder-white truncate ${
+                    placeInput ? "text-black placeholder-black" : "text-white"
+                  }`}
+                  value={placeInput}
+                  onChange={(e) => setPlaceInput(e.target.value)}
+                />
 
-      {/* Suggestions Dropdown */}
-      
-      <ul className="absolute left-0 top-full mt-1 z-50 bg-[#252525] text-gray-200 rounded-lg shadow-md max-h-60 overflow-y-auto w-full min-w-[300px] no-underline">
-        {suggestions.map((sugg, idx) => (
-            <li key={idx}  
-            onClick={() => handleSuggestionClick(sugg)} 
-            className="flex items-center px-3 py-2 sm:px-4 sm:py-2.5 hover:bg-[#faffa4] hover:text-[#212121] cursor-pointer text-xs sm:text-sm break-words border border-[#303030] transition-all duration-200 ease-in-out">
-                <MapPinIcon className="w-4 h-4 sm:w-5 sm:h-5 mr-2 shrink-0 text-red-400" />
-                {sugg.displayName || sugg.fullAddress}
-            </li>
-        ))}
-    </ul>
+                {/* Suggestions Dropdown */}
 
-</div>
+                <ul className="absolute left-0 top-full mt-1 z-50 bg-[#252525] text-gray-200 rounded-lg shadow-md max-h-60 overflow-y-auto w-full min-w-[300px] no-underline">
+                  {suggestions.map((sugg, idx) => (
+                    <li
+                      key={idx}
+                      onClick={() => handleSuggestionClick(sugg)}
+                      className="flex items-center px-3 py-2 sm:px-4 sm:py-2.5 hover:bg-[#faffa4] hover:text-[#212121] cursor-pointer text-xs sm:text-sm break-words border border-[#303030] transition-all duration-200 ease-in-out"
+                    >
+                      <MapPinIcon className="w-4 h-4 sm:w-5 sm:h-5 mr-2 shrink-0 text-red-400" />
+                      {sugg.displayName || sugg.fullAddress}
+                    </li>
+                  ))}
+                </ul>
+              </div>
 
-    {/* Get Current Location Button */}
-    <button
-      className={`flex items-center ml-2 flex-shrink-0 ${
-        placeInput ? "text-black" : "text-gray-300 hover:text-[#faffa4]"
-      }`}
-      onClick={getCurrentLocation}
-      type="button"
-    >
-      <LocateFixed className="w-5 h-5 mr-1" />
-      <span className="text-xs hidden sm:inline">Get Location</span>
-    </button>
-  </div>
-</LoadScriptNext>
-
+              {/* Get Current Location Button */}
+              <button
+                className={`flex items-center ml-2 flex-shrink-0 ${
+                  placeInput
+                    ? "text-black"
+                    : "text-gray-300 hover:text-[#faffa4]"
+                }`}
+                onClick={getCurrentLocation}
+                type="button"
+              >
+                <LocateFixed className="w-5 h-5 mr-1" />
+                <span className="text-xs hidden sm:inline">Get Location</span>
+              </button>
+            </div>
+          </LoadScriptNext>
 
           {/* Start Date Picker */}
           <div className="relative w-full">
             <div
               className={`rounded-lg p-1 py-2 flex items-center relative cursor-pointer text-sm border border-gray-500 w-full h-10
-                ${startDate ? "bg-[#faffa4] text-black" : "bg-transparent text-gray-400"}`}
+                ${
+                  startDate
+                    ? "bg-[#faffa4] text-black"
+                    : "bg-transparent text-gray-400"
+                }`}
               onClick={() => {
                 setIsStartPickerOpen(true);
                 setIsEndPickerOpen(false);
@@ -538,7 +549,6 @@ const extractCityFromGeocodingResult = (place) => {
                 }}
                 onClose={() => setIsStartPickerOpen(false)}
                 minDate={new Date()}
-
               />
             )}
           </div>
@@ -552,9 +562,16 @@ const extractCityFromGeocodingResult = (place) => {
           >
             <div
               className={`rounded-lg p-1 flex items-center relative cursor-pointer text-sm border border-gray-500 w-full h-10  
-                ${activeTab === "subscribe" ? "opacity-50 cursor-not-allowed" : ""}
-                ${endDate ? "bg-[#faffa4] text-black" : "bg-transparent text-gray-400"
-              }`}
+                ${
+                  activeTab === "subscribe"
+                    ? "opacity-50 cursor-not-allowed"
+                    : ""
+                }
+                ${
+                  endDate
+                    ? "bg-[#faffa4] text-black"
+                    : "bg-transparent text-gray-400"
+                }`}
               onClick={() => {
                 if (activeTab !== "subscribe") {
                   setIsEndPickerOpen(true);
@@ -589,7 +606,6 @@ const extractCityFromGeocodingResult = (place) => {
                 }}
                 onClose={() => setIsEndPickerOpen(false)}
                 minDate={startDate}
-
               />
             )}
           </div>
