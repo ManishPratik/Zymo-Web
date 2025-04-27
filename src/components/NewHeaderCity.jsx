@@ -11,7 +11,7 @@ const NewHeaderCity = () => {
     bangalore: '/images/CityCars&Price/bangalore.png',
     pune: '/images/CityCars&Price/pune.png',
     chennai: '/images/CityCars&Price/chennai.png',
-    hydrabad: '/images/CityCars&Price/hydrabad.png',
+    hyderabad: '/images/CityCars&Price/hyderabad.png',
     kolkata: '/images/CityCars&Price/kolkata.png',
     // Add more as needed
   };
