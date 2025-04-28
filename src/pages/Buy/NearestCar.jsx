@@ -66,22 +66,66 @@ const NearestCar = ({ title }) => {
 
       <NavBar />
       
-      <div className="head-container flex flex-col sm:flex-row justify-between items-center bg-darkGrey text-white p-4">
-        <button
+      {/* <div className="head-container flex flex-col sm:flex-row justify-between items-center bg-darkGrey text-white p-4"> */}
+        {/* <button
           onClick={() => navigate("/")}
           className="text-white m-5 cursor-pointer"
         >
           <ArrowLeft className="w-6 h-6" />
-        </button>
+        </button> */}
         
-        <h1 className="text-white text-3xl font-bold pl-5">Nearest Car</h1>
+        {/* <h1 className="text-white text-3xl font-bold pl-8">EV Cars for sale</h1>
 
         <div className="mt-3 sm:mt-0 sm:ml-4 flex justify-end w-full sm:w-auto">
           <SearchBar setSearchResults={setSearchResults} />
         </div>
-      </div>
-      <Filter setFilterCar={setFilteredCars} />
+      </div> */}
 
+      <div className="relative h-full sm:h-screen w-full bg-cover bg-center bg-no-repeat flex justify-center overflow-visible"
+        // style={{ 
+        //   backgroundImage: "url('/images/BuyCars/Electric_Hero_yellow.png')", 
+        //   backgroundSize: "cover",
+        // }}
+      >
+        {/* Dark overlay */}
+        {/* <div className="absolute inset-0 bg-black/50"></div> */}
+        
+        <img src="/images/BuyCars/Electric_Hero_yellow.png" alt="Yellow Hero" 
+          className="absolute w-full sm:w-screen h-full object-cover z-0"
+         />
+        {/* <div 
+          className="absolute inset-0 w-full h-full"
+          style={{
+            backgroundImage: "url('/images/BuyCars/Electric_Hero_yellow.png')",
+            backgroundSize: 'fit',
+            backgroundPosition: 'center',
+            backgroundRepeat: 'no-repeat'
+          }}
+        /> */}
+
+        {/* Content container */}
+        <div className="relative z-10 h-full container mx-auto px-4 py-4">
+          <div className="flex flex-col sm:flex-row justify-center items-center sm:items-start h-full mt-48 sm:mt-10 pr-0 sm:mr-11 sm:pr-8">
+            {/* <div className="space-y-4"> */}
+            <div>
+              <h1 className="text-xl sm:text-5xl font-bold text-white opacity-0 animate-slide-up">
+                Your EV Trial, Supercharged!
+              </h1>
+              {/* <p className="text-gray-200 text-lg max-w-xl opacity-0 animate-slide-up-delayed">
+                Find your perfect electric vehicle today
+              </p> */}
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      {/* <Filter setFilterCar={setFilteredCars} /> */}
+      {/* <BrandSelection setFilterCar={setFilteredCars} /> */}
+
+      {/* <div className="mt-6 sm:mt-0 w-full">
+        <SearchBar setSearchResults={setSearchResults} />
+      </div> */}
       {loading ? (
         <div className="bg-darkGrey grid grid-cols-1 sm:grid-cols-2 gap-6 p-4 py-6 my-3 rounded-lg mx-auto max-w-[1240px]">
           {Array(6)

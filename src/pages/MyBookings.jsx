@@ -16,8 +16,10 @@ function UserNavigation(label) {
   });
 }
 import { Helmet } from "react-helmet-async";
+
 import { appAuth, appDB } from "../utils/firebase";
 import { collection, getDocs, query, where } from "firebase/firestore";
+
 export default function MyBookings({ title }) {
   const [activeTab, setActiveTab] = useState("upcoming");
   const navigate = useNavigate();
@@ -29,8 +31,22 @@ export default function MyBookings({ title }) {
   const [bookings, setBookings] = useState([]);
   const [upcomingBookings, setUpcomingBookings] = useState([]);
   const [pastBookings, setPastBookings] = useState([]);
-  const [, setCancelledBookings] = useState([]);
 
+  // const [cancelledBookings, setCancelledBookings] = useState([]);
+
+
+
+  const [showOverlay, setShowOverlay] = useState(false);
+  const [vendor, setVendor] = useState("Mychoize"); // Or dynamically set
+
+  const handleCancelClick = () => {
+    setShowOverlay(true);
+  };
+
+  const closeOverlay = () => {
+    setShowOverlay(false);
+  };
+  
   useEffect(() => {
     const getUserBookings = appAuth.onAuthStateChanged(async (user) => {
       if (!user) {
@@ -128,12 +144,41 @@ export default function MyBookings({ title }) {
         <div className="max-w-4xl mx-auto p-6">
           <h2 className="text-2xl font-semibold mb-4">My Bookings</h2>
 
+{/* Implemented cancel btn & applied cancellation policy popup */}
+          {/* <button 
+        className="text-white bg-red-500 p-1 rounded-md font-semibold" 
+        onClick={handleCancelClick}
+      >
+        Cancel 
+      </button> */}
+
+          {showOverlay && (
+        <div className="fixed inset-0 bg-[#404040] bg-opacity-50 flex justify-center items-center z-50">
+          <div className="bg-[#212121] p-6 rounded-lg max-w-lg w-full relative">
+            <CancellationBookingPolicy vendor={vendor} />
+            <div className="mt-4 flex justify-between">
+              <button 
+                onClick={closeOverlay} 
+                className="px-4 py-2  bg-[#faffa4] text-black rounded hover:bg-[#faffa4] "
+              >
+                Back
+              </button>
+              <button 
+                onClick={() => alert("Proceeding to cancel...")} 
+                className="px-4 py-2 bg-[#faffa4] text-black rounded hover:bg-[#f1f77c]"
+              >
+                Proceed to Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
           {/* Tabs */}
           <div className="flex space-x-6 text-lg border-b border-gray-700 pb-2">
             <button
-              className={`${
-                activeTab === "upcoming" ? "text-[#faffa4]" : "text-gray-400"
-              } cursor-pointer hover:text-white`}
+              className={`${activeTab === "upcoming" ? "text-[#faffa4]" : "text-gray-400"
+                } cursor-pointer hover:text-white`}
               onClick={() => {
                 setActiveTab("upcoming");
                 UserNavigation("Upcoming Bookings");
@@ -142,9 +187,8 @@ export default function MyBookings({ title }) {
               Upcoming
             </button>
             <button
-              className={`${
-                activeTab === "past" ? "text-[#faffa4]" : "text-gray-400"
-              } cursor-pointer hover:text-white`}
+              className={`${activeTab === "past" ? "text-[#faffa4]" : "text-gray-400"
+                } cursor-pointer hover:text-white`}
               onClick={() => {
                 setActiveTab("past");
                 UserNavigation("Past Bookings");
@@ -153,9 +197,8 @@ export default function MyBookings({ title }) {
               Past
             </button>
             <button
-              className={`${
-                activeTab === "cancelled" ? "text-[#faffa4]" : "text-gray-400"
-              } cursor-pointer hover:text-white`}
+              className={`${activeTab === "cancelled" ? "text-[#faffa4]" : "text-gray-400"
+                } cursor-pointer hover:text-white`}
               onClick={() => {
                 setActiveTab("cancelled");
                 UserNavigation("Cancelled Bookings");
