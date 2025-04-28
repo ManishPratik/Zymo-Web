@@ -1,5 +1,13 @@
 import { getVendorDetails, toPascalCase } from "./helperFunctions";
 
+export const formatNumberAsPrice = (number) => {
+  if (!number) return "0";
+  return new Intl.NumberFormat("en-IN", {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(number);
+};
+
 const getTotalKms = (tripDurationHours) => {
   return {
     FF: `${(120 / 24) * tripDurationHours} KMs`, // Fixed Fare - 120 KM/Day
@@ -39,6 +47,13 @@ const fetchWithRetry = async (url, options, retries = 5, delay = 500) => {
 const apiUrl = import.meta.env.VITE_FUNCTIONS_API_URL;
 // const apiUrl = "http://127.0.0.1:5001/zymo-prod/us-central1/api";
 
+const validateBookingTime = (pickupDate, minHrsTillBooking) => {
+  const now = new Date();
+  const pickupTime = new Date(pickupDate);
+  const diffInHours = (pickupTime - now) / (1000 * 60 * 60);
+  return diffInHours >= minHrsTillBooking;
+};
+
 const fetchSubscriptionCars = async (
   CityName,
   formattedPickDate,
@@ -68,36 +83,100 @@ const fetchSubscriptionCars = async (
       return [];
     }
 
+    const vendorData = await getVendorDetails("mychoize");
+
     // Filter cars where RateBasis is "MLK"
     const subscriptionCars = mychoizeData.SearchBookingModel.filter(
       (car) => car.RateBasis === "MLK" && car.BrandName
-    ).map((car) => ({
-      id: car.TariffKey,
-      brand: toPascalCase(car.BrandName.split(" ")[0]),
-      name: toPascalCase(car.BrandName.split(" ")[1]),
-      options: [
-        car.TransMissionType,
-        car.FuelType,
-        `${car.SeatingCapacity} Seats`,
-      ],
-      address: car.LocationName,
-      locationkey: car.LocationKey,
-      hourly_amount: car.PerUnitCharges,
-      images: [car.VehicleBrandImageName],
-      ratingData: { text: "No ratings available" },
-      extrakm_charge: `₹${car.ExKMRate}/km`,
-      trips: car.TotalBookinCount,
-      source: "mychoize",
-      sourceImg: "/images/ServiceProvider/mychoize.png",
-      fare: `₹${car.TotalExpCharge}`, // Directly assign fare
-      rateBasis: car.rateBasis,
-    }));
+    ).map((car) => {
+      const baseFare = car.TotalExpCharge;
+      const appliedRate = parseFloat(vendorData?.Currentratesubscription);
+      const appliedDiscount = parseFloat(vendorData?.Discountsubscription);
+      const appliedTax = parseFloat(vendorData?.Taxsubscription);
+
+      // Calculate subscription fare with rate, discount and tax
+      const fareAfterRateAndDiscount = baseFare * appliedRate * appliedDiscount;
+      const gstAmount = fareAfterRateAndDiscount * appliedTax;
+      const calculatedFare = fareAfterRateAndDiscount + gstAmount;
+
+      return {
+        id: car.TariffKey,
+        brand: toPascalCase(car.BrandName.split(" ")[0]),
+        name: toPascalCase(car.BrandName.split(" ")[1]),
+        options: [
+          car.TransMissionType,
+          car.FuelType,
+          `${car.SeatingCapacity} Seats`,
+        ],
+        address: car.LocationName,
+        locationkey: car.LocationKey,
+        hourly_amount: car.PerUnitCharges,
+        images: [car.VehicleBrandImageName],
+        ratingData: { text: "No ratings available" },
+        extrakm_charge: `₹${car.ExKMRate}/km`,
+        trips: car.TotalBookinCount,
+        source: "mychoize",
+        sourceImg: vendorData?.Imageurl,
+        fare: `₹${Math.round(baseFare)}`, // Base fare
+        inflated_fare: `₹${Math.round(calculatedFare)}`, // Final fare with all factors
+        rateBasis: car.rateBasis,
+        securityDeposit: vendorData?.subSecurityDeposit,
+        rating: vendorData?.rating,
+        plateColor: vendorData?.plateColor,
+        vendorOffer: vendorData?.Offer,
+      };
+    });
 
     return subscriptionCars;
   } catch (error) {
     console.error("MyChoize API failed:", error);
     return [];
   }
+};
+
+const calculateSelfDrivePrice = (baseFare, vendor) => {
+  // Parse the base fare from string or number
+  const numericFare =
+    typeof baseFare === "string"
+      ? parseInt(baseFare.replace(/[^0-9]/g, ""))
+      : // If it's already a number, use it directly
+        baseFare;
+
+  // Return 0 if we couldn't parse a valid number
+  if (!numericFare || isNaN(numericFare)) {
+    console.warn("Invalid base fare:", baseFare);
+    return 0;
+  }
+
+  if (vendor?.vendor === "ZoomCar") {
+    // For ZoomCar, just return the base fare as is
+    return Math.round(numericFare);
+  }
+  const finalPrice =
+    numericFare *
+    (1 + parseFloat(vendor.TaxSd)) *
+    parseFloat(vendor.CurrentrateSd) *
+    parseFloat(vendor.DiscountSd);
+  return Math.round(finalPrice);
+};
+
+const calculateDiscountPrice = (baseFare, vendor) => {
+  // Parse the base fare if it's a string with ₹ symbol
+  const numericFare =
+    typeof baseFare === "string" ? parseInt(baseFare) : baseFare;
+
+  if (!numericFare || isNaN(numericFare)) return 0;
+
+  if (vendor?.vendor === "ZoomCar") {
+    const finalPrice = numericFare * parseFloat(vendor.CurrentrateSd);
+    return Math.round(finalPrice);
+  }
+  const finalPrice =
+  baseFare *
+  (1 + parseFloat(vendor.TaxSd)) *
+  parseFloat(vendor.CurrentrateSd);
+ 
+  return Math.round(finalPrice);
 };
 
 const fetchMyChoizeCars = async (
@@ -107,6 +186,21 @@ const fetchMyChoizeCars = async (
   tripDurationHours
 ) => {
   try {
+    // Get vendor details first
+    const vendorData = await getVendorDetails("mychoize");
+    console.log("Vendor Data:", vendorData);
+    // Check if API is enabled
+    if (!vendorData?.Api?.PU) {
+      console.log('Mychoize API is currently disabled');
+      return [];
+    }
+
+    // Check if booking time meets minimum hours requirement
+    if (!validateBookingTime(formattedPickDate, vendorData?.minHrsTillBooking?.sd || 0)) {
+      console.log('Pickup time does not meet minimum hours requirement');
+      return [];
+    }
+
     const mychoizeData = await fetchWithRetry(
       `${apiUrl}/mychoize/search-cars`,
       {
@@ -180,15 +274,42 @@ const fetchMyChoizeCars = async (
       });
     });
 
-    const vendorData = await getVendorDetails("mychoize");
+    // const vendorData = await getVendorDetails("mychoize");
 
-    return Object.values(groupedCars).map((car) => ({
-      ...car,
-      fare: `₹${Math.min(...car.all_fares)}`,
-      inflated_fare: `₹${parseInt(
-        vendorData?.CurrentrateSd * Math.min(...car.all_fares)
-      )}`,
-    }));
+    return Object.values(groupedCars).map((car) => {
+      const baseFare = Math.min(...car.all_fares);
+
+      const pickupDate = new Date(formattedPickDate);
+      const isWeekend = pickupDate.getDay() === 0 || pickupDate.getDay() === 6;
+
+      const discountPrice = calculateDiscountPrice(
+        baseFare,
+        vendorData,
+        isWeekend
+      );
+      const finalPrice = calculateSelfDrivePrice(
+        baseFare,
+        vendorData,
+        isWeekend
+      );
+
+      return {
+        ...car,
+        fare: `₹${finalPrice}`, // Final price with discount
+        inflated_fare: `₹${discountPrice}`, // Price without discount
+        actualPrice: baseFare, // Store original price
+        securityDeposit: vendorData?.Securitydeposit,
+        rating: vendorData?.rating,
+        plateColor: vendorData?.plateColor,
+        minHrsTillBooking: vendorData?.minHrsTillBooking?.sd,
+        vendorOffer: vendorData?.Offer,
+        vendorLogo: vendorData?.Imageurl,
+        isWeekend: isWeekend,
+        taxRate: vendorData?.TaxSd,
+        currentRate: vendorData?.CurrentrateSd,
+        discountRate: vendorData?.DiscountSd,
+      };
+    });
   } catch (error) {
     console.error(error.message);
     return [];
@@ -224,4 +345,6 @@ export {
   fetchMyChoizeLocationList,
   formatDateForMyChoize,
   fetchSubscriptionCars,
+  calculateSelfDrivePrice,
+  calculateDiscountPrice,
 };

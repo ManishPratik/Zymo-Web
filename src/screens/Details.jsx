@@ -364,7 +364,7 @@ const CarDetails = ({ title }) => {
               {carDetails[0].price}
             </p>
             <span className="text-xs text-gray-400">
-              {car.source === "zoomcar" ? "GST Included" : "GST Not Included"}
+              {car.source === "zoomcar" || car.source === 'Mychoize' ? "GST Included" : "GST Not Included"}
             </span>
             <button
               onClick={handleBooking}
