@@ -207,7 +207,7 @@ const ChatBot = ({ forApp }) => {
                 </button>
                 
                 <div>
-                    {showMessage && <span className="ask-me-message text-[#faffa4]" >Hey there👋</span>}
+                    {showMessage && <span className="ask-me-message text-[#faffa4]" >Hi👋</span>}
                 </div>
             </div>
 

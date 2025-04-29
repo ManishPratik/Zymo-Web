@@ -34,7 +34,7 @@ const ChatBotButton = () => {
             >
                 <img className="bot-icon" style={{ width: '20px' }} src={chatBotIcon} alt="Chatbot icon" />
             </button>
-            {showMessage && <span className="ask-me-message text-[#faffa4]">Hey there👋</span>}
+            {showMessage && <span className="ask-me-message text-[#faffa4]">Hi👋</span>}
         </div>
     );
 };
