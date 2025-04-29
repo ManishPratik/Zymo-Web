@@ -12,10 +12,10 @@ const BlogCard = ({ blog }) => {
     .join("-");
 
 
-  const goToBlog = () => {
-    localStorage.setItem("selectedBlogTitle", blog.title);
-    window.open(`/blogs/${urlTitle}/${blog.id}`, "_blank");
-  };
+  // const goToBlog = () => {
+  //   localStorage.setItem("selectedBlogTitle", blog.title);
+  //   window.open(`/blogs/${urlTitle}/${blog.id}`, "_blank");
+  // };
 
   return (
     <div className="bg-black shadow-md rounded-lg overflow-hidden hover:shadow-lg transition duration-300 text-white">
@@ -28,12 +28,13 @@ const BlogCard = ({ blog }) => {
         <span className="text-xs font-semibold text-black bg-[#faffa4] px-2 py-1 rounded-md w-fit">
           {blog.category}
         </span>
-        <h2
-          className="mt-2 text-lg font-semibold text-white hover:text-blue-600 transition cursor-pointer"
-          onClick={goToBlog}
+        <a
+          href={`/blogs/${urlTitle}/${blog.id}`}
+          className="mt-2 text-lg font-semibold text-white hover:text-blue-600 transition"
+          onClick={() => localStorage.setItem("selectedBlogTitle", blog.title)}
         >
-          {blog.title}
-        </h2>
+          <h2 className="inline">{blog.title}</h2>
+        </a>
         <p className="text-gray-400 text-justify text-sm mt-1">
           {blog.metaDescription}
         </p>
