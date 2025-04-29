@@ -455,11 +455,11 @@ const Listing = ({ title }) => {
             parseInt(tripDurationHours) < 24
               ? null
               : fetchMyChoizeCars(
-                  CityName,
-                  formattedPickDate,
-                  formattedDropDate,
-                  tripDurationHours
-                );
+                CityName,
+                formattedPickDate,
+                formattedDropDate,
+                tripDurationHours
+              );
 
           const firebasePromise = fetchFirebaseCars(); // Enable Firebase data fetch
 
@@ -562,17 +562,23 @@ const Listing = ({ title }) => {
     tripDurationHours,
   ]);
 
-  // Filter functionality
+  // // Filter functionality
+  // useEffect(() => {
+  //   setFilteredList(clubbedCarList);
+  // }, [clubbedCarList]);
+
+  // New Filter functionality
   useEffect(() => {
-    setFilteredList(clubbedCarList);
-  }, [clubbedCarList]);
+    applyFiltersToGroupedCars();
+  }, [clubbedCarList, priceRange, seats, fuel, transmission]);
+
   useEffect(() => {
     document.title = title;
   }, [title]);
 
   const resetFilters = () => {
     setTransmission("");
-    setPriceRange("");
+    setPriceRange("lowToHigh");
     setSeats("");
     setFuel("");
     setFilteredList(clubbedCarList);
@@ -675,6 +681,20 @@ const Listing = ({ title }) => {
     });
   };
 
+  // useEffect(() => {
+  //   const timer = setTimeout(() => {
+  //     setPriceRange("lowToHigh"); // set Low-High
+  //     applyFiltersToGroupedCars(); // apply filter after setting
+
+  //     setFilteredList(clubbedCarList);
+
+  //     console.log("Auto-applied Low-High after 2 seconds");
+  //   }, 2000); // 2000ms = 2 seconds
+
+  //   return () => clearTimeout(timer); // cleanup
+  // }, []);
+
+
   return (
     <>
       {/* ✅ Dynamic SEO Tags */}
@@ -746,7 +766,7 @@ const Listing = ({ title }) => {
                 value={priceRange}
                 onChange={(e) => setPriceRange(e.target.value)}
               >
-                <option value="">Price Range</option>
+                {/* <option value="" disabled hidden>Price Range</option> */}
                 <option value="lowToHigh">Low - High</option>
                 <option value="highToLow">High - Low</option>
               </select>
