@@ -28,8 +28,8 @@ const BlogCard = ({ blog }) => {
       </div>
 
       <div className="absolute inset-0 bg-black bg-opacity-40 p-8 flex flex-col justify-between text-white">
-        <span className="text-xs font-semibold text-black bg-[#faffa4] px-2 py-1 rounded-md w-fit">
-          {blog.category} • {readTime} minute{readTime > 1 ? "s" : ""} read
+        <span className="text-sm font-semibold text-white px-2 py-1 rounded-md w-fit">
+          {blog.category} • {readTime} min{readTime > 1 ? "s" : ""} read
         </span>
 
         <a
@@ -37,7 +37,7 @@ const BlogCard = ({ blog }) => {
           onClick={() => localStorage.setItem("selectedBlogTitle", blog.title)}
           className="group block mt-4"
         >
-          <h2 className="relative text-xl md:text-[1.4rem] font-bold leading-snug group-hover:text-[#faffa4]">
+          <h2 className="relative text-xl md:text-[1.4rem] font-bold leading-snug">
             {blog.title}
           </h2>
 
