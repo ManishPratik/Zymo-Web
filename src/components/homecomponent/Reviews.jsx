@@ -120,7 +120,7 @@ const Reviews = () => {
                 <h2 className="text-2xl font-bold">Our Customers Love Us</h2>
                 <p className="text-gray-400">We love hearing from happy customers</p>
             </div>
-            <div className="bg-darkGrey2 rounded-lg p-6 py-8 mx-auto max-w-7xl overflow-hidden">
+            <div className="bg-transparent rounded-3xl p-6 py-8 mx-auto max-w-7xl overflow-hidden">
                 <div ref={scrollRef} className="flex space-x-6 overflow-hidden  scroll-container"
                     style={{
                         maskImage:
@@ -133,11 +133,11 @@ const Reviews = () => {
                         <div
                             key={index}
                             className="relative flex flex-col w-[300px] md:w-[350px] p-6 rounded-3xl text-center flex-shrink-0
-             border border-[#faffa4]/30
-             bg-gradient-to-b from-[#424242] via-white/10 to-[#faffa4]/20"
+             border-2 border-[#faffa4]/50
+             bg-gradient-to-br from-[#424242]/50 via-white/10 to-[#faffa4]/30"
                         >
-                            <span className="absolute top-5 left-6 text-6xl text-[#faffa4]">❝</span>
-                            <p className="text-sm text-left mb-4 mt-10">{testimonial.quote}</p>
+                            <span className="absolute top-4 left-6 text-6xl text-[#faffa4]">❝</span>
+                            <p className="text-sm text-left mb-4 mt-8">{testimonial.quote}</p>
                             <div className="flex items-center gap-3 mt-auto">
                                 <img src={testimonial.imgSrc} alt={testimonial.name} className="w-10 h-10 rounded-full" />
                                 <div className="text-left">
