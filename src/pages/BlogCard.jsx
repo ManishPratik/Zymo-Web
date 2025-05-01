@@ -16,6 +16,11 @@ const BlogCard = ({ blog }) => {
   const readTime = Math.max(1, Math.round(wordCount / averageWordsPerMinute));
 
   return (
+    <a
+          href={`/blogs/${urlTitle}/${blog.id}`}
+          onClick={() => localStorage.setItem("selectedBlogTitle", blog.title)}
+          className="group block mt-4"
+        >
     <div
       className="relative group w-full h-[420px] overflow-hidden shadow-lg shadow-gray-950 hover:shadow-2xl hover:shadow-gray-950 transition-all duration-300 hover:ring-2 hover:ring-[#f9ffa5] rounded-xl"
     >
@@ -27,17 +32,13 @@ const BlogCard = ({ blog }) => {
         />
       </div>
 
-      <div className="absolute inset-0 bg-black bg-opacity-40 p-8 flex flex-col justify-between text-white">
-        <span className="text-sm font-semibold text-white px-2 py-1 rounded-md w-fit">
+      <div className="absolute inset-0 bg-black bg-opacity-30 p-8 flex flex-col text-white">
+        <span className="text-sm font-semibold text-white w-fit">
           {blog.category} • {readTime} min{readTime > 1 ? "s" : ""} read
         </span>
 
-        <a
-          href={`/blogs/${urlTitle}/${blog.id}`}
-          onClick={() => localStorage.setItem("selectedBlogTitle", blog.title)}
-          className="group block mt-4"
-        >
-          <h2 className="relative text-xl md:text-[1.4rem] font-bold leading-snug">
+        
+          <h2 className="relative mt-auto text-xl md:text-[1.4rem] font-bold leading-snug">
             {blog.title}
           </h2>
 
@@ -49,9 +50,10 @@ const BlogCard = ({ blog }) => {
               →
             </span>
           </p>
-        </a>
+        
       </div>
     </div>
+    </a>
   );
 };
 
