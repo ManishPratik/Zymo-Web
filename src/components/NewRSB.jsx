@@ -11,7 +11,7 @@ import { toast } from "react-toastify";
 import DateTimeOverlay from "./DateTimeOverlay";
 import { getCurrentTime } from "../utils/DateFunction";
 import useTrackEvent from "../hooks/useTrackEvent";
-
+import {setBookingCookies,getBookingCookies} from "./CookiesConsent";
 const NewRSB = ({ urlcity }) => {
   const [activeTab, setActiveTab] = useState("rent");
   const [placeInput, setPlaceInput] = useState(urlcity || "");
@@ -322,6 +322,9 @@ const NewRSB = ({ urlcity }) => {
         return;
       }
 
+      // Store the updated values in cookies
+      setBookingCookies(placeInput, startDate, endDate);
+
       const formattedCity =
         city === "Bengaluru"
           ? "bangalore"
@@ -376,6 +379,35 @@ const NewRSB = ({ urlcity }) => {
     }
   }, [suggestions, urlcity]);
   
+  useEffect(() => {
+    // Retrieve cookies on component mount
+    const { location, startDate: savedStartDate, endDate: savedEndDate } = getBookingCookies();
+
+    if (location) {
+      setPlaceInput(location); // Set location from cookies
+    }
+
+    const currentDate = new Date(getCurrentTime());
+
+    if (savedStartDate) {
+      const startDateObj = new Date(savedStartDate);
+      if (startDateObj < currentDate) {
+        // If start date is in the past, set it to today's date
+        setStartDate(currentDate);
+        setEndDate(null); // Reset end date if start date is in the past
+
+      } else {
+        setStartDate(startDateObj);
+        setEndDate(new Date(savedEndDate)); // Set end date from cookies
+      }
+    } else {
+      // If no start date in cookies, set it to today's date
+      setStartDate(currentDate);
+      setEndDate(null); // Reset end date if no start date in cookies  
+
+    } 
+
+  }, []);
 
   return (
     <>

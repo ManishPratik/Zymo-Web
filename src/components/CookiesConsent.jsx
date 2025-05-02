@@ -1,6 +1,36 @@
 import { useEffect, useState } from "react";
 import Cookies from "js-cookie";
 
+// This function will be used throughout your app to try to store cookies
+export const setBookingCookies = (location, startDate, endDate) => {
+  const hasConsented = Cookies.get("cookiesConsent") === "true";
+
+  if (hasConsented) {
+    const expirationDate = new Date(startDate); // Make sure startDate is in a valid date format
+
+    Cookies.set("location", location);
+    Cookies.set("startDate", startDate, { expires: expirationDate });
+    Cookies.set("endDate", endDate, { expires: expirationDate });
+  }
+};
+
+export const getBookingCookies = () => {
+  const hasConsented = Cookies.get("cookiesConsent") === "true";
+  if (!hasConsented) {
+    return {
+      location: false,
+      startDate: false,
+      endDate: false,
+    };
+  } else {
+    return {
+      location: Cookies.get("location") || false,
+      startDate: Cookies.get("startDate") || false,
+      endDate: Cookies.get("endDate") || false,
+    };
+  }
+};
+
 const CookiesConsent = () => {
   const [showBanner, setShowBanner] = useState(false);
 
@@ -69,4 +99,6 @@ const CookiesConsent = () => {
   );
 };
 
+
 export default CookiesConsent;
+
