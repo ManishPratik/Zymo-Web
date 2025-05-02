@@ -136,13 +136,15 @@ const Reviews = () => {
              border-2 border-[#faffa4]/30
              bg-gradient-to-br from-[#424242]/50 via-white/10 to-[#faffa4]/30"
                         >
-                            <span className="absolute top-4 left-6 text-6xl text-[#faffa4]">❝</span>
-                            <p className="text-sm font-merriweather italic text-left mb-4 mt-8">{testimonial.quote}</p>
+                            <span className="absolute top-6 left-6 w-7 h-7 md:w-8 md:h-8">
+                                <img src="/images/quotes.png"/>
+                            </span>
+                            <p className="text-xs font-merriweather italic text-left md:text-sm mb-4 mt-8">{testimonial.quote}</p>
                             <div className="flex items-center gap-3 mt-auto">
-                                <img src={testimonial.imgSrc} alt={testimonial.name} className="w-10 h-10 rounded-full" />
+                                <img src={testimonial.imgSrc} alt={testimonial.name} className="w-9 h-9 md:w-10 md:h-10 rounded-full" />
                                 <div className="text-left">
-                                    <p className="font-semibold font-merriweather">{testimonial.name}</p>
-                                    <p className="text-sm">{testimonial.stars}</p>
+                                    <p className="font-semibold font-merriweather text-sm md:text-base">{testimonial.name}</p>
+                                    <p className="text-xs md:text-sm">{testimonial.stars}</p>
                                 </div>
                             </div>
                         </div>
