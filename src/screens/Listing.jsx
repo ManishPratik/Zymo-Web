@@ -480,10 +480,7 @@ const Listing = ({ title }) => {
 
           const zoomPromise = retryFunction(fetchZoomcarData);
 
-          const mychoizePromise =
-            parseInt(tripDurationHours) < 24
-              ? null
-              : fetchMyChoizeCars(
+          const mychoizePromise = fetchMyChoizeCars(
                 CityName,
                 formattedPickDate,
                 formattedDropDate,
