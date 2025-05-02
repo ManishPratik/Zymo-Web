@@ -15,6 +15,7 @@ import {
   formatDateForMyChoize,
   formatNumberAsPrice,
 } from "../utils/mychoize";
+import { currencyToInteger } from "../utils/currencyHelper";
 import { addDoc, collection, doc, getDoc } from "firebase/firestore";
 import { appDB, appStorage } from "../utils/firebase";
 import PickupPopup from "../components/PickupPopup";
@@ -71,6 +72,7 @@ function BookingPage() {
   const [uploadDocData, setUploadDocData] = useState(null);
   const [bookingData, setBookingData] = useState(null);
   const [fareAmount, setFareAmount] = useState(null);
+  const [gstAmount, setGstAmount] = useState(null);
 
   const [loading, setLoading] = useState(false);
 
@@ -100,8 +102,12 @@ function BookingPage() {
     if (!car.fare || !vendorDetails) return;
 
     // Get the base fare from car data
-    const baseFare = car.actualPrice || parseInt(car.fare.slice(1));
-    const carFareAmount = parseInt(car.fare.slice(1));
+    let baseFare = car.actualPrice || currencyToInteger(car.fare);
+    if (car.source === "Karyana"){
+      baseFare = currencyToInteger(car.inflated_fare);
+    }
+    console.log("base fare", baseFare);
+    const carFareAmount = currencyToInteger(car.fare);
     const deposit = parseInt(vendorDetails?.Securitydeposit) || 0;
 
     // 1. Calculate base price: baseFare * currentRate
@@ -109,28 +115,96 @@ function BookingPage() {
     const basePrice = baseFare * currentRate;
     setFareAmount(Math.round(basePrice));
 
+    if (car.source === "Karyana"){
+      setFareAmount(Math.round(baseFare))
+    }
+
     // 2. Add GST to the base price
     const taxRate = parseFloat(vendorDetails?.TaxSd || 0);
-    const withGST =
-      vendorDetails?.vendor === "ZoomCar"
-        ? 0
-        : basePrice * taxRate;
+    
+    // Special case for Karyana or vendors where TaxSd is 1
+    // When TaxSd is 1, it means GST is already included in the base fare
+    // For other values, it represents the GST tax rate to be applied
+    let withGST = 0;
+    if (vendorDetails?.vendor === "ZoomCar") {
+      withGST = 0; // ZoomCar has GST included in base fare
+    } else if (taxRate === 1) {
+      withGST = 0; // When TaxSd is 1, GST is already included
+    } else {
+      withGST = basePrice * taxRate; // Normal GST calculation
+    }
+    setGstAmount(Math.round(withGST));
+
     console.log("withGST", baseFare, basePrice, taxRate, withGST, carFareAmount);
         
-    // 3. Calculate discount
+    // 3. Calculate discount and final amount
     const discountRate = parseFloat(vendorDetails?.DiscountSd || 1);
-    const discountAmount = (basePrice + withGST) * (1 - discountRate);
-    setDiscount(Math.round(discountAmount));
-
-    // Final payable = base price with GST - discount + deposit
-    console.log("gst amount", withGST, discountAmount, deposit);
-    const amount = Math.round(
-      vendorDetails?.vendor === "ZoomCar"
-        ? basePrice + deposit - discountAmount
-        : basePrice + withGST - discountAmount + deposit
-    );
-    setPayableAmount(amount);
-  }, [car.fare, vendorDetails]);
+    let finalAmount;
+    
+    if (car.source === "Karyana") {
+      // For Karyana cars:
+      // - baseFare is the inflated price (3912 in this case)
+      // - We need to calculate the discounted fare using the discount rate
+      const discountedFare = Math.round(baseFare * discountRate); // 3912 * 0.85 = 3325
+      const discountAmount = baseFare - discountedFare; // 3912 - 3325 = 587
+      setDiscount(discountAmount);
+      
+      console.log("Karyana price calculation:", {
+        baseFare,
+        discountRate,
+        discountedFare,
+        discountAmount,
+        deposit
+      });
+      
+      // Final amount should be discounted fare + deposit (3325 + 3000 = 6325)
+      finalAmount = discountedFare + deposit;
+    } else if (car.source === "zoomcar") {
+      // For ZoomCar:
+      // - baseFare is already the discounted price (3000)
+      // - Calculate inflated price using currentRate (3000 * 1.25 = 3750)
+      // - Discount is the difference (3750 - 3000 = 750)
+      const inflatedPrice = Math.round(baseFare * currentRate);
+      const discountAmount = inflatedPrice - baseFare;
+      setDiscount(discountAmount);
+      
+      console.log("ZoomCar price calculation:", {
+        baseFare,
+        inflatedPrice,
+        currentRate,
+        discountAmount,
+        deposit
+      });
+      
+      // For ZoomCar, use the base fare as the final amount
+      finalAmount = Math.round(baseFare);
+    } else {
+      // For other vendors, include GST in discount calculation
+      const discountAmount = (basePrice + withGST) * (1 - discountRate);
+      setDiscount(Math.round(discountAmount));
+      
+      console.log("Other vendor price calculation:", {
+        basePrice,
+        withGST,
+        discountRate,
+        discountAmount
+      });
+      
+      // Final payable = base price with GST - discount + deposit
+      finalAmount = Math.round(baseFare + withGST - discountAmount + deposit);
+    }
+    
+    console.log("Final amount calculation:", {
+      vendor: vendorDetails?.vendor,
+      baseFare,
+      withGST,
+      discount,
+      deposit,
+      finalAmount
+    });
+    
+    setPayableAmount(finalAmount);
+  }, [car.fare, car.source, car.inflated_fare, car.actualPrice, vendorDetails, discount]);
 
   useEffect(() => {
     if (selectedPickupLocation && selectedDropLocation) {
@@ -142,9 +216,8 @@ function BookingPage() {
       });
       setDeliveryCharges(newDeliveryCharges);
     }
-  }, [selectedPickupLocation, selectedDropLocation]);
+  }, [selectedPickupLocation, selectedDropLocation, deliveryCharges]);
 
-  console.log(car);
 
   const preBookingData = {
     headerDetails: {
@@ -168,14 +241,13 @@ function BookingPage() {
     fareDetails: {
       // Base price with current rate only
       base: vendorDetails
-        ? vendorDetails.vendor === "ZoomCar"
+        ? gstAmount === "ZoomCar"
           ? `₹${car?.actualPrice * (vendorDetails?.CurrentrateSd || 1)}`
           : `₹${fareAmount}`
         : "₹0",
       // GST calculated on base price
       gst:
-        car.source === "zoomcar"
-          ? "Incl. in Base Fare"
+        gstAmount === 0 ? "Incl. in Base Fare"
           : `₹${formatNumberAsPrice(fareAmount * (vendorDetails?.TaxSd || 0))}`,
       // Security deposit unchanged
       deposit:
@@ -791,7 +863,7 @@ function BookingPage() {
               </p>
             </div>
           </div>
-
+          {console.log(car.source)}
           {car.source === "mychoize" ? (
             <>
               <div className="mt-5 mb-4">

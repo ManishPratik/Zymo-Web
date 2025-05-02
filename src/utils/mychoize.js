@@ -8,7 +8,7 @@ export const formatNumberAsPrice = (number) => {
   }).format(number);
 };
 
-const getTotalKms = (tripDurationHours) => {
+export const getTotalKms = (tripDurationHours) => {
   return {
     FF: `${(120 / 24) * tripDurationHours} KMs`, // Fixed Fare - 120 KM/Day
     MP: `${(300 / 24) * tripDurationHours} KMs`, // Monthly Plan - 300 KM/Day
@@ -48,9 +48,36 @@ const apiUrl = import.meta.env.VITE_FUNCTIONS_API_URL;
 // const apiUrl = "http://127.0.0.1:5001/zymo-prod/us-central1/api";
 
 const validateBookingTime = (pickupDate, minHrsTillBooking) => {
+  if (!pickupDate || !minHrsTillBooking) {
+    console.log('Missing pickup date or minHrsTillBooking:', { pickupDate, minHrsTillBooking });
+    return false;
+  }
+
   const now = new Date();
-  const pickupTime = new Date(pickupDate);
+  // Handle MyChoize date format "/Date(1234567890+0530)/"
+  let pickupTime;
+  if (typeof pickupDate === 'string' && pickupDate.includes('/Date(')) {
+    const timestamp = parseInt(pickupDate.match(/\d+/)[0]);
+    pickupTime = new Date(timestamp);
+  } else {
+    pickupTime = new Date(pickupDate);
+  }
+
+  if (isNaN(pickupTime.getTime())) {
+    console.log('Invalid pickup date:', pickupDate);
+    return false;
+  }
+
   const diffInHours = (pickupTime - now) / (1000 * 60 * 60);
+  console.log(
+    'Time validation:', {
+      now: now.toISOString(),
+      pickupTime: pickupTime.toISOString(),
+      diffInHours,
+      minHrsTillBooking,
+      isValid: diffInHours >= minHrsTillBooking
+    }
+  );
   return diffInHours >= minHrsTillBooking;
 };
 
@@ -196,6 +223,7 @@ const fetchMyChoizeCars = async (
     }
 
     // Check if booking time meets minimum hours requirement
+    console.log(vendorData?.minHrsTillBooking?.sd)
     if (!validateBookingTime(formattedPickDate, vendorData?.minHrsTillBooking?.sd || 0)) {
       console.log('Pickup time does not meet minimum hours requirement');
       return [];

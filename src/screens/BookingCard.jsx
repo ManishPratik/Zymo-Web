@@ -2,7 +2,6 @@ import React, { useEffect, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 import {
-  findPackage,
   calculateSelfDrivePrice,
   calculateDiscountPrice,
 } from "../utils/mychoize";
@@ -19,66 +18,90 @@ const BookingCard = ({ title }) => {
   const [vendorDetails, setVendorDetails] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  const isKaryana =
+    car?.brand === "Karyana" || car?.source?.toLowerCase() === "karyana";
   useEffect(() => {
-    console.log("Car Source:", car.source);
+    console.log("Car Source:", isKaryana ? "Karyana" : car?.source);
     const fetchVendorDetails = async () => {
-      if (car.source === "mychoize") {
-        try {
-          const vendorsSnapshot = await getDocs(
-            collection(appDB, "carvendors")
-          );
-          const vendorData = vendorsSnapshot.docs.map((doc) => ({
-            id: doc.id,
-            ...doc.data(),
-          }));
-          const mychoizeVendor = vendorData.find(
-            (vendor) => vendor.id.toLowerCase() === "mychoize"
-          );
-          if (mychoizeVendor) {
-            setVendorDetails(mychoizeVendor);
-          }
-          console.log("Vendor Details:", mychoizeVendor);
-        } catch (error) {
-          console.error("Error fetching vendor details:", error);
+      try {
+        const vendorsSnapshot = await getDocs(collection(appDB, "carvendors"));
+        const vendorData = vendorsSnapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+        const selectedVendor = vendorData.find(
+          (vendor) =>
+            vendor.id?.toLowerCase() ===
+            (isKaryana ? "karyana" : car?.source?.toLowerCase())
+        );
+        if (selectedVendor) {
+          setVendorDetails(selectedVendor);
+          console.log("Vendor Details:", selectedVendor);
         }
+      } catch (error) {
+        console.error("Error fetching vendor details:", error);
       }
       setLoading(false);
     };
     fetchVendorDetails();
-  }, [car.source]);
-
-  const goToDetails = (car, rateBasis) => {
+  }, [car, isKaryana]);
+  console.log("Cars data into booking card", car);
+  
+  // Helper function to find package name based on rateBasis
+  const findPackage = (rateBasis) => {
+    switch(rateBasis) {
+      case "FF": return "120KM Package";
+      case "MP": return "300KM Package";
+      case "DR": return "Unlimited Package";
+      case "hourly": return "Hourly Package";
+      default: return "Standard Package";
+    }
+  };
+  
+  const goToDetails = (selectedCar, index = null) => {
     if (!vendorDetails) return;
 
-    const baseFare = car.rateBasisFare[rateBasis];
-    const pickupDate = new Date(startDate);
-    const isWeekend = pickupDate.getDay() === 0 || pickupDate.getDay() === 6;
+    let updatedCar;
 
-    // Use the imported price calculation functions with vendor details
-    const finalPrice = calculateSelfDrivePrice(
-      baseFare,
-      vendorDetails,
-      isWeekend
-    );
-    const discountPrice = calculateDiscountPrice(
-      baseFare,
-      vendorDetails,
-      isWeekend
-    );
-    console.log("baseFare", baseFare);
-    car.fare = `₹${finalPrice}`;
-    car.inflated_fare = `₹${discountPrice}`;
-    car.rateBasis = rateBasis;
-    car.actualPrice = baseFare;
-    car.taxRate = vendorDetails.TaxSd;
-    car.currentRate = vendorDetails.CurrentrateSd;
-    car.discountRate = vendorDetails.DiscountSd;
+    if (isKaryana) {
+      // For Karyana cars, we use the selected variation from the cars array
+      const variation = car.cars[0].variations[index];
+
+      updatedCar = {
+        ...variation,
+        taxRate: vendorDetails.TaxSd,
+        currentRate: vendorDetails.CurrentrateSd,
+        discountRate: vendorDetails.DiscountSd,
+        packageName: findPackage(variation.rateBasis || "FF")
+      };
+
+    } else {
+      // For MyChoize cars with rateBasisFare
+      const rateBasis = selectedCar;
+      const baseFare = car.rateBasisFare[rateBasis];
+      const pickupDate = new Date(startDate);
+      const isWeekend = pickupDate.getDay() === 0 || pickupDate.getDay() === 6;
+
+      const finalPrice = calculateSelfDrivePrice(baseFare, vendorDetails, isWeekend);
+      const discountPrice = calculateDiscountPrice(baseFare, vendorDetails, isWeekend);
+
+      updatedCar = {
+        ...car,
+        taxRate: vendorDetails.TaxSd,
+        currentRate: vendorDetails.CurrentrateSd,
+        discountRate: vendorDetails.DiscountSd,
+        finalPrice,
+        discountPrice,
+        packageName: findPackage(rateBasis),
+        selectedPackage: rateBasis
+      };
+    }
 
     navigate(`/self-drive-car-rentals/${city}/cars/booking-details`, {
       state: {
         startDate,
         endDate,
-        car,
+        car: updatedCar,
       },
     });
   };
@@ -115,74 +138,143 @@ const BookingCard = ({ title }) => {
         <ArrowLeft className="w-6 h-6" />
       </button>
       <div className="bg-[#212121] min-h-screen px-5 py-8 flex flex-col justify-center items-center">
-        {!loading &&
-          vendorDetails &&
-          Object.entries(car.total_km).map(([rateBasis, kms], index) => (
-            <div
-              key={index}
-              className="text-white flex flex-col items-center py-4 my-4 bg-[#303030] rounded-lg shadow-lg max-w-2xl w-full mx-auto"
-            >
-              <div className="flex justify-between items-center w-full px-4 py-2">
-                <div className="flex flex-col">
-                  <h1 className="text-xl font-semibold flex items-center gap-2">
-                    Fulfilled by
-                    <span className="text-2xl text-[#E8FF81]">MyChoize</span>
-                    {/* <img
-                                    className="w-20 h-6 rounded-md bg-cover"
-                                    src=""
-                                    alt="Fulfilled by"
-                                /> */}
-                  </h1>
-                  <ul className="text-gray-200 space-y-1 mt-4">
-                    {car.options.map((option, index) => (
-                      <li
-                        key={index}
-                        className="flex items-center gap-2 text-md"
+        {!loading && vendorDetails ? (
+          <>
+            {/* Render MyChoize cars */}
+            {!isKaryana && car?.total_km && typeof car.total_km === 'object' && 
+              Object.entries(car.total_km).map(([rateBasis, kms], index) => (
+                <div
+                  key={`mychoize-${index}`}
+                  className="text-white flex flex-col items-center py-4 my-4 bg-[#303030] rounded-lg shadow-lg max-w-2xl w-full mx-auto"
+                >
+                  <div className="flex justify-between items-center w-full px-4 py-2">
+                    <div className="flex flex-col">
+                      <h1 className="text-xl font-semibold flex items-center gap-2">
+                        Fulfilled by
+                        <span className="text-2xl text-[#E8FF81]">
+                          {vendorDetails?.vendor || "MyChoize"}
+                        </span>
+                        {vendorDetails?.Imageurl && (
+                          <img
+                            className="w-20 h-6 rounded-md object-contain"
+                            src={vendorDetails.Imageurl}
+                            alt="Vendor"
+                          />
+                        )}
+                      </h1>
+                      <ul className="text-gray-200 space-y-1 mt-4">
+                        {car.options && Array.isArray(car.options) && car.options.map((option, idx) => (
+                          <li
+                            key={idx}
+                            className="flex items-center gap-2 text-md"
+                          >
+                            <span>• {option}</span>
+                          </li>
+                        ))}
+                        <li className="flex items-center gap-2 text-md">
+                          <span>• {`Total KMs: ${kms}`}</span>
+                        </li>
+                        <li className="flex items-center gap-2 text-md">
+                          <span>
+                            •{" "}
+                            {kms === "Unlimited KMs"
+                              ? `No extra KM charge`
+                              : `Extra KMs charged at ${car.extrakm_charge || "₹10/km"}`}
+                          </span>
+                        </li>
+                      </ul>
+                    </div>
+                    <div className="flex flex-col items-center space-y-1">
+                      <div className="text-xl font-bold text-white">
+                        {`₹${calculateSelfDrivePrice(
+                          car.rateBasisFare && car.rateBasisFare[rateBasis] ? car.rateBasisFare[rateBasis] : 0,
+                          vendorDetails,
+                          false
+                        )}`}
+                      </div>
+                      <div className="text-md text-[#E8FF81]">
+                        {findPackage(rateBasis)}
+                      </div>
+                      <button
+                        onClick={() => goToDetails(car, rateBasis)}
+                        className="bg-[#E8FF81] text-black font-bold text-md py-2 px-5 rounded-xl hover:bg-[#d7e46d] transition duration-300 ease-in-out"
                       >
-                        <span>• {option}</span>
-                      </li>
-                    ))}
-                    <li className="flex items-center gap-2 text-md">
-                      <span>• {`Total KMs: ${kms}`}</span>
-                    </li>
-                    <li className="flex items-center gap-2 text-md">
-                      <span>
-                        •{" "}
-                        {kms === "Unlimited KMs"
-                          ? `No extra KM charge`
-                          : `Extra KMs charged at ${car.extrakm_charge}`}
-                      </span>
-                    </li>
-                  </ul>
-                </div>
-                <div className="flex flex-col items-center space-y-1">
-                  {/* <div className="flex items-center gap-1 text-gray-500 text-sm line-through">
-                                    <span>{packageFare}</span>
-                                </div> */}
-                  <div className="text-xl font-bold text-white">
-                    {`₹${calculateSelfDrivePrice(
-                      car.rateBasisFare[rateBasis],
-                      vendorDetails,
-                      false
-                    )}`}
+                        Go to booking
+                      </button>
+                    </div>
                   </div>
-                  <div className="text-md text-[#E8FF81]">
-                    {findPackage(rateBasis)}
+                  <div className="mt-3 text-[#E8FF81] font-normal text-md py-2 px-5 border border-[#E8FF81] rounded-lg">
+                    Home Delivery Available
                   </div>
-                  <button
-                    onClick={() => goToDetails(car, rateBasis)}
-                    className="bg-[#E8FF81] text-black font-bold text-md py-2 px-5 rounded-xl hover:bg-[#d7e46d] transition duration-300 ease-in-out"
-                  >
-                    Go to booking
-                  </button>
                 </div>
-              </div>
-              <div className="mt-3 text-[#E8FF81] font-normal text-md py-2 px-5 border border-[#E8FF81] rounded-lg">
-                {/* {kms === "Unlimited KMs" ? `Unlimited KMs` : `Extra kms will be charged at ${car.extrakm_charge}`} */}
-                Home Delivery Available
-              </div>
-            </div>
-          ))}
+              ))
+            }
+
+            {/* Render Karyana cars */}
+            {isKaryana && car?.cars && Array.isArray(car.cars) && 
+              car.cars[0].variations.map((variation, index) => (
+                <div
+                  key={`karyana-${index}`}
+                  className="text-white flex flex-col items-center py-4 my-4 bg-[#303030] rounded-lg shadow-lg max-w-2xl w-full mx-auto"
+                >
+                  <div className="flex justify-between items-center w-full px-4 py-2">
+                    <div className="flex flex-col">
+                      <h1 className="text-xl font-semibold flex items-center gap-2">
+                        Fulfilled by
+                        <span className="text-2xl text-[#E8FF81]">
+                          {vendorDetails?.vendor || "Karyana"}
+                        </span>
+                        {vendorDetails?.Imageurl && (
+                          <img
+                            className="w-20 h-6 rounded-md object-contain"
+                            src={vendorDetails.Imageurl}
+                            alt="Karyana"
+                          />
+                        )}
+                      </h1>
+                      <ul className="text-gray-200 space-y-1 mt-4">
+                        {variation.options && Array.isArray(variation.options) && variation.options.map((option, idx) => (
+                          <li key={idx} className="flex items-center gap-2 text-md">
+                            <span>• {option}</span>
+                          </li>
+                        ))}
+                        <li className="flex items-center gap-2 text-md">
+                          <span>• {`Total KMs: ${variation.total_km?.FF || "350 KMs"}`}</span>
+                        </li>
+                        <li className="flex items-center gap-2 text-md">
+                          <span>
+                            • Extra KMs charged at {variation.extrakm_charge || "10"}/km
+                          </span>
+                        </li>
+                      </ul>
+                    </div>
+                    <div className="flex flex-col items-center space-y-1">
+                      <div className="text-xl font-bold text-white">
+                        {variation.fare}
+                      </div>
+                      <div className="text-md text-[#E8FF81]">
+                        {variation.total_km?.FF || "350"} Package
+                      </div>
+                      <button
+                        onClick={() => goToDetails(null, index)}
+                        className="bg-[#E8FF81] text-black font-bold text-md py-2 px-5 rounded-xl hover:bg-[#d7e46d] transition duration-300 ease-in-out mt-2"
+                      >
+                        Go to booking
+                      </button>
+                    </div>
+                  </div>
+                  <div className="mt-3 text-[#E8FF81] font-normal text-md py-2 px-5 border border-[#E8FF81] rounded-lg">
+                    Home Delivery Available
+                  </div>
+                </div>
+              ))
+            }
+          </>
+        ) : (
+          <div className="text-white text-center">
+            <p>Loading car options...</p>
+          </div>
+        )}
       </div>
     </>
   );

@@ -129,11 +129,10 @@ const Listing = ({ title }) => {
       ...doc.data(),
     }));
     setVendersDetails(vendorData);
-  };  
+  };
 
   //It group the cars by name and brand and find the minimum fare for each group
   const clubCarsByName = (carsArray) => {
-    console.log("Cars array received:", carsArray);
     if (!Array.isArray(carsArray) || carsArray.length === 0) {
       return [];
     }
@@ -143,7 +142,7 @@ const Listing = ({ title }) => {
       if (!car) {
         return acc;
       }
-
+      console.log("Car data from club:", car);
       // Make sure we have valid values for these fields
       const name = car.name || "Unknown";
       const brand = car.brand || "Partner";
@@ -232,7 +231,9 @@ const Listing = ({ title }) => {
         const fetchFirebaseCars = async () => {
           try {
             // Step 1: Get partners from partnerWebApp collection that serve the requested city
-            const partnersSnapshot = await getDocs(collection(appDB, "partnerWebApp"));
+            const partnersSnapshot = await getDocs(
+              collection(appDB, "partnerWebApp")
+            );
 
             // Step 2: Filter partners by city and get their details
             const partnersInCity = partnersSnapshot.docs
@@ -269,7 +270,7 @@ const Listing = ({ title }) => {
                   username: data.username || "",
                   // Fields used in UI
                   brandLogo: data.logo || null,
-                  ...data
+                  ...data,
                 };
               });
 
@@ -284,6 +285,9 @@ const Listing = ({ title }) => {
                 );
 
                 if (!carsSnapshot.empty) {
+                  // Process partner cars but currently not using them
+                  // This code is kept for potential future use
+                  /*
                   const partnerCars = carsSnapshot.docs.map((doc) => {
                     const carData = doc.data();
                     return {
@@ -317,11 +321,11 @@ const Listing = ({ title }) => {
                       ...carData
                     };
                   });
-
-                  console.log(
-                    `Found ${partnerCars.length} cars for partner ${partner.fullName}`
-                  );
                   // allCars = [...allCars, ...partnerCars];
+                  */
+                  console.log(
+                    `Found ${carsSnapshot.size} partner cars from ${partner.brandName}, but not using them currently`
+                  );
                 }
               } catch (err) {
                 console.error(
@@ -332,21 +336,21 @@ const Listing = ({ title }) => {
             }
 
             // Step 4: Fetch cars from all test collections
-            console.log(`Fetching test collection cars for ${city}...`);
-            const testCollections = await fetchAllTestCollections(appDB , formatFare ,city, tripDurationHours);
+            const testCollections = await fetchAllTestCollections(
+              appDB,
+              formatFare,
+              city,
+              tripDurationHours
+            );
 
             if (testCollections && testCollections.length > 0) {
               console.log(
-                `Successfully fetched ${testCollections.length} test cars`
+                `Found ${testCollections} test collection cars for ${city}`
               );
               allCars = [...allCars, ...testCollections];
             } else {
               console.log(`No test collection cars found for ${city}`);
             }
-
-            console.log(
-              `Total cars found across all sources: ${allCars.length}`
-            );
 
             const hourlyRate = (car) => {
               if (!car.hourlyRental) return 0;
@@ -368,24 +372,38 @@ const Listing = ({ title }) => {
                 return true;
               })
               .map((car) => {
+                console.log("Car data:", car);
                 // Calculate fare if not provided
                 const calculatedHourlyRate = hourlyRate(car);
-                const calculatedFare = calculatedHourlyRate ? formatFare(calculatedHourlyRate * tripDurationHours) : '₹0';
-                console.log("car", car)
+                const calculatedFare = calculatedHourlyRate
+                  ? formatFare(calculatedHourlyRate * tripDurationHours)
+                  : "₹0";
                 return {
                   id: car.carId || car.id,
                   brand: car.partnerBrandName || "Zymo",
-                  name: car.carName || car.name || car.model || car.type || "Car",
+                  name:
+                    car.carName || car.name || car.model || car.type || "Car",
                   type: car.carType || car.type || "",
                   options: [
                     car.transmissionType || car.options?.[0] || "N/A",
                     car.fuelType || car.options?.[1] || "N/A",
-                    car.noOfSeats ? `${car.noOfSeats} Seats` : car.options?.[2] || "5 Seats"
+                    car.noOfSeats
+                      ? `${car.noOfSeats} Seats`
+                      : car.options?.[2] || "5 Seats",
                   ],
-                  address: car.pickupLocations?.[toPascalCase(city)] || car.address || "",
-                  images: car.images || car.image_urls || ["/images/Cars/default-car.png"],
+                  address:
+                    car.pickupLocations?.[toPascalCase(city)] ||
+                    car.address ||
+                    "",
+                  images: car.images ||
+                    car.image_urls || ["/images/Cars/default-car.png"],
                   fare: car.fare || calculatedFare,
-                  inflated_fare: car.inflated_fare || `₹${Math.round((parseInt(calculatedFare.replace(/[^0-9]/g, "")) || 0) * 1.2)}`,
+                  inflated_fare:
+                    car.inflated_fare ||
+                    `₹${Math.round(
+                      (parseInt(calculatedFare.replace(/[^0-9]/g, "")) || 0) *
+                        1.2
+                    )}`,
                   hourly_amount: car.hourly_amount || calculatedHourlyRate || 0,
                   extrakm_charge: car.extrakm_charge || "0",
                   extrahour_charge: car.extrahour_charge || 0,
@@ -393,15 +411,26 @@ const Listing = ({ title }) => {
                   securityDeposit: car.securityDeposit || 0,
                   deliveryCharges: car.deliveryCharges || false,
                   yearOfRegistration: car.yearOfRegistration || "N/A",
-                  ratingData: car.ratingData || { text: "No ratings available", rating: 4.0 },
+                  ratingData: car.ratingData || {
+                    text: "No ratings available",
+                    rating: 4.0,
+                  },
                   trips: car.trips || "N/A",
                   source: car.source || "Zymo",
-                  sourceImg: car.sourceImg || car.partnerLogo || "/images/ServiceProvider/zymo.png",
-                  location_est: car.location_est || city
+                  sourceImg:
+                    car.sourceImg ||
+                    car.partnerLogo ||
+                    "/images/ServiceProvider/zymo.png",
+                  location_est: car.location_est || city,
+                  total_km: car.total_km,
+                  all_fares: car.all_fares || [],
+                  rateBasis:
+                    car.rateBasis ||
+                    (tripDurationHours >= 24 ? "MP" : "hourly"),
+                  variations: car.variations || [],
                 };
               });
 
-            console.log("Firebase Filtered Data:", filterdData);
             return filterdData;
           } catch (error) {
             console.error("Error fetching Firebase cars:", error);
@@ -451,15 +480,13 @@ const Listing = ({ title }) => {
 
           const zoomPromise = retryFunction(fetchZoomcarData);
 
-          const mychoizePromise =
-            parseInt(tripDurationHours) < 24
-              ? null
-              : fetchMyChoizeCars(
-                  CityName,
-                  formattedPickDate,
-                  formattedDropDate,
-                  tripDurationHours
-                );
+          // Always fetch Mychoize cars regardless of duration
+          const mychoizePromise = fetchMyChoizeCars(
+            CityName,
+            formattedPickDate,
+            formattedDropDate,
+            tripDurationHours
+          );
 
           const firebasePromise = fetchFirebaseCars(); // Enable Firebase data fetch
 
@@ -512,7 +539,7 @@ const Listing = ({ title }) => {
               sourceImg: "/images/ServiceProvider/zoomcarlogo.png",
               rateBasis: "DR",
             }));
-            /*console.log("Zoomcar Data:", zoomCarData);*/
+
             allCarData = [...allCarData, ...zoomCarData];
           } else {
             console.error("Zoomcar API failed:", zoomData.reason);
@@ -535,7 +562,6 @@ const Listing = ({ title }) => {
             autoClose: 5000,
           });
         }
-        /*console.log("All Cars:", allCarData);*/
         const groupCarList = clubCarsByName(allCarData);
 
         setCarList(allCarData);
@@ -552,15 +578,7 @@ const Listing = ({ title }) => {
     };
 
     search();
-  }, [
-    city,
-    startDate,
-    endDate,
-    activeTab,
-    lat,
-    lng,
-    tripDurationHours,
-  ]);
+  }, [city, startDate, endDate, activeTab, lat, lng, tripDurationHours]);
 
   // Filter functionality
   useEffect(() => {
@@ -642,6 +660,10 @@ const Listing = ({ title }) => {
       });
     }
 
+    // Don't filter out multiple Karyana cars of the same model - we need to allow all packages
+    // This used to filter out duplicate Karyana cars but now we want to keep them
+    // to support showing multiple packages for trips over 24 hours
+
     setFilteredList(filteredGroups);
     setCarCount(
       filteredGroups.reduce((count, group) => count + group.cars.length, 0)
@@ -654,18 +676,74 @@ const Listing = ({ title }) => {
 
   const goToDetails = (car) => {
     handleSelectedCar(`${car.brand} ${car.name} - ${car.source}`);
-    navigate(`/self-drive-car-rentals/${city}/cars/booking-details`, {
-      state: {
-        startDate,
-        endDate,
-        car,
-        activeTab,
-      },
-    });
+
+    // For Karyana cars, ensure they have all required fields
+    if (car.source && car.source.toLowerCase() === "karyana") {
+      // Clone car to avoid modifying the original object
+      const carWithDefaults = {
+        ...car,
+        // Ensure package-related fields exist
+        rateBasis: car.rateBasis || (tripDurationHours >= 24 ? "MP" : "hourly"),
+        total_km:
+          car.total_km || (tripDurationHours >= 24 ? { MP: 300 } : undefined),
+      };
+
+      navigate(`/self-drive-car-rentals/${city}/cars/booking-details`, {
+        state: {
+          startDate,
+          endDate,
+          car: carWithDefaults,
+          activeTab,
+        },
+      });
+    } else {
+      // Normal flow for other providers
+      navigate(`/self-drive-car-rentals/${city}/cars/booking-details`, {
+        state: {
+          startDate,
+          endDate,
+          car,
+          activeTab,
+        },
+      });
+    }
   };
 
   const goToPackages = (car) => {
     handleSelectedCar(`${car.brand} ${car.name}`);
+
+    // Check if this is a Karyana car with multiple packages (rateBasisFare property exists)
+    const isKaryana = car.source === "Karyana";
+    const hasPackages =
+      car.rateBasisFare && Object.keys(car.rateBasisFare).length > 0;
+
+    console.log(
+      `Car ${car.name} - Karyana: ${isKaryana}, Has packages: ${hasPackages}, Trip hours: ${tripDurationHours}`
+    );
+
+    // if (isKaryana && !hasPackages) {
+    //   console.log("Karyana car without packages - directing to booking details");
+    //   // Direct to booking details for Karyana cars without packages
+    //   navigate(`/self-drive-car-rentals/${city}/cars/booking-details`, {
+    //     state: {
+    //       startDate,
+    //       endDate,
+    //       car,
+    //     },
+    //   });
+    // } else if (isKaryana && hasPackages) {
+    //   console.log("Karyana car with packages - directing to package selection");
+    //   console.log("Packages:", car.rateBasisFare);
+    //   // For Karyana cars with multiple packages, show package selection like MyChoize
+    //   navigate(`/self-drive-car-rentals/${city}/cars/packages`, {
+    //     state: {
+    //       startDate,
+    //       endDate,
+    //       car,
+    //     },
+    //   });
+    // } else {
+    // Normal flow for other vendors (Mychoize, etc.)
     navigate(`/self-drive-car-rentals/${city}/cars/packages`, {
       state: {
         startDate,
@@ -673,6 +751,7 @@ const Listing = ({ title }) => {
         car,
       },
     });
+    // }
   };
 
   return (
@@ -830,6 +909,7 @@ const Listing = ({ title }) => {
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-2 gap-4 w-full max-w-5xl items-start">
             {filteredList.map((car) => {
+              console.log("Car data:", car);
               const uniqueKey = `${car.name}-${car.brand}`;
               return (
                 <div
@@ -846,9 +926,7 @@ const Listing = ({ title }) => {
                     />
                     <div className="mt-3 flex justify-between items-start">
                       <div>
-                        <h3 className="text-md font-semibold">
-                          {car.brand} {car.name}
-                        </h3>
+                        <h3 className="text-md font-semibold">{car.name}</h3>
                         <p className="text-sm text-gray-400">
                           {car.cars[0].options[2]}
                         </p>
@@ -864,7 +942,17 @@ const Listing = ({ title }) => {
                       <div className="text-right">
                         <p className="text-sm text-gray-400">Starts at</p>
                         <p className="text-sm text-gray-500 line-through decoration-2">
-                          {car.cars[0].inflated_fare}
+                          {
+                            car.cars.sort((a, b) => {
+                              const fareA = parseInt(
+                                a.fare.replace(/[^0-9]/g, "")
+                              );
+                              const fareB = parseInt(
+                                b.fare.replace(/[^0-9]/g, "")
+                              );
+                              return fareA - fareB;
+                            })[0].inflated_fare
+                          }
                         </p>
                         <p className="font-semibold text-md">{car.fare}</p>
                         <p className="text-[10px] text-gray-400">(GST incl)</p>
@@ -904,7 +992,7 @@ const Listing = ({ title }) => {
                       <div className="flex flex-col text-white w-1/4 justify-between">
                         <div>
                           <h3 className="text-xl font-semibold mb-1">
-                            {car.brand} {car.name}
+                            {car.name}
                           </h3>
                         </div>
                         <div>
@@ -992,7 +1080,9 @@ const Listing = ({ title }) => {
                             </div>
                             <p className="text-xs text-[#eeff87] flex items-center gap-1">
                               Rating:{" "}
-                              {renderStarRating(individualCar?.ratingData?.rating)}
+                              {renderStarRating(
+                                individualCar?.ratingData?.rating
+                              )}
                             </p>
                             <p className="text-xs text-[#eeff87] flex items-center gap-1">
                               <Armchair className="w-3 h-3" />
@@ -1029,6 +1119,12 @@ const Listing = ({ title }) => {
                                     goToDetails(individualCar);
                                   } else if (activeTab === "subscribe") {
                                     goToDetails(individualCar);
+                                  }
+                                  //  else if (individualCar.source.toLowerCase() === "karyana" && !individualCar.rateBasisFare) {
+                                  //   goToDetails(individualCar); // Direct to booking for Karyana cars without packages
+                                  // }
+                                  else if (individualCar.source === "Karyana") {
+                                    goToPackages(car); // Show packages for Karyana cars with multiple packages
                                   } else {
                                     goToPackages(individualCar);
                                   }

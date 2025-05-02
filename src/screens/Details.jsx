@@ -23,6 +23,11 @@ const CarDetails = ({ title }) => {
   const trackEvent = useTrackEvent();
   const { startDate, endDate, car, activeTab } = location.state || {};
 
+  // Calculate trip duration
+  const startTime = new Date(startDate);
+  const endTime = new Date(endDate);
+  const tripDurationHours = Math.ceil((endTime - startTime) / (1000 * 60 * 60));
+
   const startDateFormatted = formatDate(startDate);
   const endDateFormatted = formatDate(endDate);
 
@@ -136,10 +141,10 @@ const CarDetails = ({ title }) => {
         {
           label: "Package",
           value:
-            activeTab === "subscribe"
-              ? "Subscription"
-              : car.source === "zoomcar"
+            car.source === "zoomcar"
               ? "Unlimited KMs"
+              : car.source.toLowerCase() === "karyana"
+              ? tripDurationHours < 24 ? "Hourly Package" : "Daily Package"
               : findPackage(car.rateBasis),
         },
         {
@@ -149,12 +154,17 @@ const CarDetails = ({ title }) => {
               ? "Unlimited KMs"
               : activeTab === "subscribe" && car.source === "mychoize"
               ? " 3600 KMs"
-              : car.total_km[car.rateBasis],
+              : car.source.toLowerCase() === "karyana"
+              ? `${car.extraKm} KMs`
+              : car.total_km?.[car.rateBasis] || "350 KMs",
         },
 
         {
           label: "Extra KM Charge",
-          value: car.rateBasis === "DR" ? "No Charge" : car.extrakm_charge,
+          value:
+            car.source === "zoomcar" || car.rateBasis === "DR"
+              ? "No Charge"
+              : `₹${car.extrakm_charge}/km`,
         },
       ],
       price: car.fare,
