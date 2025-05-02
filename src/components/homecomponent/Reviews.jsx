@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 
 const testimonials = [
     {
@@ -95,24 +95,27 @@ const testimonials = [
 
 const Reviews = () => {
     const scrollRef = useRef(null);
+    const scrollAmountRef = useRef(0);
+
+    const [isPaused, setIsPaused] = useState(false);
 
     useEffect(() => {
         const scrollContainer = scrollRef.current;
-        let scrollAmount = 0;
 
         const scrollInterval = setInterval(() => {
-            if (scrollContainer) {
-                scrollAmount += 1;
-                scrollContainer.scrollLeft = scrollAmount;
+            if (!isPaused && scrollContainer) {
+                scrollAmountRef.current += 1;
+                scrollContainer.scrollLeft = scrollAmountRef.current;
 
-                if (scrollAmount >= scrollContainer.scrollWidth / 2) {
-                    scrollAmount = 0; // Reset scroll
+                if (scrollAmountRef.current >= scrollContainer.scrollWidth / 2) {
+                    scrollAmountRef.current = 0; 
+                    scrollContainer.scrollLeft = 0;
                 }
             }
-        }, 10); // Adjust speed for smoother scrolling
+        }, 15); 
 
         return () => clearInterval(scrollInterval);
-    }, []);
+    }, [isPaused]);
 
     return (
         <section className="text-white py-12">
@@ -122,6 +125,10 @@ const Reviews = () => {
             </div>
             <div className="bg-transparent rounded-3xl p-6 py-8 mx-auto max-w-7xl overflow-hidden">
                 <div ref={scrollRef} className="flex space-x-6 overflow-hidden  scroll-container"
+                    onMouseEnter={() => setIsPaused(true)}   
+                    onMouseLeave={() => setIsPaused(false)}   
+                    onTouchStart={() => setIsPaused(true)}    
+                    onTouchEnd={() => setIsPaused(false)}
                     style={{
                         maskImage:
                             "linear-gradient(to right, transparent 0%, black 10%, black 90%, transparent 100%)",
