@@ -14,6 +14,9 @@ export default {
         black: "#000000",    // Black color
         white: "#ffffff",    // White color
       },
+      fontFamily: {
+        merriweather: ['"Merriweather"', 'serif'],
+      },
 
       keyframes: {
         slideUp: {

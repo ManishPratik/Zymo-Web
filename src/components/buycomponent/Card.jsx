@@ -1,89 +1,75 @@
 import { Link } from 'react-router-dom';
 
 const Card = ({ car }) => {
-
-    return (
-
-        <div className="flex flex-col md:flex-row bg-[#303030] border border-gray-500 rounded-2xl p-4 py-1 text-white mx-auto w-full max-w-[900px] min-h-[300px] md:items-center">
-
-            {/* Left Section: Car Details */}
-            <div className="flex md:flex-col justify-between w-full md:w-1/3 text-center md:text-left gap-8">
-                <div>
-                    <h2 className="text-2xl font-bold">{car.name}</h2>
-                    <p className="text-xl">{car.model}</p>
-                </div>
-                <div className="mt-2">
-                    <div className="text-center md:text-start mb-1">
-                        <span className="text-sm text-[#faffa4]">&#9733; {car.rating}</span>
-                    </div>
-                    {/* Vehicle details */}
-                    <div className="text-sm text-gray-400 flex flex-col items-center md:items-start">
-                        <div className="flex items-center gap-1">
-                            <i className="fa fa-user-group"></i>
-                            <span>{car.passengers} Passengers</span>
-                        </div>
-                        <div className="flex items-center gap-1">
-                            <i className="fa-solid fa-gear"></i>
-                            <span>{car.transmission}</span>
-                        </div>
-                    </div>
-                </div>
+  return (
+    <div className="relative flex flex-col md:flex-row bg-[#303030] border border-gray-500 rounded-2xl p-4 text-white mx-auto w-full max-w-[900px] min-h-[300px] md:items-center overflow-hidden">
+      {/* Left Section: Car Details and Image */}
+      <div className="flex flex-col md:flex-row items-center w-full md:w-3/4 gap-4">
+        {/* Car Details */}
+        <div className="flex flex-col justify-between w-full md:w-1/3 text-left gap-4">
+          <div>
+            <h2 className="text-2xl font-bold text-white">{car.model}</h2>
+          </div>
+          <div className="mt-2">
+            <div className="text-sm text-[#faffa4] mb-1">
+              ★ {car.rating}
             </div>
-
-            {/* Center Section: Car Image */}
-            <div className="relative flex items-center justify-center rounded-xl p-1 w-full md:w-auto mt-4 md:mt-0">
-
-                <img
-                    loading='lazy'
-                    src={car.image}  //add newtnexcar.png image here
-                    alt={car.name}
-                    className="h-auto object-contain rounded-xl w-full md:w-auto max-h-50 p-2 hover:scale-100 transition-transform duration-700"
-                />
-
-            </div> 
-       
-       {/* <div className="relative w-[320px] h-[360px]   rounded-xl   p-2">
-
-<div className="absolute top-[30px] left-[30px] w-full h-full bg-[#faffa4] rounded-[30px] z-0" />
-
-<div className="absolute top-0 left-0 w-full h-full bg-[#faffa4] rounded-[30px] z-10" />
-
-<img
-  src={car.image}
-  alt="Car"
-  className="relative z-20 w-full h-full object-contain p-6"
-/>
-</div> */}
-    
-
-
-
-
-            {/* Right Section: Price & CTA */}
-            <div className="flex md:flex-col items-center md:items-end text-center md:text-right justify-between w-full md:w-1/3 mt-4 md:mt-0 gap-8">
-                <div>
-                    <div className='p-0'>
-                        <p className="text-lg font-bold">₹{`${car.price.min_price}-${car.price.max_price}`} Lakh</p>
-                        <p className="text-sm text-gray-400">onwards</p>
-                        <p className="text-xs text-right mb-4">Avg. Ex-Showroom price</p>
-                    </div>
-
-
-                </div>
-                <Link
-                    to={`/buy/car-details/${car.carId}`}
-                    state={{ car }}  // <-- this is important
-                    className="mt-3"
-                >
-                    <button className="w-20 h-10 rounded-lg bg-[#faffa4] flex items-center justify-center hover:bg-[#dff566] transition-colors">
-                        <i className="fa-solid fa-arrow-right text-darkGrey2"></i>
-                    </button>
-                </Link>
-
+            <div className="text-sm text-gray-400 flex flex-col gap-1">
+              <div className="flex items-center gap-1">
+                <span className="fa fa-user-group"></span>
+                <span>{car.passengers} Passengers</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <span className="fa-solid fa-gear"></span>
+                <span>{car.transmission}</span>
+              </div>
             </div>
+          </div>
         </div>
 
-    );
+        {/* Car Image with Folder-like Background */}
+        <div className="relative w-full md:w-2/3 flex justify-center items-center py-2 sm:-mt-6">
+          {/* <div className="relative w-[240px] h-[190px] "> */}
+          {/* <div className="relative w-[312px] h-[347px] "> */}
+            {/* Main folder background */}
+            {/* <div className="absolute inset-0 bg-[#eeff8c] rounded-2xl z-0  "> */}
+              {/* Tab part - positioned to match the image */}
+              {/* <div className="absolute -right-8 top-16 h-40 w-60 bg-[#eeff8c]  rounded-2xl transform -rotate-15 z-10"></div> */}
+            {/* </div> */}
+
+          <div className="absolute top-1 left-3 w-[71%] h-[110%] bg-yellow-200 rounded-tr-3xl rounded-tl-3xl rounded-bl-3xl z-0"></div>
+          {/* Second yellow rectangle */}
+          <div className="absolute top-8 left-12 w-[71%] h-[110%] bg-yellow-200 rounded-tr-3xl rounded-br-3xl rounded-bl-3xl z-0"></div>
+
+            {/* Car image */}
+          <div className='relative z-10'>
+            <img
+              src={car.image || "/placeholder.svg"}
+              alt={car.name}
+              className="w-full h-full object-contain pr-5 pt-8 "
+            />
+          </div>
+          {/* </div> */}
+        </div>
+      </div>
+
+      {/* Right Section: Price & CTA */}
+      <div className="flex flex-col items-end justify-between text-right w-full md:w-1/4 mt-16 md:mt-0 gap-4">
+        <div>
+          <p className="text-lg font-bold text-white">
+            ₹{car.price.min_price}-{car.price.max_price} Lakh
+          </p>
+          <p className="text-sm text-gray-400">onwards</p>
+          <p className="text-xs text-gray-500 text-right">Avg. Ex-Showroom price</p>
+        </div>
+        <Link to={`/buy/car-details/${car.carId}`} state={{ car }} className="mt-2">
+          <button className="w-20 h-10 rounded-lg bg-[#faffa4] flex items-center justify-center hover:bg-[#dff566] transition-colors">
+            <span className="fa-solid fa-arrow-right text-gray-800"></span>
+          </button>
+        </Link>
+      </div>
+    </div>
+  );
 };
 
 export default Card;

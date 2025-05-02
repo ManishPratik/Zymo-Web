@@ -113,7 +113,7 @@ const CityBlogsContent = ({ cityName }) => {
                                 className="bg-[#404040] text-white rounded-xl shadow-lg p-4 sm:p-5 md:p-6 transition-transform duration-300 hover:scale-105 mx-2 sm:mx-3"
                             >
                                 <img
-                                    src={blog.cover || carSkeleton}
+                                    src={blog.cover}
                                     alt="Blog"
                                     className="rounded-lg mb-4 w-full h-40 sm:h-44 md:h-48 lg:h-52 object-cover"
                                 />
