@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 
 const testimonials = [
     {
@@ -95,24 +95,27 @@ const testimonials = [
 
 const Reviews = () => {
     const scrollRef = useRef(null);
+    const scrollAmountRef = useRef(0);
+
+    const [isPaused, setIsPaused] = useState(false);
 
     useEffect(() => {
         const scrollContainer = scrollRef.current;
-        let scrollAmount = 0;
 
         const scrollInterval = setInterval(() => {
-            if (scrollContainer) {
-                scrollAmount += 1;
-                scrollContainer.scrollLeft = scrollAmount;
+            if (!isPaused && scrollContainer) {
+                scrollAmountRef.current += 1;
+                scrollContainer.scrollLeft = scrollAmountRef.current;
 
-                if (scrollAmount >= scrollContainer.scrollWidth / 2) {
-                    scrollAmount = 0; // Reset scroll
+                if (scrollAmountRef.current >= scrollContainer.scrollWidth / 2) {
+                    scrollAmountRef.current = 0; 
+                    scrollContainer.scrollLeft = 0;
                 }
             }
-        }, 10); // Adjust speed for smoother scrolling
+        }, 15); 
 
         return () => clearInterval(scrollInterval);
-    }, []);
+    }, [isPaused]);
 
     return (
         <section className="text-white py-12">
@@ -122,6 +125,10 @@ const Reviews = () => {
             </div>
             <div className="bg-transparent rounded-3xl p-6 py-8 mx-auto max-w-7xl overflow-hidden">
                 <div ref={scrollRef} className="flex space-x-6 overflow-hidden  scroll-container"
+                    onMouseEnter={() => setIsPaused(true)}   
+                    onMouseLeave={() => setIsPaused(false)}   
+                    onTouchStart={() => setIsPaused(true)}    
+                    onTouchEnd={() => setIsPaused(false)}
                     style={{
                         maskImage:
                             "linear-gradient(to right, transparent 0%, black 10%, black 90%, transparent 100%)",
@@ -136,13 +143,15 @@ const Reviews = () => {
              border-2 border-[#faffa4]/30
              bg-gradient-to-br from-[#424242]/50 via-white/10 to-[#faffa4]/30"
                         >
-                            <span className="absolute top-4 left-6 text-6xl text-[#faffa4]">❝</span>
-                            <p className="text-sm font-merriweather italic text-left mb-4 mt-8">{testimonial.quote}</p>
+                            <span className="absolute top-6 left-6 w-7 h-7 md:w-8 md:h-8">
+                                <img src="/images/quotes.png"/>
+                            </span>
+                            <p className="text-xs font-merriweather italic text-left md:text-sm mb-4 mt-8">{testimonial.quote}</p>
                             <div className="flex items-center gap-3 mt-auto">
-                                <img src={testimonial.imgSrc} alt={testimonial.name} className="w-10 h-10 rounded-full" />
+                                <img src={testimonial.imgSrc} alt={testimonial.name} className="w-9 h-9 md:w-10 md:h-10 rounded-full" />
                                 <div className="text-left">
-                                    <p className="font-semibold font-merriweather">{testimonial.name}</p>
-                                    <p className="text-sm">{testimonial.stars}</p>
+                                    <p className="font-semibold font-merriweather text-sm md:text-base">{testimonial.name}</p>
+                                    <p className="text-xs md:text-sm">{testimonial.stars}</p>
                                 </div>
                             </div>
                         </div>
