@@ -20,6 +20,7 @@ import CompareAndChoice from "../components/CityContentComponent/CompareAndChoic
 import CityBenefits from "../components/CityContentComponent/CityBenefits";
 import CityContents from "../components/CityContentComponent/CityContents";
 import CityBlogsContent from "../components/CityBlogsContent";
+import NewHeaderCity from "../components/NewHeaderCity";
 //import StepsofZymo from "../components/homecomponent/StepsofZymo.jsx";
 
 const HomeScreen = ({ title, canonical }) => {
@@ -39,8 +40,8 @@ const HomeScreen = ({ title, canonical }) => {
   const canonicalLink = canonical
     ? `https://zymo.app${canonical}`
     : city
-    ? `https://zymo.app/self-drive-car-rentals/${city.toLowerCase()}`
-    : "https://zymo.app/";
+      ? `https://zymo.app/self-drive-car-rentals/${city.toLowerCase()}`
+      : "https://zymo.app/";
 
   useEffect(() => {
     document.title = pageTitle;
@@ -64,19 +65,27 @@ const HomeScreen = ({ title, canonical }) => {
       <NavBar city={city} />
       <div className="container flex flex-col w-full mx-auto">
         <div className="container">
-          <Header />
+
+          {city ? <NewHeaderCity/> : <Header/>}
+          {/* <Header /> */}
           {/* <NewRSB urlcity={city} /> */}
+          <CompareAndChoice />
+          <CityBenefits />
+          
           <HeroImage />
           {/* <RSB /> */}
+         
+
+
           <Benefits />
           <BrandsAvailable />
 
           <ServiceProvider />
           <FeaturedIn />
+
           {city && (
             <>
-              <CompareAndChoice />
-              <CityBenefits />
+
               <div
                 className="px-4 md:px-12 py-12 mb-12 bg-[#404040] text-white font-poppins rounded-2xl max-w-screen-lg mx-auto border border-[#505050]"
                 style={{

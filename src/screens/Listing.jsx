@@ -7,7 +7,7 @@ import {
   Armchair,
   LocateFixed,
 } from "lucide-react";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { FiMapPin } from "react-icons/fi";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
@@ -15,6 +15,8 @@ import {
   fetchMyChoizeCars,
   formatDateForMyChoize,
   fetchSubscriptionCars,
+  calculateSelfDrivePrice,
+  calculateDiscountPrice,
 } from "../utils/mychoize";
 import {
   formatDate,
@@ -28,6 +30,7 @@ import { appDB } from "../utils/firebase";
 import useTrackEvent from "../hooks/useTrackEvent";
 import { Helmet } from "react-helmet-async";
 import { motion } from "framer-motion";
+import fetchAllTestCollections from "../utils/testCarFetcher";
 
 const Listing = ({ title }) => {
   const location = useLocation();
@@ -61,6 +64,7 @@ const Listing = ({ title }) => {
   const [filteredList, setFilteredList] = useState(clubbedCarList);
   const [carCount, setCarCount] = useState("");
   const [expandedStates, setExpandedStates] = useState({});
+  const [vendersDetails, setVendersDetails] = useState({});
 
   const toggleDeals = (key) => {
     setExpandedStates((prev) => ({
@@ -70,7 +74,6 @@ const Listing = ({ title }) => {
   };
 
   //lowtoHigh filter sets as default
- 
 
   const renderStarRating = (rating) => {
     const maxStars = 5;
@@ -118,31 +121,40 @@ const Listing = ({ title }) => {
     });
   };
 
-  const unknownError = () => {
-    toast.error("Something went wrong, Please try again later...", {
-      position: "top-center",
-      autoClose: 1000 * 3,
-    });
-  };
+  // fetch vendor discount, tax, and current rate of vehicle for that respective venders
+  const fetchVendorDetails = async () => {
+    const vendorsSnapshot = await getDocs(collection(appDB, "carvendors"));
+    const vendorData = vendorsSnapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    }));
+    setVendersDetails(vendorData);
+  };  
 
   //It group the cars by name and brand and find the minimum fare for each group
   const clubCarsByName = (carsArray) => {
+    console.log("Cars array received:", carsArray);
     if (!Array.isArray(carsArray) || carsArray.length === 0) {
       return [];
     }
 
     // Group cars by name
     const groupedCars = carsArray.reduce((acc, car) => {
-      if (
-        !car ||
-        !car.name ||
-        !car.brand ||
-        !car.fare ||
-        typeof car.fare !== "string"
-      ) {
+      if (!car) {
         return acc;
       }
-      const key = `${car.name}|${car.brand}`;
+
+      // Make sure we have valid values for these fields
+      const name = car.name || "Unknown";
+      const brand = car.brand || "Partner";
+
+      const fare = car.fare;
+
+      if (typeof fare !== "string") {
+        return acc;
+      }
+
+      const key = `${name}|${brand}`;
 
       if (!acc[key]) {
         acc[key] = {
@@ -158,7 +170,7 @@ const Listing = ({ title }) => {
     // Transform groups and find the minimun fare
     return Object.values(groupedCars).map((group) => {
       const minFare = group.cars.reduce((min, car) => {
-        const currentFare = parseInt(car.fare.replace(/[^0-9]/g, ""));
+        const currentFare = parseInt(car.fare?.replace(/[^0-9]/g, ""));
         if (isNaN(currentFare)) return min;
         const minFareNum = parseInt(min.replace(/[^0-9]/g, ""));
         return currentFare < minFareNum ? car.fare : min;
@@ -196,18 +208,20 @@ const Listing = ({ title }) => {
       return;
     }
 
-    if (sessionStorage.getItem("fromSearch") !== "true") {
-      sessionStorage.setItem("fromSearch", false);
-      const cachedCarList = localStorage.getItem("carList");
-      if (cachedCarList) {
-        setCarList(JSON.parse(cachedCarList));
-        const groupedList = clubCarsByName(JSON.parse(cachedCarList));
-        setClubbedCarList(groupedList);
-        setCarCount(JSON.parse(cachedCarList).length);
-        setLoading(false);
-        return;
-      }
-    }
+    // if (sessionStorage.getItem("fromSearch") !== "true") {
+    //   sessionStorage.setItem("fromSearch", false);
+    //   const cachedCarList = localStorage.getItem("carList");
+    //   if (cachedCarList) {
+    //     setCarList(JSON.parse(cachedCarList));
+    //     const groupedList = clubCarsByName(JSON.parse(cachedCarList));
+    //     setClubbedCarList(groupedList);
+    //     setCarCount(JSON.parse(cachedCarList).length);
+    //     setLoading(false);
+    //     return;
+    //   }
+    // }
+
+    fetchVendorDetails();
 
     const search = async () => {
       setLoading(true);
@@ -215,101 +229,177 @@ const Listing = ({ title }) => {
         const url = import.meta.env.VITE_FUNCTIONS_API_URL;
         // const url = "http://127.0.0.1:5001/zymo-prod/us-central1/api";
 
-        // Fetch Firebase Cars
         const fetchFirebaseCars = async () => {
           try {
-            // const snapshot = await getDocs(collectionGroup(appDB, "uploadedCars"));
-            const testSnapshot = await getDocs(
-              collection(appDB, "partnerTestCars")
-            );
+            // Step 1: Get partners from partnerWebApp collection that serve the requested city
+            const partnersSnapshot = await getDocs(collection(appDB, "partnerWebApp"));
+
+            // Step 2: Filter partners by city and get their details
+            const partnersInCity = partnersSnapshot.docs
+              .filter((doc) => {
+                const partner = doc.data();
+                return (
+                  partner.cities &&
+                  Array.isArray(partner.cities) &&
+                  partner.cities.some(
+                    (c) => c && city && c.toLowerCase() === city.toLowerCase()
+                  )
+                );
+              })
+              .map((doc) => {
+                const data = doc.data();
+                return {
+                  id: doc.id,
+                  accountType: data.accountType || "company",
+                  bankAccount: data.bankAccount || "",
+                  bankAccountName: data.bankAccountName || "",
+                  brandName: data.brandName || "",
+                  carsRange: data.carsRange || "",
+                  cities: data.cities || [],
+                  createdAt: data.createdAt,
+                  email: data.email || "",
+                  fullName: data.fullName || "Unknown",
+                  gstNumber: data.gstNumber || "",
+                  ifscCode: data.ifscCode || "",
+                  isApproved: data.isApproved || false,
+                  logo: data.logo || null,
+                  phone: data.phone || "",
+                  updatedAt: data.updatedAt,
+                  upiId: data.upiId || null,
+                  username: data.username || "",
+                  // Fields used in UI
+                  brandLogo: data.logo || null,
+                  ...data
+                };
+              });
+
+            // Step 3: Now fetch cars for each partner
+            let allCars = [];
+
+            for (const partner of partnersInCity) {
+              try {
+                // Get the uploadedCars subcollection for this partner
+                const carsSnapshot = await getDocs(
+                  collection(appDB, "partnerWebApp", partner.id, "uploadedCars")
+                );
+
+                if (!carsSnapshot.empty) {
+                  const partnerCars = carsSnapshot.docs.map((doc) => {
+                    const carData = doc.data();
+                    return {
+                      id: doc.id,
+                      partnerId: partner.id,
+                      partnerName: partner.fullName,
+                      partnerBrandName: partner.brandName || "Zymo",
+                      partnerLogo: partner.logo,
+                      partnerPhone: partner.phone,
+                      partnerEmail: partner.email,
+                      carName: carData.carName || carData.name,
+                      carType: carData.carType || carData.type,
+                      carBrand: carData.carBrand || carData.brand,
+                      transmissionType: carData.transmissionType,
+                      fuelType: carData.fuelType,
+                      noOfSeats: carData.noOfSeats || 5,
+                      hourlyRental: carData.hourlyRental || {
+                        limit: "Limited",
+                        limited: {
+                          packages: [{
+                            hourlyRate: parseInt(carData.hourly_amount) || 0
+                          }]
+                        }
+                      },
+                      images: carData.images || ["/images/Cars/default-car.png"],
+                      securityDeposit: carData.securityDeposit || 0,
+                      deliveryCharges: carData.deliveryCharges || false,
+                      source: "Zymo",
+                      sourceImg: partner.logo || "/images/ServiceProvider/zymo.png",
+                      location_est: city,
+                      ...carData
+                    };
+                  });
+
+                  console.log(
+                    `Found ${partnerCars.length} cars for partner ${partner.fullName}`
+                  );
+                  // allCars = [...allCars, ...partnerCars];
+                }
+              } catch (err) {
+                console.error(
+                  `Error fetching cars for partner ${partner.id}:`,
+                  err
+                );
+              }
+            }
+
+            // Step 4: Fetch cars from all test collections
+            console.log(`Fetching test collection cars for ${city}...`);
+            const testCollections = await fetchAllTestCollections(appDB , formatFare ,city, tripDurationHours);
+
+            if (testCollections && testCollections.length > 0) {
+              console.log(
+                `Successfully fetched ${testCollections.length} test cars`
+              );
+              allCars = [...allCars, ...testCollections];
+            } else {
+              console.log(`No test collection cars found for ${city}`);
+            }
+
             console.log(
-              "Firebase Snapshot:",
-              testSnapshot.docs.map((doc) => doc.data())
+              `Total cars found across all sources: ${allCars.length}`
             );
 
             const hourlyRate = (car) => {
-              return car.hourlyRental.limit === "Limited"
+              if (!car.hourlyRental) return 0;
+
+              return car.hourlyRental.limit === "Limited" &&
+                car.hourlyRental.limited?.packages?.[0]?.hourlyRate
                 ? car.hourlyRental.limited.packages[0].hourlyRate
-                : car.hourlyRental.unlimited.fixedHourlyRate;
+                : car.hourlyRental.unlimited?.fixedHourlyRate || 0;
             };
 
-            const filterdData = testSnapshot.docs
-              .map((doc) => ({ id: doc.id, ...doc.data() }))
-              .filter((car) =>
-                car.cities?.some((c) => c.toLowerCase() === city?.toLowerCase())
-              )
-              // .filter(
-              //   (car) =>
-              //     car.unavailableDates?.some((date) => {
-              //       const unavailableDateTimestamp = Date.parse("2025-04-01");
-              //       return (
-              //         unavailableDateTimestamp >= startDateEpoc &&
-              //         unavailableDateTimestamp <= endDateEpoc
-              //       );
-              //     })
-              // ) // Filter based on unavailable dates
-              // .filter(
-              //   (car) =>
-              //     !car.unavailableHours?.some(({ startHour, endHour }) => {
-              //       const [unavailableStartH, unavailableStartM] = startHour
-              //         .split(":")
-              //         .map(Number);
-              //       const [unavailableEndH, unavailableEndM] = endHour
-              //         .split(":")
-              //         .map(Number);
-
-              //       const unavailabeStartTime = new Date().setHours(
-              //         unavailableStartH,
-              //         unavailableStartM,
-              //         0,
-              //         0
-              //       );
-              //       const unavailableEndTime = new Date().setHours(
-              //         unavailableEndH,
-              //         unavailableEndM,
-              //         0,
-              //         0
-              //       );
-              //       const currentTime = new Date();
-
-              //       return (
-              //         currentTime >= unavailabeStartTime &&
-              //         currentTime <= unavailableEndTime
-              //       );
-              //     })
-              // ) // Filter based on unvailable hours (This applies to booking)
-              .map((car) => ({
-                id: car.carId,
-                brand: toPascalCase(car.carBrand),
-                name: toPascalCase(car.carName),
-                type: car.carType,
-                options: [
-                  car.transmissionType,
-                  car.fuelType,
-                  `${car.noOfSeats} Seats`,
-                ],
-                address: car.pickupLocations[toPascalCase(city)] || "",
-                images: car.images,
-                fare: formatFare(hourlyRate(car) * tripDurationHours),
-                inflated_fare: hourlyRate(car) * tripDurationHours,
-                hourly_amount: hourlyRate(car),
-                extrakm_charge: car.hourlyRental.limited.extraKmRate || 0,
-                extrahour_charge:
-                  car.hourlyRental.limit === "Limited"
-                    ? car.hourlyRental.limited.extraHourRate
-                    : car.hourlyRental.unlimited.extraHourRate,
-                slabRates: car.slabRates.enabled ? car.slabRates.slabs : [],
-                securityDeposit: car.securityDeposit,
-                deliveryCharges: car.deliveryCharges.enabled
-                  ? car.deliveryCharges
-                  : false,
-                yearOfRegistration: car.yearOfRegistration,
-                ratingData: { text: "No ratings available" },
-                trips: "N/A",
-                source: "Zymo",
-                sourceImg: null,
-                // rateBasis: car.hourlyRental.limit === "Limited" ? ,
-              }));
+            // Step 5: Map car data to the expected format
+            const filterdData = allCars
+              .filter((car) => {
+                // Skip cars with no data or undefined required fields
+                if (!car || !car.id) {
+                  console.log("Skipping invalid car:", car);
+                  return false;
+                }
+                return true;
+              })
+              .map((car) => {
+                // Calculate fare if not provided
+                const calculatedHourlyRate = hourlyRate(car);
+                const calculatedFare = calculatedHourlyRate ? formatFare(calculatedHourlyRate * tripDurationHours) : '₹0';
+                console.log("car", car)
+                return {
+                  id: car.carId || car.id,
+                  brand: car.partnerBrandName || "Zymo",
+                  name: car.carName || car.name || car.model || car.type || "Car",
+                  type: car.carType || car.type || "",
+                  options: [
+                    car.transmissionType || car.options?.[0] || "N/A",
+                    car.fuelType || car.options?.[1] || "N/A",
+                    car.noOfSeats ? `${car.noOfSeats} Seats` : car.options?.[2] || "5 Seats"
+                  ],
+                  address: car.pickupLocations?.[toPascalCase(city)] || car.address || "",
+                  images: car.images || car.image_urls || ["/images/Cars/default-car.png"],
+                  fare: car.fare || calculatedFare,
+                  inflated_fare: car.inflated_fare || `₹${Math.round((parseInt(calculatedFare.replace(/[^0-9]/g, "")) || 0) * 1.2)}`,
+                  hourly_amount: car.hourly_amount || calculatedHourlyRate || 0,
+                  extrakm_charge: car.extrakm_charge || "0",
+                  extrahour_charge: car.extrahour_charge || 0,
+                  slabRates: car.slabRates || [],
+                  securityDeposit: car.securityDeposit || 0,
+                  deliveryCharges: car.deliveryCharges || false,
+                  yearOfRegistration: car.yearOfRegistration || "N/A",
+                  ratingData: car.ratingData || { text: "No ratings available", rating: 4.0 },
+                  trips: car.trips || "N/A",
+                  source: car.source || "Zymo",
+                  sourceImg: car.sourceImg || car.partnerLogo || "/images/ServiceProvider/zymo.png",
+                  location_est: car.location_est || city
+                };
+              });
 
             console.log("Firebase Filtered Data:", filterdData);
             return filterdData;
@@ -361,27 +451,24 @@ const Listing = ({ title }) => {
 
           const zoomPromise = retryFunction(fetchZoomcarData);
 
-          // const zoomPromise = null; // Temporarily Disabled
-
           const mychoizePromise =
             parseInt(tripDurationHours) < 24
               ? null
               : fetchMyChoizeCars(
-                  CityName,
-                  formattedPickDate,
-                  formattedDropDate,
-                  tripDurationHours
-                );
+                CityName,
+                formattedPickDate,
+                formattedDropDate,
+                tripDurationHours
+              );
 
-          // const firebasePromise = fetchFirebaseCars();
-          const firebasePromise = null; // Temporarily Disabled
+          const firebasePromise = fetchFirebaseCars(); // Enable Firebase data fetch
 
-          // Execute both API calls in parallel
+          // Execute all API calls in parallel
           const [zoomData, mychoizeData, firebaseData] =
             await Promise.allSettled([
               zoomPromise ? zoomPromise : Promise.resolve(null),
               mychoizePromise ? mychoizePromise : Promise.resolve(null),
-              firebasePromise ? firebasePromise : Promise.resolve(null),
+              firebasePromise,
             ]);
 
           if (
@@ -405,10 +492,17 @@ const Listing = ({ title }) => {
               location_est: car.car_data.location.text,
               lat: car.car_data.location.lat,
               lng: car.car_data.location.lng,
-              fare: `₹${car.car_data.pricing.revenue}`,
-              inflated_fare: `₹${parseInt(
-                vendorData?.CurrentrateSd * car.car_data.pricing.revenue
+              fare: `₹${calculateSelfDrivePrice(
+                car.car_data.pricing.revenue,
+                vendorData,
+                false
               )}`,
+              inflated_fare: `₹${calculateDiscountPrice(
+                car.car_data.pricing.revenue,
+                vendorData,
+                false
+              )}`,
+              actualPrice: car.car_data.pricing.revenue,
               pricing_id: car.car_data.pricing.id,
               hourly_amount: car.car_data.pricing.payable_amount,
               images: car.car_data.image_urls,
@@ -425,15 +519,7 @@ const Listing = ({ title }) => {
           }
 
           if (mychoizeData.status === "fulfilled" && mychoizeData.value) {
-            /*console.log("MyChoize Data:", mychoizeData.value);*/
             allCarData = [...allCarData, ...mychoizeData.value];
-          } else {
-            console.error(
-              "MyChoize API failed:",
-              mychoizeData.reason
-                ? mychoizeData.reason
-                : "Trip duration must be atleast 24hrs"
-            );
           }
 
           if (firebaseData.status === "fulfilled" && firebaseData.value) {
@@ -466,19 +552,33 @@ const Listing = ({ title }) => {
     };
 
     search();
-  }, [city, startDate, endDate, activeTab]); // Add activeTab as a dependency
+  }, [
+    city,
+    startDate,
+    endDate,
+    activeTab,
+    lat,
+    lng,
+    tripDurationHours,
+  ]);
 
-  // Filter functionality
+  // // Filter functionality
+  // useEffect(() => {
+  //   setFilteredList(clubbedCarList);
+  // }, [clubbedCarList]);
+
+  // New Filter functionality
   useEffect(() => {
-    setFilteredList(clubbedCarList);
-  }, [clubbedCarList]);
+    applyFiltersToGroupedCars();
+  }, [clubbedCarList, priceRange, seats, fuel, transmission]);
+
   useEffect(() => {
     document.title = title;
   }, [title]);
 
   const resetFilters = () => {
     setTransmission("");
-    setPriceRange("");
+    setPriceRange("lowToHigh");
     setSeats("");
     setFuel("");
     setFilteredList(clubbedCarList);
@@ -581,6 +681,20 @@ const Listing = ({ title }) => {
     });
   };
 
+  // useEffect(() => {
+  //   const timer = setTimeout(() => {
+  //     setPriceRange("lowToHigh"); // set Low-High
+  //     applyFiltersToGroupedCars(); // apply filter after setting
+
+  //     setFilteredList(clubbedCarList);
+
+  //     console.log("Auto-applied Low-High after 2 seconds");
+  //   }, 2000); // 2000ms = 2 seconds
+
+  //   return () => clearTimeout(timer); // cleanup
+  // }, []);
+
+
   return (
     <>
       {/* ✅ Dynamic SEO Tags */}
@@ -652,7 +766,7 @@ const Listing = ({ title }) => {
                 value={priceRange}
                 onChange={(e) => setPriceRange(e.target.value)}
               >
-                <option value="">Price Range</option>
+                {/* <option value="" disabled hidden>Price Range</option> */}
                 <option value="lowToHigh">Low - High</option>
                 <option value="highToLow">High - Low</option>
               </select>
@@ -753,12 +867,7 @@ const Listing = ({ title }) => {
                     <div className="mt-3 flex justify-between items-start">
                       <div>
                         <h3 className="text-md font-semibold">
-                          {car.cars[0].source === "zoomcar"
-                            ? car.brand.split(" ")[0]
-                            : car.brand}{" "}
-                          {car.cars[0].source === "zoomcar"
-                            ? car.name.split(" ")[0]
-                            : car.name}
+                          {car.brand} {car.name}
                         </h3>
                         <p className="text-sm text-gray-400">
                           {car.cars[0].options[2]}
@@ -774,7 +883,7 @@ const Listing = ({ title }) => {
                       </div>
                       <div className="text-right">
                         <p className="text-sm text-gray-400">Starts at</p>
-                        <p className="text-sm text-gray-500 line-through">
+                        <p className="text-sm text-gray-500 line-through decoration-2">
                           {car.cars[0].inflated_fare}
                         </p>
                         <p className="font-semibold text-md">{car.fare}</p>
@@ -790,12 +899,12 @@ const Listing = ({ title }) => {
                           backgroundColor: "#faffa4",
                           padding: "3px 5px",
                         }}
-                        onClick={() => toggleDeals(`${car.name}-${car.brand}`)}
+                        onClick={() => toggleDeals(uniqueKey)}
                         className="bg-[#faffa4] flex items-center rounded-lg text-black text-xs font-semibold h-8 w-[30%] sm:w-[120px]"
                       >
-                        {expandedStates[`${car.name}-${car.brand}`] ? (
+                        {expandedStates[uniqueKey] ? (
                           <>
-                            <span className="ml-2">Hide</span>
+                            <span>Hide</span>
                             <ChevronUp className="text-black w-4 h-4" />
                           </>
                         ) : (
@@ -848,7 +957,7 @@ const Listing = ({ title }) => {
                       <div className="flex flex-col justify-between text-right w-1/4 border-l border-gray-400 pl-4">
                         <div>
                           <p className="text-xs text-gray-400">Starts at</p>
-                          <p className="text-md text-gray-300 line-through">
+                          <p className="text-md text-gray-400 line-through decoration-2">
                             {car.cars[0].inflated_fare}
                           </p>
                           <p className="text-xl font-semibold text-white">
@@ -860,11 +969,9 @@ const Listing = ({ title }) => {
                           <button
                             style={{ backgroundColor: "#faffa4" }}
                             className="bg-[#faffa4] flex items-center justify-center rounded-lg text-black text-xs font-semibold h-8 w-[90px] mt-4"
-                            onClick={() =>
-                              toggleDeals(`${car.name}-${car.brand}`)
-                            }
+                            onClick={() => toggleDeals(uniqueKey)}
                           >
-                            {expandedStates[`${car.name}-${car.brand}`] ? (
+                            {expandedStates[uniqueKey] ? (
                               <>
                                 <span>Hide</span>
                                 <ChevronUp className="text-black w-4 h-4" />
@@ -876,9 +983,6 @@ const Listing = ({ title }) => {
                               </>
                             )}
                           </button>
-                          <p className="text-xs text-[#eeff87] mt-2">
-                            {car.cars.length} deals
-                          </p>
                         </div>
                       </div>
                     </div>
@@ -908,9 +1012,7 @@ const Listing = ({ title }) => {
                             </div>
                             <p className="text-xs text-[#eeff87] flex items-center gap-1">
                               Rating:{" "}
-                              {renderStarRating(
-                                individualCar?.ratingData?.rating
-                              )}
+                              {renderStarRating(individualCar?.ratingData?.rating)}
                             </p>
                             <p className="text-xs text-[#eeff87] flex items-center gap-1">
                               <Armchair className="w-3 h-3" />
@@ -930,15 +1032,20 @@ const Listing = ({ title }) => {
                             </p>
                           </div>
                           <div className="text-center flex flex-col items-center gap-3">
-                            <p className="text-xl sm:text-md font-semibold ml-3">
-                              {individualCar.fare}
-                            </p>
+                            <div>
+                              <p className="text-sm text-gray-400 line-through decoration-2">
+                                {individualCar.inflated_fare}
+                              </p>
+                              <p className="text-xl sm:text-md font-semibold">
+                                {individualCar.fare}
+                              </p>
+                            </div>
                             <div className="flex items-center">
                               <button
                                 style={{ backgroundColor: "#faffa4" }}
                                 className="bg-[#faffa4] flex items-center px-4 py-1 rounded-lg text-black text-xs font-semibold h-8 w-[calc(95%-0.25rem)] sm:w-[calc(90%-0.25rem)] ml-2"
                                 onClick={() => {
-                                  if (car.cars[0].source === "zoomcar") {
+                                  if (individualCar.source === "zoomcar") {
                                     goToDetails(individualCar);
                                   } else if (activeTab === "subscribe") {
                                     goToDetails(individualCar);

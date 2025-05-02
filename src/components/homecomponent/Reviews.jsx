@@ -120,19 +120,29 @@ const Reviews = () => {
                 <h2 className="text-2xl font-bold">Our Customers Love Us</h2>
                 <p className="text-gray-400">We love hearing from happy customers</p>
             </div>
-            <div className="bg-darkGrey2 rounded-lg p-6 py-8 mx-auto max-w-7xl overflow-hidden">
-                <div ref={scrollRef} className="flex space-x-6 overflow-hidden  scroll-container">
+            <div className="bg-transparent rounded-3xl p-6 py-8 mx-auto max-w-7xl overflow-hidden">
+                <div ref={scrollRef} className="flex space-x-6 overflow-hidden  scroll-container"
+                    style={{
+                        maskImage:
+                            "linear-gradient(to right, transparent 0%, black 10%, black 90%, transparent 100%)",
+                        WebkitMaskImage:
+                            "linear-gradient(to right, transparent 0%, black 10%, black 90%, transparent 100%)",
+                    }}
+                >
                     {[...testimonials, ...testimonials].map((testimonial, index) => (
                         <div
                             key={index}
-                            className="border border-[#faffa4] p-6 rounded-lg w-[300px] md:w-[350px] text-center flex-shrink-0"
+                            className="relative flex flex-col w-[300px] md:w-[350px] p-6 rounded-3xl text-center flex-shrink-0
+             border-2 border-[#faffa4]/30
+             bg-gradient-to-br from-[#424242]/50 via-white/10 to-[#faffa4]/30"
                         >
-                            <p className="text-sm italic mb-4">"{testimonial.quote}"</p>
-                            <div className="flex items-center gap-3 mt-4">
+                            <span className="absolute top-4 left-6 text-6xl text-[#faffa4]">❝</span>
+                            <p className="text-sm font-merriweather italic text-left mb-4 mt-8">{testimonial.quote}</p>
+                            <div className="flex items-center gap-3 mt-auto">
                                 <img src={testimonial.imgSrc} alt={testimonial.name} className="w-10 h-10 rounded-full" />
                                 <div className="text-left">
-                                    <p className="font-semibold">{testimonial.name}</p>
-                                    <p className="text-[#faffa4] text-sm">{testimonial.stars}</p>
+                                    <p className="font-semibold font-merriweather">{testimonial.name}</p>
+                                    <p className="text-sm">{testimonial.stars}</p>
                                 </div>
                             </div>
                         </div>

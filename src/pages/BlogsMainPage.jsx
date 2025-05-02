@@ -22,6 +22,7 @@ const BlogsMainPage = ({ title }) => {
             ...doc.data(),
         }));
 
+
         setBlogs(blogsData);
         sessionStorage.setItem("blogs", JSON.stringify(blogsData));
         setLoading(false);
@@ -31,6 +32,8 @@ const BlogsMainPage = ({ title }) => {
         document.title = title;
     }, [title]);
 
+
+      
     useEffect(() => {
         if (sessionStorage.getItem("blogs")) {
             setBlogs(JSON.parse(sessionStorage.getItem("blogs")));
@@ -38,6 +41,7 @@ const BlogsMainPage = ({ title }) => {
             return;
         }
         getBlogs();
+
     }, []);
 
     const refreshBlogs = () => {
@@ -68,7 +72,7 @@ const BlogsMainPage = ({ title }) => {
                 <ArrowLeft className="w-6 h-6" />
             </button>
 
-            <div className="container flex flex-col items-center justify-center mx-auto px-4 py-8">
+            <div className="container flex flex-col items-center justify-center mx-auto 2xl:px-16 px-4 py-8">
                 <h1 className="text-2xl font-bold text-[#faffa4] mb-6 text-center">
                     <span className="text-blue-600">“</span> Blog{" "}
                     <span className="text-blue-600">”</span>
@@ -101,7 +105,7 @@ const BlogsMainPage = ({ title }) => {
                         ))}
                     </div>
                 ) : (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 mt-6">
                         {blogs.flat().map((blog) => (
                             <BlogCard key={blog.id} blog={blog} />
                         ))}

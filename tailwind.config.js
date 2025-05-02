@@ -14,7 +14,20 @@ export default {
         black: "#000000",    // Black color
         white: "#ffffff",    // White color
       },
+      fontFamily: {
+        merriweather: ['"Merriweather"', 'serif'],
+      },
 
+      keyframes: {
+        slideUp: {
+          '0%': { transform: 'translateY(100px)', opacity: '0' },
+          '100%': { transform: 'translateY(0)', opacity: '1' },
+        }
+      },
+      animation: {
+        'slide-up': 'slideUp 1s ease-out forwards',
+        'slide-up-delayed': 'slideUp 1s ease-out 0.5s forwards',
+      }
     },
   },
   plugins: [],

@@ -1,22 +1,22 @@
-import { ArrowLeft, MapPin, Calendar, IndianRupee, Car } from "lucide-react";
+import { ArrowLeft, Calendar, IndianRupee, Car } from "lucide-react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
 import { toast } from "react-toastify";
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import ConfirmPage from "../components/ConfirmPage";
 import {
   formatDate,
   formatFare,
   retryFunction,
-  toPascalCase,
 } from "../utils/helperFunctions";
 import {
   fetchMyChoizeLocationList,
   findPackage,
   formatDateForMyChoize,
+  formatNumberAsPrice,
 } from "../utils/mychoize";
-import { addDoc, collection, doc, getDoc, setDoc } from "firebase/firestore";
-import { appDB, appStorage, webDB } from "../utils/firebase";
+import { addDoc, collection, doc, getDoc } from "firebase/firestore";
+import { appDB, appStorage } from "../utils/firebase";
 import PickupPopup from "../components/PickupPopup";
 import DropupPopup from "../components/DropupPopup";
 import BookingPageFormPopup from "../components/BookingPageFormPopup";
@@ -70,6 +70,7 @@ function BookingPage() {
   const [formData, setFormData] = useState(null);
   const [uploadDocData, setUploadDocData] = useState(null);
   const [bookingData, setBookingData] = useState(null);
+  const [fareAmount, setFareAmount] = useState(null);
 
   const [loading, setLoading] = useState(false);
 
@@ -98,15 +99,36 @@ function BookingPage() {
   useEffect(() => {
     if (!car.fare || !vendorDetails) return;
 
-    const inflatedFare = parseInt(car.inflated_fare.slice(1));
-
-    const discountPercent = parseFloat(vendorDetails?.DiscountSd) || 0;
+    // Get the base fare from car data
+    const baseFare = car.actualPrice || parseInt(car.fare.slice(1));
+    const carFareAmount = parseInt(car.fare.slice(1));
     const deposit = parseInt(vendorDetails?.Securitydeposit) || 0;
-    const discountValue = inflatedFare * (1 - discountPercent);
 
-    setDiscount(discountValue);
+    // 1. Calculate base price: baseFare * currentRate
+    const currentRate = parseFloat(vendorDetails?.CurrentrateSd || 1);
+    const basePrice = baseFare * currentRate;
+    setFareAmount(Math.round(basePrice));
 
-    const amount = inflatedFare + deposit - discountValue;
+    // 2. Add GST to the base price
+    const taxRate = parseFloat(vendorDetails?.TaxSd || 0);
+    const withGST =
+      vendorDetails?.vendor === "ZoomCar"
+        ? 0
+        : basePrice * taxRate;
+    console.log("withGST", baseFare, basePrice, taxRate, withGST, carFareAmount);
+        
+    // 3. Calculate discount
+    const discountRate = parseFloat(vendorDetails?.DiscountSd || 1);
+    const discountAmount = (basePrice + withGST) * (1 - discountRate);
+    setDiscount(Math.round(discountAmount));
+
+    // Final payable = base price with GST - discount + deposit
+    console.log("gst amount", withGST, discountAmount, deposit);
+    const amount = Math.round(
+      vendorDetails?.vendor === "ZoomCar"
+        ? basePrice + deposit - discountAmount
+        : basePrice + withGST - discountAmount + deposit
+    );
     setPayableAmount(amount);
   }, [car.fare, vendorDetails]);
 
@@ -122,7 +144,7 @@ function BookingPage() {
     }
   }, [selectedPickupLocation, selectedDropLocation]);
 
-  const formattedFare = formatFare(car.inflated_fare);
+  console.log(car);
 
   const preBookingData = {
     headerDetails: {
@@ -144,14 +166,26 @@ function BookingPage() {
       seats: car.options[2],
     },
     fareDetails: {
-      base: formattedFare,
-      gst: "Incl. in Base Fare",
+      // Base price with current rate only
+      base: vendorDetails
+        ? vendorDetails.vendor === "ZoomCar"
+          ? `₹${car?.actualPrice * (vendorDetails?.CurrentrateSd || 1)}`
+          : `₹${fareAmount}`
+        : "₹0",
+      // GST calculated on base price
+      gst:
+        car.source === "zoomcar"
+          ? "Incl. in Base Fare"
+          : `₹${formatNumberAsPrice(fareAmount * (vendorDetails?.TaxSd || 0))}`,
+      // Security deposit unchanged
       deposit:
         car.source === "zoomcar"
           ? "₹0"
-          : formatFare(vendorDetails?.Securitydeposit),
-      discount: formatFare(discount),
-      payable_amount: formatFare(payableAmount),
+          : `₹${formatNumberAsPrice(vendorDetails?.Securitydeposit || 0)}`,
+      // Discount on base price
+      discount: `₹${formatNumberAsPrice(discount)}`,
+      // Final payable amount
+      payable_amount: `₹${formatNumberAsPrice(payableAmount)}`,
     },
     customer: {
       name: customerName || "N/A",
@@ -305,28 +339,6 @@ function BookingPage() {
       collection(appDB, "CarsPaymentSuccessDetails"),
       bookingDataStructure
     );
-
-    try {
-      // Saving booking into user specific collection (webDB)
-      const userDocRef = doc(webDB, "webUserProfiles", userData.uid);
-      const userDocSnap = await getDoc(userDocRef);
-
-      if (!userDocSnap.exists()) {
-        await setDoc(userDocRef, {
-          uid: userData.uid,
-          email: customerEmail,
-          name: customerName,
-          phone: customerPhone,
-          createdAt: Date.now(),
-        });
-      }
-
-      const bookingsCollectionRef = collection(userDocRef, "bookings");
-
-      await addDoc(bookingsCollectionRef, bookingDataStructure);
-    } catch (error) {
-      console.error("Error saving booking to user collection:", error);
-    }
 
     return bookingId;
   };

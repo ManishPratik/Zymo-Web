@@ -50,7 +50,10 @@ const BlogDetailPage = () => {
         navigate("/blogs", { replace: true });
       } else {
         setBlog(foundBlog);
-        document.title = `${foundBlog.title} - Zymo Blog`;
+        document.title = `${foundBlog.title.length > 60 
+          ? foundBlog.title.slice(0, 57) + "..." 
+          : foundBlog.title} - Zymo Blog`;
+        
       }
     };
 

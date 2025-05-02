@@ -60,14 +60,14 @@ const cities = [
 const Cities = () => {
     const navigate = useNavigate();
 
-    const handleCityClick = (city) => {
-        navigate(`/self-drive-car-rentals/${city.toLowerCase()}`); // Navigate properly
-    };
+    // const handleCityClick = (city) => {
+    //     navigate(`/self-drive-car-rentals/${city.toLowerCase()}`); // Navigate properly
+    // };
 
 
     return (
         <>
- 
+
             <section className="text-black py-10">
                 <div className="bg-[#faffa4] mx-auto p-6 rounded-lg max-w-8xl">
                     <h2 className="text-xl font-bold mb-4 text-center">
@@ -77,13 +77,14 @@ const Cities = () => {
                         {cities.map((column, colIndex) => (
                             <div key={colIndex}>
                                 {column.map((city, index) => (
-                                    <button
+                                    <a
                                         key={index}
-                                        onClick={() => handleCityClick(city)}
+                                        href={`/self-drive-car-rentals/${city.toLowerCase()}`}
                                         className="block text-black hover:text-gray-700 transition duration-300 cursor-pointer"
+                                        onClick={() => navigate(`/self-drive-car-rentals/${city.toLowerCase()}`)}
                                     >
                                         {city}
-                                    </button>
+                                    </a>
                                 ))}
                             </div>
                         ))}

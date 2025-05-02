@@ -8,6 +8,7 @@ const {
     sendWhatsAppMessageWhenOtherVendorToZymo,
     sendTestDriveWhatsappMessage,
     sendExtendedTestDriveWhatsappMessage,
+    bookingCancelMessage,
 } = require("../config/twilio.js");
 const router = express.Router();
 dotenv.config();
@@ -190,6 +191,27 @@ router.post("/extended-test-drive-whatsapp-message", async (req, res) => {
         const response = await sendExtendedTestDriveWhatsappMessage(
             bookingData
         );
+        res.status(200).json({
+            message: "WhatsApp message sent successfully.",
+            response,
+        });
+    } catch (error) {
+        console.error("Error sending WhatsApp message:", error);
+        res.status(500).json({ error: error.message });
+    }
+});
+// API to send a WhatsApp message for booking cancellation
+router.post("/booking-cancel-whatsapp-message", async (req, res) => {
+    try {
+        const { bookingData } = req.body;
+
+        if (!bookingData || !bookingData.phone) {
+            return res
+                .status(400)
+                .json({ error: "Booking data are required." });
+        }
+
+        const response = await bookingCancelMessage(bookingData);
         res.status(200).json({
             message: "WhatsApp message sent successfully.",
             response,
