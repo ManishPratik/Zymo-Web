@@ -52,7 +52,7 @@ const BrandsAvailable = () => {
                     {[...brands, ...brands].map((brand, index) => (
                         <div
                             key={index}
-                            className="flex flex-col justify-between items-center flex-shrink-0 w-28 md:32 "
+                            className="flex flex-col justify-between items-center flex-shrink-0 w-28 md:w-32"
                         >
                             <img
                                 src={brand.logo}
