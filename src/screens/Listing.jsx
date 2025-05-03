@@ -635,7 +635,7 @@ const Listing = ({ title }) => {
 
     // Handle no results
     if (filteredGroups.length === 0) {
-      noCarsFound();
+      //noCarsFound();
       return;
     }
 
@@ -647,13 +647,14 @@ const Listing = ({ title }) => {
         return priceRange === "lowToHigh" ? priceA - priceB : priceB - priceA;
       });
     }
-
+    let totalCars = filteredGroups.reduce((count, group) => count + group.cars.length, 0)
     setFilteredList(filteredGroups);
-    setCarCount(
-      filteredGroups.reduce((count, group) => count + group.cars.length, 0)
-    );
-  };
-
+    setCarCount(totalCars);
+      //filteredGroups.reduce((count, group) => count + group.cars.length, 0)
+    if (totalCars === 0) {
+      noCarsFound(); 
+    };
+  }
   const handleSelectedCar = (label) => {
     trackEvent("Car List Section", "Rent Section Car", label);
   };
@@ -1072,5 +1073,4 @@ const Listing = ({ title }) => {
     </>
   );
 };
-
 export default Listing;
