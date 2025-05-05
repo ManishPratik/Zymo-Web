@@ -382,10 +382,8 @@ const groupTheCarsByName = (formattedTestCars) => {
   const groupedCars = {};
 
   formattedTestCars.map((car) => {
-    console.log("Car processing data:", car);
     const carName = car.name;
     if (!groupedCars[carName]) {
-      console.log("Creating new car group:", carName);
       groupedCars[carName] = {
         ...car,
         all_fares: [],
@@ -393,14 +391,12 @@ const groupTheCarsByName = (formattedTestCars) => {
         variations: [],
       };
     }
-    console.log("Adding car to group:", carName);
     groupedCars[carName].all_fares.push(car.fare.slice(1))
     groupedCars[carName].total_km.push(car.total_km)
     groupedCars[carName].variations.push(car);
   });
 
   return Object.values(groupedCars).map((car) => {
-    console.log("Final car group:", car);
     const { variations, ...rest } = car;
     return {
       ...rest,

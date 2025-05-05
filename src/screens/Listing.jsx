@@ -7,7 +7,7 @@ import {
   Armchair,
   LocateFixed,
 } from "lucide-react";
-import { useEffect, useState, useRef, useCallback } from "react";
+import { useEffect, useState, useRef } from "react";
 import { FiMapPin } from "react-icons/fi";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
@@ -20,17 +20,15 @@ import {
 } from "../utils/mychoize";
 import {
   formatDate,
-  formatFare,
   getVendorDetails,
   retryFunction,
-  toPascalCase,
 } from "../utils/helperFunctions";
-import { collection, collectionGroup, getDocs } from "firebase/firestore";
+import { collection, getDocs } from "firebase/firestore";
 import { appDB } from "../utils/firebase";
 import useTrackEvent from "../hooks/useTrackEvent";
 import { Helmet } from "react-helmet-async";
 import { motion } from "framer-motion";
-import fetchAllTestCollections from "../utils/testCarFetcher";
+import { fetchFirebaseCars } from "../utils/cars/firebasePartnerCarsFetcher";
 
 const Listing = ({ title }) => {
   const location = useLocation();
@@ -55,16 +53,16 @@ const Listing = ({ title }) => {
   const hasRun = useRef(false);
 
   const [loading, setLoading] = useState(true);
-  const [carList, setCarList] = useState([]);
+  const [, setCarList] = useState([]);
   const [clubbedCarList, setClubbedCarList] = useState([]);
   const [priceRange, setPriceRange] = useState("lowToHigh");
   const [seats, setSeats] = useState("");
   const [fuel, setFuel] = useState("");
   const [transmission, setTransmission] = useState("");
   const [filteredList, setFilteredList] = useState(clubbedCarList);
-  const [carCount, setCarCount] = useState("");
+  const [, setCarCount] = useState("");
   const [expandedStates, setExpandedStates] = useState({});
-  const [vendersDetails, setVendersDetails] = useState({});
+  const [, setVendersDetails] = useState({});
 
   const toggleDeals = (key) => {
     setExpandedStates((prev) => ({
@@ -146,7 +144,7 @@ const Listing = ({ title }) => {
       // Make sure we have valid values for these fields
       const name = car.name || "Unknown";
       const brand = car.brand || "Partner";
-
+      
       const fare = car.fare;
 
       if (typeof fare !== "string") {
@@ -228,216 +226,6 @@ const Listing = ({ title }) => {
         const url = import.meta.env.VITE_FUNCTIONS_API_URL;
         // const url = "http://127.0.0.1:5001/zymo-prod/us-central1/api";
 
-        const fetchFirebaseCars = async () => {
-          try {
-            // Step 1: Get partners from partnerWebApp collection that serve the requested city
-            const partnersSnapshot = await getDocs(
-              collection(appDB, "partnerWebApp")
-            );
-
-            // Step 2: Filter partners by city and get their details
-            const partnersInCity = partnersSnapshot.docs
-              .filter((doc) => {
-                const partner = doc.data();
-                return (
-                  partner.cities &&
-                  Array.isArray(partner.cities) &&
-                  partner.cities.some(
-                    (c) => c && city && c.toLowerCase() === city.toLowerCase()
-                  )
-                );
-              })
-              .map((doc) => {
-                const data = doc.data();
-                return {
-                  id: doc.id,
-                  accountType: data.accountType || "company",
-                  bankAccount: data.bankAccount || "",
-                  bankAccountName: data.bankAccountName || "",
-                  brandName: data.brandName || "",
-                  carsRange: data.carsRange || "",
-                  cities: data.cities || [],
-                  createdAt: data.createdAt,
-                  email: data.email || "",
-                  fullName: data.fullName || "Unknown",
-                  gstNumber: data.gstNumber || "",
-                  ifscCode: data.ifscCode || "",
-                  isApproved: data.isApproved || false,
-                  logo: data.logo || null,
-                  phone: data.phone || "",
-                  updatedAt: data.updatedAt,
-                  upiId: data.upiId || null,
-                  username: data.username || "",
-                  // Fields used in UI
-                  brandLogo: data.logo || null,
-                  ...data,
-                };
-              });
-
-            // Step 3: Now fetch cars for each partner
-            let allCars = [];
-
-            for (const partner of partnersInCity) {
-              try {
-                // Get the uploadedCars subcollection for this partner
-                const carsSnapshot = await getDocs(
-                  collection(appDB, "partnerWebApp", partner.id, "uploadedCars")
-                );
-
-                if (!carsSnapshot.empty) {
-                  // Process partner cars but currently not using them
-                  // This code is kept for potential future use
-                  /*
-                  const partnerCars = carsSnapshot.docs.map((doc) => {
-                    const carData = doc.data();
-                    return {
-                      id: doc.id,
-                      partnerId: partner.id,
-                      partnerName: partner.fullName,
-                      partnerBrandName: partner.brandName || "Zymo",
-                      partnerLogo: partner.logo,
-                      partnerPhone: partner.phone,
-                      partnerEmail: partner.email,
-                      carName: carData.carName || carData.name,
-                      carType: carData.carType || carData.type,
-                      carBrand: carData.carBrand || carData.brand,
-                      transmissionType: carData.transmissionType,
-                      fuelType: carData.fuelType,
-                      noOfSeats: carData.noOfSeats || 5,
-                      hourlyRental: carData.hourlyRental || {
-                        limit: "Limited",
-                        limited: {
-                          packages: [{
-                            hourlyRate: parseInt(carData.hourly_amount) || 0
-                          }]
-                        }
-                      },
-                      images: carData.images || ["/images/Cars/default-car.png"],
-                      securityDeposit: carData.securityDeposit || 0,
-                      deliveryCharges: carData.deliveryCharges || false,
-                      source: "Zymo",
-                      sourceImg: partner.logo || "/images/ServiceProvider/zymo.png",
-                      location_est: city,
-                      ...carData
-                    };
-                  });
-                  // allCars = [...allCars, ...partnerCars];
-                  */
-                  console.log(
-                    `Found ${carsSnapshot.size} partner cars from ${partner.brandName}, but not using them currently`
-                  );
-                }
-              } catch (err) {
-                console.error(
-                  `Error fetching cars for partner ${partner.id}:`,
-                  err
-                );
-              }
-            }
-
-            // Step 4: Fetch cars from all test collections
-            const testCollections = await fetchAllTestCollections(
-              appDB,
-              formatFare,
-              city,
-              tripDurationHours
-            );
-
-            if (testCollections && testCollections.length > 0) {
-              console.log(
-                `Found ${testCollections} test collection cars for ${city}`
-              );
-              allCars = [...allCars, ...testCollections];
-            } else {
-              console.log(`No test collection cars found for ${city}`);
-            }
-
-            const hourlyRate = (car) => {
-              if (!car.hourlyRental) return 0;
-
-              return car.hourlyRental.limit === "Limited" &&
-                car.hourlyRental.limited?.packages?.[0]?.hourlyRate
-                ? car.hourlyRental.limited.packages[0].hourlyRate
-                : car.hourlyRental.unlimited?.fixedHourlyRate || 0;
-            };
-
-            // Step 5: Map car data to the expected format
-            const filterdData = allCars
-              .filter((car) => {
-                // Skip cars with no data or undefined required fields
-                if (!car || !car.id) {
-                  console.log("Skipping invalid car:", car);
-                  return false;
-                }
-                return true;
-              })
-              .map((car) => {
-                console.log("Car data:", car);
-                // Calculate fare if not provided
-                const calculatedHourlyRate = hourlyRate(car);
-                const calculatedFare = calculatedHourlyRate
-                  ? formatFare(calculatedHourlyRate * tripDurationHours)
-                  : "₹0";
-                return {
-                  id: car.carId || car.id,
-                  brand: car.partnerBrandName || "Zymo",
-                  name:
-                    car.carName || car.name || car.model || car.type || "Car",
-                  type: car.carType || car.type || "",
-                  options: [
-                    car.transmissionType || car.options?.[0] || "N/A",
-                    car.fuelType || car.options?.[1] || "N/A",
-                    car.noOfSeats
-                      ? `${car.noOfSeats} Seats`
-                      : car.options?.[2] || "5 Seats",
-                  ],
-                  address:
-                    car.pickupLocations?.[toPascalCase(city)] ||
-                    car.address ||
-                    "",
-                  images: car.images ||
-                    car.image_urls || ["/images/Cars/default-car.png"],
-                  fare: car.fare || calculatedFare,
-                  inflated_fare:
-                    car.inflated_fare ||
-                    `₹${Math.round(
-                      (parseInt(calculatedFare.replace(/[^0-9]/g, "")) || 0) *
-                        1.2
-                    )}`,
-                  hourly_amount: car.hourly_amount || calculatedHourlyRate || 0,
-                  extrakm_charge: car.extrakm_charge || "0",
-                  extrahour_charge: car.extrahour_charge || 0,
-                  slabRates: car.slabRates || [],
-                  securityDeposit: car.securityDeposit || 0,
-                  deliveryCharges: car.deliveryCharges || false,
-                  yearOfRegistration: car.yearOfRegistration || "N/A",
-                  ratingData: car.ratingData || {
-                    text: "No ratings available",
-                    rating: 4.0,
-                  },
-                  trips: car.trips || "N/A",
-                  source: car.source || "Zymo",
-                  sourceImg:
-                    car.sourceImg ||
-                    car.partnerLogo ||
-                    "/images/ServiceProvider/zymo.png",
-                  location_est: car.location_est || city,
-                  total_km: car.total_km,
-                  all_fares: car.all_fares || [],
-                  rateBasis:
-                    car.rateBasis ||
-                    (tripDurationHours >= 24 ? "MP" : "hourly"),
-                  variations: car.variations || [],
-                };
-              });
-
-            return filterdData;
-          } catch (error) {
-            console.error("Error fetching Firebase cars:", error);
-            return [];
-          }
-        };
-
         let allCarData = [];
 
         if (activeTab === "subscribe") {
@@ -481,13 +269,14 @@ const Listing = ({ title }) => {
           const zoomPromise = retryFunction(fetchZoomcarData);
 
           const mychoizePromise = fetchMyChoizeCars(
-                CityName,
-                formattedPickDate,
-                formattedDropDate,
-                tripDurationHours
-              );
+            CityName,
+            formattedPickDate,
+            formattedDropDate,
+            tripDurationHours
+          );
 
-          const firebasePromise = fetchFirebaseCars(); // Enable Firebase data fetch
+          // fetch firebase partners cars
+          const firebasePromise = fetchFirebaseCars(city, tripDurationHours);
 
           // Execute all API calls in parallel
           const [zoomData, mychoizeData, firebaseData] =
@@ -772,7 +561,6 @@ const Listing = ({ title }) => {
   //   return () => clearTimeout(timer); // cleanup
   // }, []);
 
-
   return (
     <>
       {/* ✅ Dynamic SEO Tags */}
@@ -928,7 +716,6 @@ const Listing = ({ title }) => {
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-2 gap-4 w-full max-w-5xl items-start">
             {filteredList.map((car) => {
-              console.log("Car data:", car);
               const uniqueKey = `${car.name}-${car.brand}`;
               return (
                 <div

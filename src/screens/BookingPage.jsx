@@ -80,6 +80,7 @@ function BookingPage() {
 
   const functionsUrl = import.meta.env.VITE_FUNCTIONS_API_URL;
   // const functionsUrl = "http://127.0.0.1:5001/zymo-prod/us-central1/api";
+  // console.log("car", car)
 
   const vendor =
     car.source === "zoomcar"
@@ -90,9 +91,20 @@ function BookingPage() {
 
   useEffect(() => {
     const fetchVendorDetails = async () => {
+      if (car.source === "Zymo") {
+        setVendorDetails({
+          vendor: "Zymo",
+          CurrentrateSd: 1,
+          TaxSd: 0,
+          Securitydeposit: car?.securityDeposit || 0,
+          DiscountSd: 1,
+
+          // Add any other relevant details here
+        });
+        return;
+      }
       const docRef = doc(appDB, "carvendors", vendor);
       const docSnap = await getDoc(docRef);
-
       setVendorDetails(docSnap.data());
     };
     fetchVendorDetails();
@@ -103,10 +115,10 @@ function BookingPage() {
 
     // Get the base fare from car data
     let baseFare = car.actualPrice || currencyToInteger(car.fare);
-    if (car.source === "Karyana"){
+    if (car.source === "Karyana") {
       baseFare = currencyToInteger(car.inflated_fare);
     }
-    console.log("base fare", baseFare);
+    // console.log("base fare", baseFare);
     const carFareAmount = currencyToInteger(car.fare);
     const deposit = parseInt(vendorDetails?.Securitydeposit) || 0;
 
@@ -115,13 +127,13 @@ function BookingPage() {
     const basePrice = baseFare * currentRate;
     setFareAmount(Math.round(basePrice));
 
-    if (car.source === "Karyana"){
-      setFareAmount(Math.round(baseFare))
+    if (car.source === "Karyana") {
+      setFareAmount(Math.round(baseFare));
     }
 
     // 2. Add GST to the base price
     const taxRate = parseFloat(vendorDetails?.TaxSd || 0);
-    
+
     // Special case for Karyana or vendors where TaxSd is 1
     // When TaxSd is 1, it means GST is already included in the base fare
     // For other values, it represents the GST tax rate to be applied
@@ -135,12 +147,19 @@ function BookingPage() {
     }
     setGstAmount(Math.round(withGST));
 
-    console.log("withGST", baseFare, basePrice, taxRate, withGST, carFareAmount);
-        
+    // console.log(
+    //   "withGST",
+    //   baseFare,
+    //   basePrice,
+    //   taxRate,
+    //   withGST,
+    //   carFareAmount
+    // );
+
     // 3. Calculate discount and final amount
     const discountRate = parseFloat(vendorDetails?.DiscountSd || 1);
     let finalAmount;
-    
+
     if (car.source === "Karyana") {
       // For Karyana cars:
       // - baseFare is the inflated price (3912 in this case)
@@ -148,15 +167,6 @@ function BookingPage() {
       const discountedFare = Math.round(baseFare * discountRate); // 3912 * 0.85 = 3325
       const discountAmount = baseFare - discountedFare; // 3912 - 3325 = 587
       setDiscount(discountAmount);
-      
-      console.log("Karyana price calculation:", {
-        baseFare,
-        discountRate,
-        discountedFare,
-        discountAmount,
-        deposit
-      });
-      
       // Final amount should be discounted fare + deposit (3325 + 3000 = 6325)
       finalAmount = discountedFare + deposit;
     } else if (car.source === "zoomcar") {
@@ -167,44 +177,51 @@ function BookingPage() {
       const inflatedPrice = Math.round(baseFare * currentRate);
       const discountAmount = inflatedPrice - baseFare;
       setDiscount(discountAmount);
-      
-      console.log("ZoomCar price calculation:", {
-        baseFare,
-        inflatedPrice,
-        currentRate,
-        discountAmount,
-        deposit
-      });
-      
+
+      // console.log("ZoomCar price calculation:", {
+      //   baseFare,
+      //   inflatedPrice,
+      //   currentRate,
+      //   discountAmount,
+      //   deposit,
+      // });
+
       // For ZoomCar, use the base fare as the final amount
       finalAmount = Math.round(baseFare);
     } else {
       // For other vendors, include GST in discount calculation
       const discountAmount = (basePrice + withGST) * (1 - discountRate);
       setDiscount(Math.round(discountAmount));
-      
-      console.log("Other vendor price calculation:", {
-        basePrice,
-        withGST,
-        discountRate,
-        discountAmount
-      });
-      
+
+      // console.log("Other vendor price calculation:", {
+      //   basePrice,
+      //   withGST,
+      //   discountRate,
+      //   discountAmount,
+      // });
+
       // Final payable = base price with GST - discount + deposit
       finalAmount = Math.round(baseFare + withGST - discountAmount + deposit);
     }
-    
-    console.log("Final amount calculation:", {
-      vendor: vendorDetails?.vendor,
-      baseFare,
-      withGST,
-      discount,
-      deposit,
-      finalAmount
-    });
-    
+
+    // console.log("Final amount calculation:", {
+    //   vendor: vendorDetails?.vendor,
+    //   baseFare,
+    //   withGST,
+    //   discount,
+    //   deposit,
+    //   finalAmount,
+    // });
+
     setPayableAmount(finalAmount);
-  }, [car.fare, car.source, car.inflated_fare, car.actualPrice, vendorDetails, discount]);
+  }, [
+    car.fare,
+    car.source,
+    car.inflated_fare,
+    car.actualPrice,
+    vendorDetails,
+    discount,
+  ]);
 
   useEffect(() => {
     if (selectedPickupLocation && selectedDropLocation) {
@@ -218,12 +235,11 @@ function BookingPage() {
     }
   }, [selectedPickupLocation, selectedDropLocation, deliveryCharges]);
 
-
   const preBookingData = {
     headerDetails: {
       name: `${car.brand} ${car.name}`,
       type: car.options.slice(0, 3).join(" | "),
-      range: `${findPackage(car.rateBasis)}`,
+      range: car.source === "Zymo" ? `${car.total_km[car.selectedPackage]} KMs` : `${findPackage(car.rateBasis)}`,
       image: car.images[0],
     },
     pickup: {
@@ -233,7 +249,7 @@ function BookingPage() {
     },
     carDetails: {
       registration: vendorDetails?.plateColor || "N/A",
-      package: findPackage(car.rateBasis),
+      package: car.source === "Zymo" ? `${car.total_km[car.selectedPackage]} KMs` : findPackage(car.rateBasis),
       transmission: car.options[0],
       fuel: car.options[1],
       seats: car.options[2],
@@ -247,7 +263,8 @@ function BookingPage() {
         : "₹0",
       // GST calculated on base price
       gst:
-        gstAmount === 0 ? "Incl. in Base Fare"
+        gstAmount === 0
+          ? "Incl. in Base Fare"
           : `₹${formatNumberAsPrice(fareAmount * (vendorDetails?.TaxSd || 0))}`,
       // Security deposit unchanged
       deposit:
@@ -383,7 +400,7 @@ function BookingPage() {
       EndTime: "",
       FirstName: formData?.userName || customerName,
       MapLocation: car.address,
-      "Package Selected": findPackage(car.rateBasis),
+      "Package Selected": car.source === "Zymo" ? `${car.total_km[car.selectedPackage]} KMs` :  findPackage(car.rateBasis),
       PhoneNumber: formData?.phone || formattedPhoneNumber,
       "Pickup Location": selectedPickupLocation?.LocationName || car.address,
       "Promo Code Used": "",
@@ -863,7 +880,6 @@ function BookingPage() {
               </p>
             </div>
           </div>
-          {console.log(car.source)}
           {car.source === "mychoize" ? (
             <>
               <div className="mt-5 mb-4">

@@ -5,6 +5,7 @@ export const formatNumberAsPrice = (number) => {
   return new Intl.NumberFormat("en-IN", {
     minimumFractionDigits: 0,
     maximumFractionDigits: 0,
+    useGrouping: true,
   }).format(number);
 };
 
