@@ -453,6 +453,7 @@ const Listing = ({ title }) => {
         return priceRange === "lowToHigh" ? priceA - priceB : priceB - priceA;
       });
     }
+    let totalCars = filteredGroups.reduce((count, group) => count + group.cars.length, 0)
 
     setFilteredList(filteredGroups);
     setCarCount(totalCars);
