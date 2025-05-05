@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+import Marquee from "react-fast-marquee";
 
 const BrandsAvailable = () => {
     const brands = [
@@ -14,25 +15,25 @@ const BrandsAvailable = () => {
         { name: "Audi", logo: "/images/CarLogos/audi.png" },
     ];
 
-    const scrollRef = useRef(null);
+    // const scrollRef = useRef(null);
 
-    useEffect(() => {
-        const scrollContainer = scrollRef.current;
-        let scrollAmount = 0;
+    // useEffect(() => {
+    //     const scrollContainer = scrollRef.current;
+    //     let scrollAmount = 0;
 
-        const scrollInterval = setInterval(() => {
-            if (scrollContainer) {
-                scrollAmount += 1;
-                scrollContainer.scrollLeft = scrollAmount;
+    //     const scrollInterval = setInterval(() => {
+    //         if (scrollContainer) {
+    //             scrollAmount += 1;
+    //             scrollContainer.scrollLeft = scrollAmount;
 
-                if (scrollAmount >= scrollContainer.scrollWidth / 2) {
-                    scrollAmount = 0; 
-                }
-            }
-        }, 20); 
+    //             if (scrollAmount >= scrollContainer.scrollWidth / 2) {
+    //                 scrollAmount = 0; 
+    //             }
+    //         }
+    //     }, 20); 
 
-        return () => clearInterval(scrollInterval);
-    }, []);
+    //     return () => clearInterval(scrollInterval);
+    // }, []);
 
     return (
         <div className="text-white py-10">
@@ -40,7 +41,6 @@ const BrandsAvailable = () => {
                 Brands Available
             </h2>
                 <div
-                    ref={scrollRef}
                     className="flex space-x-10 md:space-x-16 overflow-hidden whitespace-nowrap scroll-container"
                     style={{
                         maskImage:
@@ -49,19 +49,27 @@ const BrandsAvailable = () => {
                             "linear-gradient(to right, transparent 0%, black 10%, black 90%, transparent 100%)",
                     }}
                 >
-                    {[...brands, ...brands].map((brand, index) => (
-                        <div
-                            key={index}
-                            className="flex flex-col justify-between items-center flex-shrink-0 w-28 md:w-32"
-                        >
-                            <img
-                                src={brand.logo}
-                                alt={brand.name}
-                                className="w-18 h-18"
-                            />
-                            <span className="text-sm md:text-base">{brand.name}</span>
-                        </div>
-                    ))}
+                <Marquee 
+                    autoFill
+                    
+                >
+                    <div className="flex space-x-10 md:space-x-16 mr-10 md:mr-16">
+                        {brands.map((brand, index) => (
+                            <div
+                                key={index}
+                                className="flex flex-col justify-between items-center flex-shrink-0 w-28 md:w-32"
+                            >
+                                <img
+                                    src={brand.logo}
+                                    alt={brand.name}
+                                    className="w-18 h-18"
+                                />
+                                <span className="text-sm md:text-base">{brand.name}</span>
+                            </div>
+                        ))}
+                    </div>
+                </Marquee>
+                    
                 </div>
         </div>
     );
