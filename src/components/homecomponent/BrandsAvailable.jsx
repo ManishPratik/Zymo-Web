@@ -26,39 +26,43 @@ const BrandsAvailable = () => {
                 scrollContainer.scrollLeft = scrollAmount;
 
                 if (scrollAmount >= scrollContainer.scrollWidth / 2) {
-                    scrollAmount = 0; // Reset scroll
+                    scrollAmount = 0; 
                 }
             }
-        }, 30); // Adjust speed
+        }, 20); 
 
         return () => clearInterval(scrollInterval);
     }, []);
 
     return (
         <div className="text-white py-10">
-            <h2 className="text-center text-xl font-bold mb-6">
+            <h2 className="text-center text-xl font-bold mb-16">
                 Brands Available
             </h2>
-            <div className="bg-darkGrey2 rounded-lg p-6 py-8 mx-auto max-w-7xl overflow-hidden">
                 <div
                     ref={scrollRef}
-                    className="flex space-x-6 overflow-hidden whitespace-nowrap scroll-container"
+                    className="flex space-x-10 md:space-x-16 overflow-hidden whitespace-nowrap scroll-container"
+                    style={{
+                        maskImage:
+                            "linear-gradient(to right, transparent 0%, black 10%, black 90%, transparent 100%)",
+                        WebkitMaskImage:
+                            "linear-gradient(to right, transparent 0%, black 10%, black 90%, transparent 100%)",
+                    }}
                 >
                     {[...brands, ...brands].map((brand, index) => (
                         <div
                             key={index}
-                            className="flex flex-col items-center flex-shrink-0 w-32"
+                            className="flex flex-col justify-between items-center flex-shrink-0 w-28 md:w-32"
                         >
                             <img
                                 src={brand.logo}
                                 alt={brand.name}
                                 className="w-18 h-18"
                             />
-                            <span className="text-sm mt-2">{brand.name}</span>
+                            <span className="text-sm md:text-base">{brand.name}</span>
                         </div>
                     ))}
                 </div>
-            </div>
         </div>
     );
 };

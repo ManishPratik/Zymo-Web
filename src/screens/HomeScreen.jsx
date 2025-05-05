@@ -79,9 +79,9 @@ const HomeScreen = ({ title, canonical }) => {
 
           <Benefits />
           <BrandsAvailable />
-
-          <ServiceProvider />
           <FeaturedIn />
+          <ServiceProvider />
+          
 
           {city && (
             <>
