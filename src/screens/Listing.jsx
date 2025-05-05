@@ -441,7 +441,7 @@ const Listing = ({ title }) => {
 
     // Handle no results
     if (filteredGroups.length === 0) {
-      noCarsFound();
+      //noCarsFound();
       return;
     }
 
@@ -453,17 +453,19 @@ const Listing = ({ title }) => {
         return priceRange === "lowToHigh" ? priceA - priceB : priceB - priceA;
       });
     }
+    let totalCars = filteredGroups.reduce((count, group) => count + group.cars.length, 0)
 
     // Don't filter out multiple Karyana cars of the same model - we need to allow all packages
     // This used to filter out duplicate Karyana cars but now we want to keep them
     // to support showing multiple packages for trips over 24 hours
 
     setFilteredList(filteredGroups);
-    setCarCount(
-      filteredGroups.reduce((count, group) => count + group.cars.length, 0)
-    );
-  };
-
+    setCarCount(totalCars);
+      //filteredGroups.reduce((count, group) => count + group.cars.length, 0)
+    if (totalCars === 0) {
+      noCarsFound(); 
+    };
+  }
   const handleSelectedCar = (label) => {
     trackEvent("Car List Section", "Rent Section Car", label);
   };
@@ -954,5 +956,4 @@ const Listing = ({ title }) => {
     </>
   );
 };
-
 export default Listing;
