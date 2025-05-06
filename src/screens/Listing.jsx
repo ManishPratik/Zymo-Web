@@ -455,10 +455,6 @@ const Listing = ({ title }) => {
     }
     let totalCars = filteredGroups.reduce((count, group) => count + group.cars.length, 0)
 
-    // Don't filter out multiple Karyana cars of the same model - we need to allow all packages
-    // This used to filter out duplicate Karyana cars but now we want to keep them
-    // to support showing multiple packages for trips over 24 hours
-
     setFilteredList(filteredGroups);
     setCarCount(totalCars);
       //filteredGroups.reduce((count, group) => count + group.cars.length, 0)
