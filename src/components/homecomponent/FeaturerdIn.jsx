@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+import Marquee from "react-fast-marquee";
 
 const FeaturedIn = () => {
   const Featured = [
@@ -71,38 +72,38 @@ const FeaturedIn = () => {
     { id: 12, name: "MD", image: "/images/FeaturedIn/MD.png", url: "public/images/FeaturedIn/" },
   ];
   
-  const scrollRef = useRef(null);
-  const scrollAmountRef = useRef(0);
+//   const scrollRef = useRef(null);
+//   const scrollAmountRef = useRef(0);
 
 
-useEffect(() => {
-  const scrollContainer = scrollRef.current;
+// useEffect(() => {
+//   const scrollContainer = scrollRef.current;
   
-  // Initialize scroll position to the maximum (right edge)
-  if (scrollContainer) {
-    const maxScroll = scrollContainer.scrollWidth - scrollContainer.clientWidth;
-    scrollAmountRef.current = maxScroll;
-    scrollContainer.scrollLeft = maxScroll;
-  }
+//   // Initialize scroll position to the maximum (right edge)
+//   if (scrollContainer) {
+//     const maxScroll = scrollContainer.scrollWidth - scrollContainer.clientWidth;
+//     scrollAmountRef.current = maxScroll;
+//     scrollContainer.scrollLeft = maxScroll;
+//   }
 
-  const scrollInterval = setInterval(() => {
-    if (scrollContainer) {
-      // Decrement to scroll left (opposite of original)
-      scrollAmountRef.current -= 1;
-      scrollContainer.scrollLeft = scrollAmountRef.current;
+//   const scrollInterval = setInterval(() => {
+//     if (scrollContainer) {
+//       // Decrement to scroll left (opposite of original)
+//       scrollAmountRef.current -= 1;
+//       scrollContainer.scrollLeft = scrollAmountRef.current;
 
-      // Reset when we reach the left edge
-      if (scrollAmountRef.current <= 0) {
-        // Reset to right edge
-        const maxScroll = scrollContainer.scrollWidth - scrollContainer.clientWidth;
-        scrollAmountRef.current = maxScroll;
-        scrollContainer.scrollLeft = maxScroll;
-      }
-    }
-  }, 20); 
+//       // Reset when we reach the left edge
+//       if (scrollAmountRef.current <= 0) {
+//         // Reset to right edge
+//         const maxScroll = scrollContainer.scrollWidth - scrollContainer.clientWidth;
+//         scrollAmountRef.current = maxScroll;
+//         scrollContainer.scrollLeft = maxScroll;
+//       }
+//     }
+//   }, 20); 
 
-  return () => clearInterval(scrollInterval);
-}, []);
+//   return () => clearInterval(scrollInterval);
+// }, []);
 
 return (
   <div className="text-white py-10">
@@ -111,7 +112,6 @@ return (
     </h2>
     
     <div
-      ref={scrollRef}
       className="flex space-x-10 md:space-x-16 overflow-hidden whitespace-nowrap scroll-container"
       style={{
                         maskImage:
@@ -120,23 +120,31 @@ return (
                             "linear-gradient(to right, transparent 0%, black 10%, black 90%, transparent 100%)",
                     }}
     >
-      {[...Featured, ...Featured].map((featured, index) => (
-        <div
-          key={index}
-          className="flex flex-col items-center justify-center flex-shrink-0 w-32 h-36"
-        >
-          <a href={featured.url} target="_blank">
-            <div className="w-20 h-20 md:w-24 md:h-24 flex items-center justify-center bg-white rounded-lg hover:scale-105 transition-all duration-300">
-              <img
-                src={featured.image}
-                alt={featured.name}
-                className="w-full h-full object-contain"
-              />
-            </div>
-          </a>
-          <span className="text-sm mt-4">{featured.name}</span>
-        </div>
-      ))}
+    <Marquee
+      autoFill
+      direction="right"
+    >
+      <div className="flex space-x-10 md:space-x-16 mr-10 md:mr-16">
+        {Featured.map((featured, index) => (
+          <div
+            key={index}
+            className="flex flex-col items-center justify-center flex-shrink-0 w-32 h-36"
+          >
+            <a href={featured.url} target="_blank">
+              <div className="w-20 h-20 md:w-24 md:h-24 flex items-center justify-center bg-white rounded-lg group hover:scale-105 transition-all duration-300">
+                <img
+                  src={featured.image}
+                  alt={featured.name}
+                  className="w-full h-full object-contain shadow-sm shadow-[#424242] group-hover:shadow-xl"
+                />
+              </div>
+            </a>
+            <span className="text-sm mt-4">{featured.name}</span>
+          </div>
+        ))}
+      </div>
+    </Marquee>
+      
     </div>
   </div>
 );

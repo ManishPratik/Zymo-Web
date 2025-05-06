@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
+import Marquee from "react-fast-marquee";
 
 const testimonials = [
     {
@@ -94,28 +95,28 @@ const testimonials = [
 ];
 
 const Reviews = () => {
-    const scrollRef = useRef(null);
-    const scrollAmountRef = useRef(0);
+    // const scrollRef = useRef(null);
+    // const scrollAmountRef = useRef(0);
 
-    const [isPaused, setIsPaused] = useState(false);
+    // const [isPaused, setIsPaused] = useState(false);
 
-    useEffect(() => {
-        const scrollContainer = scrollRef.current;
+    // useEffect(() => {
+    //     const scrollContainer = scrollRef.current;
 
-        const scrollInterval = setInterval(() => {
-            if (!isPaused && scrollContainer) {
-                scrollAmountRef.current += 1;
-                scrollContainer.scrollLeft = scrollAmountRef.current;
+    //     const scrollInterval = setInterval(() => {
+    //         if (!isPaused && scrollContainer) {
+    //             scrollAmountRef.current += 1;
+    //             scrollContainer.scrollLeft = scrollAmountRef.current;
 
-                if (scrollAmountRef.current >= scrollContainer.scrollWidth / 2) {
-                    scrollAmountRef.current = 0; 
-                    scrollContainer.scrollLeft = 0;
-                }
-            }
-        }, 15); 
+    //             if (scrollAmountRef.current >= scrollContainer.scrollWidth / 2) {
+    //                 scrollAmountRef.current = 0; 
+    //                 scrollContainer.scrollLeft = 0;
+    //             }
+    //         }
+    //     }, 15); 
 
-        return () => clearInterval(scrollInterval);
-    }, [isPaused]);
+    //     return () => clearInterval(scrollInterval);
+    // }, [isPaused]);
 
     return (
         <section className="text-white py-12">
@@ -124,11 +125,8 @@ const Reviews = () => {
                 <p className="text-gray-400">We love hearing from happy customers</p>
             </div>
             <div className="bg-transparent rounded-3xl p-6 py-8 mx-auto max-w-7xl overflow-hidden">
-                <div ref={scrollRef} className="flex space-x-6 overflow-hidden  scroll-container"
-                    onMouseEnter={() => setIsPaused(true)}   
-                    onMouseLeave={() => setIsPaused(false)}   
-                    onTouchStart={() => setIsPaused(true)}    
-                    onTouchEnd={() => setIsPaused(false)}
+                <div 
+                    className="flex space-x-6 overflow-hidden  scroll-container"
                     style={{
                         maskImage:
                             "linear-gradient(to right, transparent 0%, black 10%, black 90%, transparent 100%)",
@@ -136,7 +134,13 @@ const Reviews = () => {
                             "linear-gradient(to right, transparent 0%, black 10%, black 90%, transparent 100%)",
                     }}
                 >
-                    {[...testimonials, ...testimonials].map((testimonial, index) => (
+                <Marquee
+                    autoFill
+                    pauseOnClick
+                    pauseOnHover
+                >
+                    <div className="flex space-x-6 mr-6">
+                    {testimonials.map((testimonial, index) => (
                         <div
                             key={index}
                             className="relative flex flex-col w-[300px] md:w-[350px] p-6 rounded-3xl text-center flex-shrink-0
@@ -156,6 +160,9 @@ const Reviews = () => {
                             </div>
                         </div>
                     ))}
+                    </div>
+                </Marquee>
+                    
                 </div>
             </div>
         </section>
