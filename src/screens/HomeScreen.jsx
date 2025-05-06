@@ -31,7 +31,7 @@ const HomeScreen = ({ title, canonical }) => {
 
   const pageTitle = city
     ? ` Explore Self-Drive Car Rentals in ${capitalizedCity} | Zymo`
-    : title || "Zymo Your Right Your Way" ;                           //Added new title
+    : title || "Zymo: Your Ride. Your Way." ;                           //Added new title
 
   const pageDescription = city
     ? `Rent affordable self-drive cars in ${capitalizedCity}. Compare prices, book in minutes, and enjoy affordable, hassle-free car rentals.`
