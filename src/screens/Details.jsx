@@ -132,7 +132,7 @@ const CarDetails = ({ title }) => {
           label: "Hourly Amount",
           value:
             car.source === "mychoize" || car.source === "Zymo"
-              ? `₹${car.hourly_amount}`
+              ? `₹${car.hourlyRates[car?.selectedPackage]}`
               : car?.hourly_amount,
         },
         { label: "Seats", value: car.options[2] },
