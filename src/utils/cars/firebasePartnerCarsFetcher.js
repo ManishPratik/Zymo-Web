@@ -128,7 +128,6 @@ export const fetchFirebaseCars = async (city, tripDurationHours) => {
               ...carData,
             };
           });
-
           allCars = [...allCars, ...partnerCars];
 
           console.log(
@@ -204,6 +203,7 @@ export const fetchFirebaseCars = async (city, tripDurationHours) => {
           location_est: car.location_est || city,
           total_km: car.total_km,
           all_fares: car.all_fares || [],
+          hourlyRates: car.hourlyRates || [],
           rateBasis:
             car.rateBasis || (tripDurationHours >= 24 ? "MP" : "hourly"),
           variations: car.variations || [],
