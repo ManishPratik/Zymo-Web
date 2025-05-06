@@ -93,7 +93,7 @@ const CarDetails = ({ title }) => {
 
   const carDetails = [
     {
-      name: `${car?.brand} ${car?.name}`,
+      name: `${car?.name}`,
       image: car?.images || [],
       rating: car?.ratingData?.rating,
       features: [
