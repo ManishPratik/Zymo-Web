@@ -27,4 +27,4 @@ dist-ssr
 *.env
 *.env.production
 
-functions/config/keys
+/functions/config/keys
