@@ -15,6 +15,8 @@ const LoginPage = ({ onAuth, isOpen, onClose, authType }) => {
   const [step, setStep] = useState("phone");  const [loading, setLoading] = useState(false);
   const [timer, setTimer] = useState(0);
 
+  const VITE_FUNCTIONS_API_URL = import.meta.env.VITE_FUNCTIONS_API_URL 
+
   useEffect(() => {
     if (timer > 0) {
       const interval = setInterval(() => {
@@ -88,7 +90,7 @@ const LoginPage = ({ onAuth, isOpen, onClose, authType }) => {
       }
       
       // In development, use local API, in production use deployed URL
-      const apiUrl = "http://127.0.0.1:5001/zymo-prod/us-central1/api/otp/send";
+      const apiUrl = `${VITE_FUNCTIONS_API_URL}/otp/send`;
       
       const response = await fetch(apiUrl, {
         method: "POST",
@@ -140,7 +142,7 @@ const LoginPage = ({ onAuth, isOpen, onClose, authType }) => {
           : "+91" + formattedPhone;
       }
       
-      const apiUrl = "http://127.0.0.1:5001/zymo-prod/us-central1/api/otp/verify";
+      const apiUrl = `${VITE_FUNCTIONS_API_URL}/otp/verify`;
       
       const requestBody = {
         sessionId: OTPData,

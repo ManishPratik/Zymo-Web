@@ -2,46 +2,14 @@ const express = require("express");
 const axios = require("axios");
 const router = express.Router();
 const { getTwoFactorConfig } = require("../config/twofactor.js");
-const admin = require("firebase-admin");
-const fs = require("fs");
-const path = require("path");
+const { admin } = require("../config/firebase-admin"); 
 
 // Get API key from config
 const { apiKey: API_KEY } = getTwoFactorConfig();
 
-// Initialize Firebase Admin with service account if available
-try {
-  const serviceAccountPath = path.join(
-    __dirname,
-    "../config/keys/serviceAccountKey.json"
-  );
-  if (fs.existsSync(serviceAccountPath)) {
-    const serviceAccount = require(serviceAccountPath);
-    if (!admin.apps.length) {
-      admin.initializeApp({
-        credential: admin.credential.cert(serviceAccount),
-      });
-      console.log(
-        "Firebase Admin initialized with service account credentials"
-      );
-    }
-  } else {
-    console.warn(
-      "Service account file not found. Firebase Admin will use default credentials or mock authentication."
-    );
-    if (!admin.apps.length) {
-      admin.initializeApp();
-    }
-  }
-} catch (error) {
-  console.warn(
-    "Error initializing Firebase Admin with service account:",
-    error.message
-  );
-  if (!admin.apps.length) {
-    admin.initializeApp();
-  }
-}
+// The rest of the admin initialization code is no longer needed as we're using the centralized instance
+// Just log that we're using the centralized admin instance
+console.log("OTP API using the centralized Firebase Admin instance");
 
 router.post("/send", async (req, res) => {
   const { phone } = req.body;
