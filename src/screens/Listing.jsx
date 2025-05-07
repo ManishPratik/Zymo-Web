@@ -699,7 +699,7 @@ const Listing = ({ title }) => {
 
         {/* Car Grid */}
         {loading ? (
-          <div className="grid grid-cols-1  w-[56%] gap-5  max-w-6xl">
+          <div className="grid grid-cols-1  lg:w-[56%] gap-5  max-w-6xl">
             {[...Array(6)].map((_, index) => (
               <div
                 key={index}
