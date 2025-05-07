@@ -29,6 +29,24 @@ import useTrackEvent from "../hooks/useTrackEvent";
 import { Helmet } from "react-helmet-async";
 import { motion } from "framer-motion";
 import { fetchFirebaseCars } from "../utils/cars/firebasePartnerCarsFetcher";
+import { getCarKeywords } from "../utils/carClubbing";
+
+// Helper function to get normalized car name
+const getNormalizedCarName = (originalName, keywords) => {
+  if (!originalName) return "UNKNOWN";
+  let nameToProcess = String(originalName).toLowerCase();
+  let normalizedNameResult = String(originalName); // Default to original name if no keyword matches
+
+  if (Array.isArray(keywords)) {
+    for (const keyword of keywords) {
+      if (keyword && nameToProcess.includes(String(keyword).toLowerCase())) {
+        normalizedNameResult = String(keyword); // Use the keyword itself as the normalized name
+        break; // Found a keyword, no need to check further
+      }
+    }
+  }
+  return normalizedNameResult.toUpperCase(); // Return the keyword or original name, uppercased
+};
 
 const Listing = ({ title }) => {
   const location = useLocation();
@@ -130,60 +148,62 @@ const Listing = ({ title }) => {
   };
 
   //It group the cars by name and brand and find the minimum fare for each group
-  const clubCarsByName = (carsArray) => {
+  const clubCarsByName = async (carsArray) => {
+    console.log("Cars Array:", carsArray); // For debugging
+    const clubbingCarNames = (await getCarKeywords()) || [];
+    // console.log("Car Grouping Keywords:", clubbingCarNames); // For debugging
+
     if (!Array.isArray(carsArray) || carsArray.length === 0) {
       return [];
     }
 
-    // Group cars by name
-    const groupedCars = carsArray.reduce((acc, car) => {
-      if (!car) {
+    // Step 1: Group cars by normalized name
+    const carsGroupedByNormalizedName = carsArray.reduce((acc, car) => {
+      if (!car || !car.name || typeof car.fare !== 'string') {
         return acc;
       }
-      console.log("Car data from club:", car);
-      // Make sure we have valid values for these fields
-      const name = car.name || "Unknown";
-      const brand = car.brand || "Partner";
+
+      const normalizedNameKey = getNormalizedCarName(car.name, clubbingCarNames);
       
-      const fare = car.fare;
-
-      if (typeof fare !== "string") {
-        return acc;
+      if (!acc[normalizedNameKey]) {
+        console.log("New group created:", normalizedNameKey); // For debugging
+        acc[normalizedNameKey] = [];
       }
-
-      const key = `${name}|${brand}`;
-
-      if (!acc[key]) {
-        acc[key] = {
-          name: car.name,
-          brand: car.brand,
-          cars: [],
-        };
-      }
-      acc[key].cars.push(car);
+      console.log("Adding car to group:", normalizedNameKey, car); // For debugging
+      acc[normalizedNameKey].push(car);
       return acc;
     }, {});
 
-    // Transform groups and find the minimun fare
-    return Object.values(groupedCars).map((group) => {
-      const minFare = group.cars.reduce((min, car) => {
-        const currentFare = parseInt(car.fare?.replace(/[^0-9]/g, ""));
-        if (isNaN(currentFare)) return min;
-        const minFareNum = parseInt(min.replace(/[^0-9]/g, ""));
-        return currentFare < minFareNum ? car.fare : min;
-      }, group.cars[0].fare);
+    // Step 2: Transform groups into the desired output structure
+    return Object.entries(carsGroupedByNormalizedName).map(([normalizedGroupName, carsInGroup]) => {
+      if (!carsInGroup || carsInGroup.length === 0) {
+        return null;
+      }
 
-      const minFareCar = group.cars.find((car) => car.fare === minFare);
-      const seat = minFareCar.options.find((opt) => opt.includes("Seats"));
+      // Sort cars within the group by price (ascending)
+      const sortedCarsInGroup = [...carsInGroup].sort((a, b) => {
+        const fareA = parseInt(a.fare?.replace(/[^0-9]/g, "") || "0");
+        const fareB = parseInt(b.fare?.replace(/[^0-9]/g, "") || "0");
+        return fareA - fareB;
+      });
+
+      const minFareCar = sortedCarsInGroup[0];
+      if (!minFareCar) {
+        return null; 
+      }
+
+      const minFare = minFareCar.fare;
+      const seat = minFareCar.options?.find((opt) => typeof opt === 'string' && opt.includes("Seats")) || "N/A";
+      const brand = minFareCar.brand; // Brand of the car with the minimum fare
 
       return {
-        brand: group.brand,
-        name: group.name,
+        brand: brand,
+        name: normalizedGroupName, // The normalized group name (e.g., "SWIFT")
         fare: minFare,
         seat: seat,
-        cars: group.cars,
+        cars: sortedCarsInGroup, // All cars in this normalized group, sorted by price
       };
-    });
+    }).filter(group => group !== null); // Remove any null groups
   };
 
   useEffect(() => {
@@ -350,7 +370,7 @@ const Listing = ({ title }) => {
             autoClose: 5000,
           });
         }
-        const groupCarList = clubCarsByName(allCarData);
+        const groupCarList = await clubCarsByName(allCarData);
 
         setCarList(allCarData);
         setClubbedCarList(groupCarList);
@@ -453,15 +473,18 @@ const Listing = ({ title }) => {
         return priceRange === "lowToHigh" ? priceA - priceB : priceB - priceA;
       });
     }
-    let totalCars = filteredGroups.reduce((count, group) => count + group.cars.length, 0)
+    let totalCars = filteredGroups.reduce(
+      (count, group) => count + group.cars.length,
+      0
+    );
 
     setFilteredList(filteredGroups);
     setCarCount(totalCars);
-      //filteredGroups.reduce((count, group) => count + group.cars.length, 0)
+    //filteredGroups.reduce((count, group) => count + group.cars.length, 0)
     if (totalCars === 0) {
-      noCarsFound(); 
-    };
-  }
+      noCarsFound();
+    }
+  };
   const handleSelectedCar = (label) => {
     trackEvent("Car List Section", "Rent Section Car", label);
   };

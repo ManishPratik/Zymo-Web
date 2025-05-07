@@ -68,7 +68,6 @@ export const fetchFirebaseCars = async (city, tripDurationHours) => {
 
             const minBookingDuration = carData.minBookingDuration;
 
-            console.log(minBookingDuration, tripDurationHours);
             if (minBookingDuration === 1 && tripDurationHours < 24) {
               return null;
             } else if (minBookingDuration > tripDurationHours) {
@@ -77,10 +76,8 @@ export const fetchFirebaseCars = async (city, tripDurationHours) => {
 
             for (const city of partner.cities) {
               if (city && city.toLowerCase() === city.toLowerCase()) {
-                console.log(`Car ${carData.carName} available in ${city}`);
                 break;
               } else {
-                console.log(`Car ${carData.carName} not available in ${city}`);
                 return null;
               }
             }            // create packages
@@ -130,9 +127,6 @@ export const fetchFirebaseCars = async (city, tripDurationHours) => {
           });
           allCars = [...allCars, ...partnerCars];
 
-          console.log(
-            `Found ${carsSnapshot.size} partner cars from ${partner.brandName}, but not using them currently`
-          );
         }
       } catch (err) {
         console.error(`Error fetching cars for partner ${partner.id}:`, err);
@@ -148,24 +142,19 @@ export const fetchFirebaseCars = async (city, tripDurationHours) => {
     );
 
     if (testCollections && testCollections.length > 0) {
-      console.log(`Found ${testCollections} test collection cars for ${city}`);
       allCars = [...allCars, ...testCollections];
-    } else {
-      console.log(`No test collection cars found for ${city}`);
-    }
+    } 
 
     // Step 5: Map car data to the expected format
     const filterdData = allCars
       .filter((car) => {
         // Skip cars with no data or undefined required fields
         if (!car || !car.id) {
-          console.log("Skipping invalid car:", car);
           return false;
         }
         return true;
       })
       .map((car) => {
-        console.log("Car data:", car);
         return {
           id: car.carId || car.id,
           brand: car.partnerBrandName || "Zymo",
@@ -210,7 +199,8 @@ export const fetchFirebaseCars = async (city, tripDurationHours) => {
         };
       });
 
-    return filterdData;
+    // return filterdData;
+    return [];
   } catch (error) {
     console.error("Error fetching Firebase cars:", error);
     return [];
