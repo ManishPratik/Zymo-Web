@@ -699,7 +699,7 @@ const Listing = ({ title }) => {
 
         {/* Car Grid */}
         {loading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-2 gap-5 w-full max-w-6xl">
+          <div className="grid grid-cols-1  w-[56%] gap-5  max-w-6xl">
             {[...Array(6)].map((_, index) => (
               <div
                 key={index}
@@ -712,14 +712,15 @@ const Listing = ({ title }) => {
             ))}
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-2 gap-4 w-full max-w-5xl items-start">
+          <div className="grid grid-cols-1  w-[56%] items-start gap-5">
             {filteredList.map((car) => {
               const uniqueKey = `${car.name}-${car.brand}`;
               return (
                 <div
-                  key={uniqueKey}
-                  className="bg-[#404040] p-0 rounded-lg shadow-lg cursor-pointer transition-transform duration-300 hover:-translate-y-[2%] mb-5"
-                >
+  key={uniqueKey}
+  className="bg-[#404040] p-4 rounded-xl shadow-2xl cursor-pointer transition-transform duration-300 hover:-translate-y-1 mb-8"
+>
+
                   {/* Small Screens Layout */}
                   <div className="block md:hidden p-3">
                     <img
@@ -730,7 +731,7 @@ const Listing = ({ title }) => {
                     />
                     <div className="mt-3 flex justify-between items-start">
                       <div>
-                        <h3 className="text-md font-semibold">{car.name}</h3>
+                      <h3 className="text-md font-semibold">{car.name}</h3>
                         <p className="text-sm text-gray-400">
                           {car.cars[0].options[2]}
                         </p>
@@ -739,9 +740,9 @@ const Listing = ({ title }) => {
                             loading="lazy"
                             src={car.cars[0].sourceImg}
                             alt={car.cars[0].source}
-                            className="h-6 rounded-sm mt-2 bg-white p-1 text-black"
-                          />
-                        </div>
+                            className="h-6 rounded-sm mt-2 bg-white p-1 text-black"                          
+                            />
+                             </div>
                       </div>
                       <div className="text-right">
                         <p className="text-sm text-gray-400">Starts at</p>
@@ -790,12 +791,12 @@ const Listing = ({ title }) => {
                   </div>
 
                   {/* Medium and Larger Screens Layout */}
-                  <div className="hidden md:flex items-center px-4 py-2 rounded-xl shadow-xl w-full h-52">
+                  <div className="hidden md:flex items-center px-4 py-2 rounded-xl  w-full h-52">
                     <div className="flex items-stretch justify-between w-full">
                       {/* Left Side Info */}
-                      <div className="flex flex-col text-white w-1/4 justify-between">
+                      <div className="flex flex-col text-white w-1/3 justify-between">
                         <div>
-                          <h3 className="text-xl font-semibold mb-1">
+                          <h3 className="text-2xl font-semibold mb-1">
                             {car.name}
                           </h3>
                         </div>
@@ -804,43 +805,43 @@ const Listing = ({ title }) => {
                             loading="lazy"
                             src={car.cars[0].sourceImg}
                             alt={car.cars[0].source}
-                            className="h-5 rounded-sm bg-white p-1 text-black"
+                            className="h-7 rounded-sm bg-white p-1 text-black"
                           />
-                          <p className="text-xs text-gray-400 ">
+                          <p className="text-md text-gray-400 ">
                             {car.cars[0].options[2]}
                           </p>
-                          <p className="text-xs text-[#faffa4]">
+                          <p className="text-sm text-[#faffa4]">
                             {car.cars[0].location_est}
                           </p>
                         </div>
                       </div>
 
                       {/* Middle Car Image */}
-                      <div className="w-2/4 flex justify-center items-center">
+                      <div className="w-1/3 flex justify-center items-center">
                         <img
                           loading="lazy"
                           src={car.cars[0].images[0]}
                           alt={car.cars[0].name}
-                          className="w-full max-w-60 h-36 object-contain bg-[#353535] rounded-md p-1"
+                          className="w-full h-48 object-contain bg-[#353535] rounded-md p-1"
                         />
                       </div>
 
                       {/* Right Side Info */}
-                      <div className="flex flex-col justify-between text-right w-1/4 border-l border-gray-400 pl-4">
+                      <div className="flex flex-col justify-between text-right w-1/3 border-l border-gray-400 ml-2 ">
                         <div>
-                          <p className="text-xs text-gray-400">Starts at</p>
-                          <p className="text-md text-gray-400 line-through decoration-2">
+                          <p className="text-sm text-gray-400">Starts at</p>
+                          <p className="text-lg text-gray-400 line-through decoration-2">
                             {car.cars[0].inflated_fare}
                           </p>
-                          <p className="text-xl font-semibold text-white">
+                          <p className="text-2xl font-semibold text-white">
                             {car.fare}
                           </p>
-                          <p className="text-xs text-gray-400">(GST incl)</p>
+                          <p className="text-sm text-gray-400">(GST incl)</p>
                         </div>
                         <div className="flex flex-col items-end">
                           <button
                             style={{ backgroundColor: "#faffa4" }}
-                            className="bg-[#faffa4] flex items-center justify-center rounded-lg text-black text-xs font-semibold h-8 w-[90px] mt-4"
+                            className="bg-[#faffa4] p-2 flex items-center justify-center rounded-lg text-black text-sm font-semibold  mt-4"
                             onClick={() => toggleDeals(uniqueKey)}
                           >
                             {expandedStates[uniqueKey] ? (
