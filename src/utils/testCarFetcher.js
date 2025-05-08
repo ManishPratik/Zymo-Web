@@ -79,7 +79,7 @@ export const fetchAllTestCollections = async function (
     }
 
     // Check if API is enabled
-    if (!vendorDetails?.Api?.PU) {
+    if (vendorDetails?.Api?.PU) {
       console.log("testKaaryana API is currently disabled");
       return [];
     }

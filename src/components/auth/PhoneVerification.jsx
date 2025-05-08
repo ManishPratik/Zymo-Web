@@ -16,7 +16,11 @@ const LoginPage = ({ onAuth, isOpen, onClose, authType }) => {
   const [step, setStep] = useState("phone");  const [loading, setLoading] = useState(false);
   const [timer, setTimer] = useState(0);
 
+  //? Environment variable for API URL
   const VITE_FUNCTIONS_API_URL = import.meta.env.VITE_FUNCTIONS_API_URL 
+  
+  //? For testing purposes, using local API URL
+  // const VITE_FUNCTIONS_API_URL = "http://127.0.0.1:5001/zymo-prod/us-central1/api"; 
 
   useEffect(() => {
     if (timer > 0) {
