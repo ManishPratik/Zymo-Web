@@ -770,7 +770,7 @@ const Listing = ({ title }) => {
                       </div>
                       <div className="text-right">
                         <p className="text-sm text-gray-400">Starts at</p>
-                        <p className="text-sm text-gray-500 line-through decoration-2">
+                        <p className="text-sm text-gray-500 !line-through !decoration-2">
                           {
                             car.cars.sort((a, b) => {
                               const fareA = parseInt(
