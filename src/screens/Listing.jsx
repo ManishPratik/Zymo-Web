@@ -384,7 +384,7 @@ const Listing = ({ title }) => {
         setCarCount(
           groupCarList.reduce((count, group) => count + group.cars.length, 0)
         );
-        setLoading(false);
+        setLoading(true);
 
         localStorage.setItem("carList", JSON.stringify(allCarData));
       } catch (error) {
@@ -756,7 +756,7 @@ const Listing = ({ title }) => {
                   <img 
                     src={brand.logo}
                     alt={brand.name}
-                    className="w-12 h-6"
+                    className="w-14 h-7"
                   />
                   </div>
                 ))
