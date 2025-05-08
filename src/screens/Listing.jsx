@@ -159,6 +159,7 @@ const Listing = ({ title }) => {
 
     // Step 1: Group cars by normalized name
     const carsGroupedByNormalizedName = carsArray.reduce((acc, car) => {
+      if (car.brand === "Karyana") console.log(car);
       if (!car || !car.name || typeof car.fare !== 'string') {
         return acc;
       }
@@ -169,7 +170,7 @@ const Listing = ({ title }) => {
         console.log("New group created:", normalizedNameKey); // For debugging
         acc[normalizedNameKey] = [];
       }
-      console.log("Adding car to group:", normalizedNameKey, car); // For debugging
+      // console.log("Adding car to group:", normalizedNameKey, car); // For debugging
       acc[normalizedNameKey].push(car);
       return acc;
     }, {});
@@ -370,6 +371,7 @@ const Listing = ({ title }) => {
             autoClose: 5000,
           });
         }
+        console.log("All Car Data:", allCarData); // For debugging
         const groupCarList = await clubCarsByName(allCarData);
 
         setCarList(allCarData);
