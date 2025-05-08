@@ -112,7 +112,7 @@ export default function StepsofZymo() {
                         <img
                           src={step.image}
                           alt={step.title}
-                          className="w-full sm:max-w-[300px] max-w-[200px] sm:h-[250px] rounded object-contain"
+                          className="w-full sm:max-w-[300px] max-w-[250px] h-[200px] sm:h-[250px] rounded object-contain"
                         />
                       </motion.div>
 
