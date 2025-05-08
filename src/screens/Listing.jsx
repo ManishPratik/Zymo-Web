@@ -84,9 +84,13 @@ const Listing = ({ title }) => {
   const [, setVendersDetails] = useState({});
 
   const brands = [
+    { name: "WheelUp", logo: "/images/ServiceProvider/wheelup.png" },
     { name: "Avis", logo: "/images/ServiceProvider/avis.png" },
     { name: "Zoomcars", logo: "/images/ServiceProvider/Zoomcar_Logo.jpg" },
     { name: "MyChoize", logo: "/images/ServiceProvider/mychoize.png" },
+    { name: "Carronrent", logo: "/images/ServiceProvider/carronrent.png" },
+    { name: "Doorcars", logo: "/images/ServiceProvider/doorcars1.png" },
+    { name: "Renx", logo: "/images/ServiceProvider/renx.jpeg" }
   ];
 
   const toggleDeals = (key) => {
@@ -733,7 +737,7 @@ const Listing = ({ title }) => {
           <h3 className="text-[#faffa4] text-lg text-center">We compare multiple sites to get you the best deal</h3>
 
           <div 
-            className="sm:max-w-96 max-w-80"
+            className="sm:max-w-[40rem] max-w-80"
             style={{
                         maskImage:
                             "linear-gradient(to right, transparent 0%, black 10%, black 90%, transparent 100%)",
@@ -756,7 +760,7 @@ const Listing = ({ title }) => {
                   <img 
                     src={brand.logo}
                     alt={brand.name}
-                    className="w-14 h-7"
+                    className="w-12 h-8"
                   />
                   </div>
                 ))
