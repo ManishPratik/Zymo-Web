@@ -730,10 +730,10 @@ const Listing = ({ title }) => {
         {/* Car Grid */}
         {loading ? (
           <>
-          <h3 className="text-[#faffa4] text-lg">We compare multiple sites to get you the best deal</h3>
+          <h3 className="text-[#faffa4] text-lg text-center">We compare multiple sites to get you the best deal</h3>
 
           <div 
-            className="max-w-96"
+            className="sm:max-w-96 max-w-80"
             style={{
                         maskImage:
                             "linear-gradient(to right, transparent 0%, black 10%, black 90%, transparent 100%)",
@@ -756,7 +756,7 @@ const Listing = ({ title }) => {
                   <img 
                     src={brand.logo}
                     alt={brand.name}
-                    className="w-12 h-6"
+                    className="w-14 h-7"
                   />
                   </div>
                 ))
