@@ -30,6 +30,7 @@ import { Helmet } from "react-helmet-async";
 import { motion } from "framer-motion";
 import { fetchFirebaseCars } from "../utils/cars/firebasePartnerCarsFetcher";
 import { getCarKeywords } from "../utils/carClubbing";
+import Marquee from "react-fast-marquee";
 
 // Helper function to get normalized car name
 const getNormalizedCarName = (originalName, keywords) => {
@@ -81,6 +82,12 @@ const Listing = ({ title }) => {
   const [, setCarCount] = useState("");
   const [expandedStates, setExpandedStates] = useState({});
   const [, setVendersDetails] = useState({});
+
+  const brands = [
+    { name: "Avis", logo: "/images/ServiceProvider/avis.png" },
+    { name: "Zoomcars", logo: "/images/ServiceProvider/Zoomcar_Logo.jpg" },
+    { name: "MyChoize", logo: "/images/ServiceProvider/mychoize.png" },
+  ];
 
   const toggleDeals = (key) => {
     setExpandedStates((prev) => ({
@@ -722,6 +729,42 @@ const Listing = ({ title }) => {
 
         {/* Car Grid */}
         {loading ? (
+          <>
+          <h3 className="text-[#faffa4] text-lg">We compare multiple sites to get you the best deal</h3>
+
+          <div 
+            className="max-w-96"
+            style={{
+                        maskImage:
+                            "linear-gradient(to right, transparent 0%, black 10%, black 90%, transparent 100%)",
+                        WebkitMaskImage:
+                            "linear-gradient(to right, transparent 0%, black 10%, black 90%, transparent 100%)",
+                    }}  
+            >
+            <Marquee
+              autoFill
+            >
+              <div
+              className="flex space-x-10 md:space-x-10 my-5 mr-10 md:mr-10"
+            >
+                {
+                brands.map((brand, index) => (
+                  <div
+                    key={index}
+                    className="flex items-center justify-center rounded-full bg-white w-16 h-16"
+                  >
+                  <img 
+                    src={brand.logo}
+                    alt={brand.name}
+                    className="w-12 h-6"
+                  />
+                  </div>
+                ))
+              }
+            </div>
+            </Marquee>
+          </div>   
+
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-2 gap-5 w-full max-w-6xl">
             {[...Array(6)].map((_, index) => (
               <div
@@ -734,6 +777,7 @@ const Listing = ({ title }) => {
               </div>
             ))}
           </div>
+          </>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-2 gap-4 w-full max-w-5xl items-start">
             {filteredList.map((car) => {
