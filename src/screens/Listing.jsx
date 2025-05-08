@@ -829,7 +829,7 @@ const Listing = ({ title }) => {
                       <div className="flex flex-col justify-between text-right w-1/4 border-l border-gray-400 pl-4">
                         <div>
                           <p className="text-xs text-gray-400">Starts at</p>
-                          <p className="text-md text-gray-400 line-through decoration-2">
+                          <p className="text-md text-gray-400 !line-through !decoration-[2px]">
                             {car.cars[0].inflated_fare}
                           </p>
                           <p className="text-xl font-semibold text-white">
@@ -907,7 +907,7 @@ const Listing = ({ title }) => {
                           </div>
                           <div className="text-center flex flex-col items-center gap-3">
                             <div>
-                              <p className="text-sm text-gray-400 line-through decoration-2">
+                              <p className="text-sm text-gray-400 !line-through !decoration-[2px]">
                                 {individualCar.inflated_fare}
                               </p>
                               <p className="text-xl sm:text-md font-semibold">
