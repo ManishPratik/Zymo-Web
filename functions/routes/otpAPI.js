@@ -23,7 +23,7 @@ router.post("/send", async (req, res) => {
 
   try {
     const response = await axios.get(
-      `https://2factor.in/API/V1/${API_KEY}/SMS/${phone}/AUTOGEN`
+      `https://2factor.in/API/V1/${API_KEY}/SMS/${phone}/AUTOGEN/OTP1`
     );
 
     res.json({
