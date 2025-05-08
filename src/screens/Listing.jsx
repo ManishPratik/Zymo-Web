@@ -238,7 +238,7 @@ const Listing = ({ title }) => {
     //     return;
     //   }
     // }
-
+    
     fetchVendorDetails();
 
     const search = async () => {
@@ -724,7 +724,7 @@ const Listing = ({ title }) => {
 
         {/* Car Grid */}
         {loading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-2 gap-5 w-full max-w-6xl">
+          <div className="grid grid-cols-1  lg:w-[56%] items-start gap-5">
             {[...Array(6)].map((_, index) => (
               <div
                 key={index}
@@ -737,7 +737,7 @@ const Listing = ({ title }) => {
             ))}
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-2 gap-4 w-full max-w-5xl items-start">
+          <div className="grid grid-cols-1  lg:w-[56%] items-start gap-5">
             {filteredList.map((car) => {
               const uniqueKey = `${car.name}-${car.brand}`;
               return (
