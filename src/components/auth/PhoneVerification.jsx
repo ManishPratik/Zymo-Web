@@ -7,6 +7,7 @@ import {
 import { appAuth } from "../../utils/firebase";
 import OtpInput from "./OtpInput";
 import PhoneInputForm, { PhoneHeaderIcon } from "./PhoneInputForm";
+import LoadingSpinner from '../LoadingSpinner';
 
 const LoginPage = ({ onAuth, isOpen, onClose, authType }) => {
   const [phone, setPhone] = useState("");
@@ -35,8 +36,9 @@ const LoginPage = ({ onAuth, isOpen, onClose, authType }) => {
     setLoading(true);
     try {
       await sendOtp(phone);
+      await new Promise(resolve => setTimeout(resolve, 1000)); // Add slight delay for UX
       setStep("otp");
-      setTimer(30); // Set timer to 30 seconds
+      setTimer(30);
       toast.success("OTP sent successfully!");
     } catch (error) {
       toast.error(error.message);
@@ -44,6 +46,7 @@ const LoginPage = ({ onAuth, isOpen, onClose, authType }) => {
       setLoading(false);
     }
   };
+
   const handleOtpSubmit = async (e) => {
     e.preventDefault();
     const otpValue = otp.join("");
@@ -56,12 +59,12 @@ const LoginPage = ({ onAuth, isOpen, onClose, authType }) => {
       await verifyOTP();
       // verifyOTP will handle the success message and navigation
     } catch (error) {
-      // Error handling is done inside verifyOTP
       console.log("OTP verification failed:", error.message);
     } finally {
       setLoading(false);
     }
   };
+
   const handleResendOtp = async () => {
     if (timer > 0) return;
     setLoading(true);
@@ -252,7 +255,8 @@ const LoginPage = ({ onAuth, isOpen, onClose, authType }) => {
               : "Create a new account with your phone number"}
           </p>
         )}
-      </div>      {step === "phone" && (
+      </div>      
+      {step === "phone" && (
         <div className="space-y-6">
           {/* Phone verification form */}
           <PhoneInputForm
@@ -266,8 +270,23 @@ const LoginPage = ({ onAuth, isOpen, onClose, authType }) => {
         </div>
       )}
 
+      {/* Add loading state between steps */}
+    {loading && step === "phone" && (
+      <div className="text-center py-8">
+        <LoadingSpinner />
+        <p className="text-[#faffa4] mt-4">Sending OTP...</p>
+      </div>
+    )}
+
       {step === "otp" && (
         <form onSubmit={handleOtpSubmit} className="space-y-6">
+           {/* Show loading spinner during verification */}
+        {loading && (
+          <div className="text-center py-4">
+            <LoadingSpinner />
+            <p className="text-[#faffa4] mt-4">Verifying OTP...</p>
+          </div>
+        )}
           <div className="space-y-2">
             <label className="text-sm text-gray-300">
               Enter the 6-digit code sent to {phone}

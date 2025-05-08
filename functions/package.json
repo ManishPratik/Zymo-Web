@@ -20,6 +20,7 @@
         "firebase": "^11.6.0",
         "firebase-admin": "^12.6.0",
         "firebase-functions": "^6.3.2",
+        "functions": "file:",
         "razorpay": "^2.9.6",
         "twilio": "^5.4.4"
     },
