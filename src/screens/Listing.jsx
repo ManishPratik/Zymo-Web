@@ -30,6 +30,7 @@ import { Helmet } from "react-helmet-async";
 import { motion } from "framer-motion";
 import { fetchFirebaseCars } from "../utils/cars/firebasePartnerCarsFetcher";
 import { getCarKeywords } from "../utils/carClubbing";
+import Marquee from "react-fast-marquee";
 
 // Helper function to get normalized car name
 const getNormalizedCarName = (originalName, keywords) => {
@@ -81,6 +82,16 @@ const Listing = ({ title }) => {
   const [, setCarCount] = useState("");
   const [expandedStates, setExpandedStates] = useState({});
   const [, setVendersDetails] = useState({});
+
+  const brands = [
+    { name: "WheelUp", logo: "/images/ServiceProvider/wheelup.png" },
+    { name: "Avis", logo: "/images/ServiceProvider/avis.png" },
+    { name: "Zoomcars", logo: "/images/ServiceProvider/Zoomcar_Logo.jpg" },
+    { name: "MyChoize", logo: "/images/ServiceProvider/mychoize.png" },
+    { name: "Carronrent", logo: "/images/ServiceProvider/carronrent.png" },
+    { name: "Doorcars", logo: "/images/ServiceProvider/doorcars1.png" },
+    { name: "Renx", logo: "/images/ServiceProvider/renx.jpeg" }
+  ];
 
   const toggleDeals = (key) => {
     setExpandedStates((prev) => ({
@@ -159,6 +170,7 @@ const Listing = ({ title }) => {
 
     // Step 1: Group cars by normalized name
     const carsGroupedByNormalizedName = carsArray.reduce((acc, car) => {
+      if (car.brand === "Karyana") console.log(car);
       if (!car || !car.name || typeof car.fare !== 'string') {
         return acc;
       }
@@ -169,7 +181,7 @@ const Listing = ({ title }) => {
         console.log("New group created:", normalizedNameKey); // For debugging
         acc[normalizedNameKey] = [];
       }
-      console.log("Adding car to group:", normalizedNameKey, car); // For debugging
+      // console.log("Adding car to group:", normalizedNameKey, car); // For debugging
       acc[normalizedNameKey].push(car);
       return acc;
     }, {});
@@ -370,6 +382,7 @@ const Listing = ({ title }) => {
             autoClose: 5000,
           });
         }
+        console.log("All Car Data:", allCarData); // For debugging
         const groupCarList = await clubCarsByName(allCarData);
 
         setCarList(allCarData);
@@ -722,6 +735,42 @@ const Listing = ({ title }) => {
 
         {/* Car Grid */}
         {loading ? (
+          <>
+          <h3 className="text-[#faffa4] text-lg text-center">We compare multiple sites to get you the best deal</h3>
+
+          <div 
+            className="sm:max-w-[40rem] max-w-80"
+            style={{
+                        maskImage:
+                            "linear-gradient(to right, transparent 0%, black 10%, black 90%, transparent 100%)",
+                        WebkitMaskImage:
+                            "linear-gradient(to right, transparent 0%, black 10%, black 90%, transparent 100%)",
+                    }}  
+            >
+            <Marquee
+              autoFill
+            >
+              <div
+              className="flex space-x-10 md:space-x-10 my-5 mr-10 md:mr-10"
+            >
+                {
+                brands.map((brand, index) => (
+                  <div
+                    key={index}
+                    className="flex items-center justify-center rounded-full bg-white w-16 h-16"
+                  >
+                  <img 
+                    src={brand.logo}
+                    alt={brand.name}
+                    className="w-12 h-8"
+                  />
+                  </div>
+                ))
+              }
+            </div>
+            </Marquee>
+          </div>   
+
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-2 gap-5 w-full max-w-6xl">
             {[...Array(6)].map((_, index) => (
               <div
@@ -734,6 +783,7 @@ const Listing = ({ title }) => {
               </div>
             ))}
           </div>
+          </>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-2 gap-4 w-full max-w-5xl items-start">
             {filteredList.map((car) => {

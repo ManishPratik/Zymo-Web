@@ -23,6 +23,7 @@ export const fetchAllTestCollections = async function (
     // finalDiscount = perHourRate * tripDurationInHours * vendor.currentRate
     const finalDiscount = perHourRate * tripDurationHours * vendorRate;
 
+    console.log(tripDurationHours, vendorRate, finalDiscount);
     const finalPrice =
       perHourRate * tripDurationHours * vendorRate * discountRate;
 
@@ -77,9 +78,9 @@ export const fetchAllTestCollections = async function (
       console.log("Vendor details not found for testKaaryana");
       return [];
     }
-
+    console.log("Vendor details fetched successfully:", vendorDetails);
     // Check if API is enabled
-    if (vendorDetails?.Api?.PU) {
+    if (!vendorDetails?.Api?.PU) {
       console.log("testKaaryana API is currently disabled");
       return [];
     }
@@ -391,7 +392,7 @@ const groupTheCarsByName = (formattedTestCars) => {
         variations: [],
       };
     }
-    groupedCars[carName].all_fares.push(car.fare.slice(1))
+    groupedCars[carName].all_fares.push(car.fare?.slice(1))
     groupedCars[carName].total_km.push(car.total_km)
     groupedCars[carName].variations.push(car);
   });

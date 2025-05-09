@@ -199,8 +199,8 @@ export const fetchFirebaseCars = async (city, tripDurationHours) => {
         };
       });
 
-    // return filterdData;
-    return [];
+    return filterdData;
+    // return [];
   } catch (error) {
     console.error("Error fetching Firebase cars:", error);
     return [];

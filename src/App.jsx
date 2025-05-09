@@ -22,6 +22,7 @@ import Profile from "./components/Profile";
 import NearestCar from "./pages/Buy/NearestCar";
 import CarDetails from "./pages/Buy/CarDetails";
 import MyBookings from "./pages/MyBookings";
+import CareerPanel from "./pages/CareerPanel.jsx";
 
 import TestDrivePopup from "./components/buycomponent/TestDrivePopup";
 import TestDriveInputForm from "./components/buycomponent/TestDriveInputForm";
@@ -148,6 +149,10 @@ const App = () => {
           <Route
             path="/career"
             element={<CareerForm title="Careers at Zymo" />}
+          />
+          <Route
+            path="/careerpanel"
+            element={<CareerPanel title="Careers at Zymo" />}
           />
           <Route
             path="/blogs"

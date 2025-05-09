@@ -34,6 +34,8 @@ const CarDetails = ({ title }) => {
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false); // State to control modal visibility
   const [authUser, setAuthUser] = useState(null);
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [availableKMs, setAvailableKMs] = useState(0);
+  const [hourlyRate, setHourlyRate] = useState(0);
   // console.log("Car Details", car);
   useEffect(() => {
     if (authUser) {
@@ -86,11 +88,32 @@ const CarDetails = ({ title }) => {
     );
   };
 
+  // handle values for different vendors
+  useEffect(() => {
+    if (car?.source === "zoomcar") {
+      setAvailableKMs("Unlimited KMs");
+    } else if (car?.source === "mychoize") {
+      setHourlyRate(car?.hourly_amount);
+      setAvailableKMs("3600 KMs");
+    } else if (car?.source === "Zymo") {
+      setHourlyRate(car?.hourlyRates[car.selectedPackage]);
+      setAvailableKMs(car?.total_km[car.selectedPackage] + " KMs");
+    } else if (car?.source.toLowerCase() === "karyana") {
+      setAvailableKMs(
+        tripDurationHours < 24
+          ? car.total_km["hourly"] + " KMs"
+          : car.total_km[car.rateBasis] + " KMs"
+      );
+    } else {
+      setAvailableKMs(car?.total_km[car.rateBasis]);
+    }
+  }, []);
+
   //ga for car booking
   const handleCarBooking = (label) => {
     trackEvent("Car Booking Section", "Rent Section Button Clicked", label);
   };
-
+  console.log(car);
   const carDetails = [
     {
       name: `${car?.name}`,
@@ -130,10 +153,7 @@ const CarDetails = ({ title }) => {
         { label: "Car Name", value: car?.name },
         {
           label: "Hourly Amount",
-          value:
-            car.source === "mychoize" || car.source === "Zymo"
-              ? `₹${car.hourlyRates[car?.selectedPackage]}`
-              : car?.hourly_amount,
+          value: `₹${hourlyRate}`
         },
         { label: "Seats", value: car.options[2] },
         { label: "Fuel Type", value: car.options[1] },
@@ -152,15 +172,7 @@ const CarDetails = ({ title }) => {
         },
         {
           label: "Available KMs",
-          value:
-            car.source === "zoomcar"
-              ? "Unlimited KMs"
-              : activeTab === "subscribe" && car.source === "mychoize"
-              ? " 3600 KMs"
-              : car.source.toLowerCase() === "karyana" ||
-                car.source.toLowerCase() === "zymo"
-              ? `${car.total_km[car.selectedPackage]} KMs`
-              : car.total_km?.[car.rateBasis] || "350 KMs",
+          value: availableKMs,
         },
 
         {
@@ -171,7 +183,8 @@ const CarDetails = ({ title }) => {
               : `₹${car.extrakm_charge}/km`,
         },
       ],
-      price: car.source === "Zymo" ? car?.all_fares[car.selectedPackage] : car.fare,
+      price:
+        car.source === "Zymo" ? car?.all_fares[car.selectedPackage] : car.fare,
     },
   ];
 
@@ -378,7 +391,9 @@ const CarDetails = ({ title }) => {
               {carDetails[0].price}
             </p>
             <span className="text-xs text-gray-400">
-              {car.source === "zoomcar" || car.source === "Mychoize" || car.source === "Zymo"
+              {car.source === "zoomcar" ||
+              car.source === "Mychoize" ||
+              car.source === "Zymo"
                 ? "GST Included"
                 : "GST Not Included"}
             </span>
