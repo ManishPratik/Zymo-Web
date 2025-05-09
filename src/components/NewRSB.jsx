@@ -138,7 +138,15 @@ const NewRSB = ({ urlcity }) => {
   };
 
   const extractCityFromDetails = (place) => {
-    const components = place?.addressComponents || [];
+    if (!place?.addressComponents) {
+      console.warn("No address components found");
+      return "";
+    }
+  
+    const components = Array.isArray(place.addressComponents) 
+      ? place.addressComponents 
+      : [];
+  
     const cityTypesPriority = [
       "locality",
       "sublocality_level_1",
@@ -148,22 +156,36 @@ const NewRSB = ({ urlcity }) => {
       "administrative_area_level_2",
       "administrative_area_level_1",
     ];
-
+  
     for (let type of cityTypesPriority) {
-      const match = components.find((c) => {
-        const types = c.types || c.Eg || [];
+      const match = components.find((component) => {
+        // Handle the new structure where types is an array directly
+        const types = Array.isArray(component.types) ? component.types : [];
         return types.includes(type);
       });
-
+  
       if (match) {
-        const name = match.long_name || match.Fg || match.Gg || "";
-        return name;
+        // Use longText for the new structure
+        const name = match.longText || match.shortText || "";
+        console.log(`Found city: ${name} (type: ${type})`);
+        
+        if (name) {
+          return name;
+        }
       }
     }
-
-    console.warn("No suitable city component found.");
+  
+    // Fallback: use first component if it exists
+    if (components.length > 0 && components[0].longText) {
+      const name = components[0].longText;
+      console.log(`Using first component as city: ${name}`);
+      return name;
+    }
+  
+    console.warn("No suitable city component found");
     return "";
   };
+  
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -313,49 +335,77 @@ const NewRSB = ({ urlcity }) => {
   };
 
   const handleSearch = () => {
-    if (city && startDate && endDate) {
-      if (!place || !place.lat || !place.lng) {
-        toast.error("Please select a valid location", {
-          position: "top-center",
-          autoClose: 5000,
-        });
-        return;
-      }
-
-      // Store the updated values in cookies
-      setBookingCookies(placeInput, startDate, endDate);
-
-      const formattedCity =
-        city === "Bengaluru"
-          ? "bangalore"
-          : ["New Delhi", "Delhi Division", "Delhi"].includes(city)
-          ? "delhi"
-          : city.toLowerCase();
-
-      const stateData = {
-        address: address || place.name,
-        lat: place.lat,
-        lng: place.lng,
-        startDate,
-        endDate,
-        tripDuration,
-        tripDurationHours,
-        activeTab,
-      };
-
-      handleRSBFunctionClicks("Search");
-      sessionStorage.setItem("fromSearch", true);
-
-      navigate(`/self-drive-car-rentals/${formattedCity}/cars`, {
-        state: stateData,
-      });
-    } else {
-      toast.error("Required fields are empty", {
+    // Debug logging
+    console.log('Search validation:', {
+      city,
+      startDate,
+      endDate,
+      place,
+      placeInput
+    });
+  
+    if (!city) {
+      toast.error("Please select a valid city", {
         position: "top-center",
         autoClose: 5000,
       });
+      return;
     }
+  
+    if (!startDate) {
+      toast.error("Please select a start date", {
+        position: "top-center",
+        autoClose: 5000,
+      });
+      return;
+    }
+  
+    if (!endDate) {
+      toast.error("Please select an end date", {
+        position: "top-center",
+        autoClose: 5000,
+      });
+      return;
+    }
+  
+    if (!place || !place.lat || !place.lng) {
+      toast.error("Please select a valid location", {
+        position: "top-center",
+        autoClose: 5000,
+      });
+      return;
+    }
+  
+    // If all validations pass, proceed with search
+    const formattedCity =
+      city === "Bengaluru"
+        ? "bangalore"
+        : ["New Delhi", "Delhi Division", "Delhi"].includes(city)
+        ? "delhi"
+        : city.toLowerCase();
+  
+    const stateData = {
+      address: address || place.name,
+      lat: place.lat,
+      lng: place.lng,
+      startDate,
+      endDate,
+      tripDuration,
+      tripDurationHours,
+      activeTab,
+    };
+  
+    // Store the updated values in cookies
+    setBookingCookies(placeInput, startDate, endDate, place);
+  
+    handleRSBFunctionClicks("Search");
+    sessionStorage.setItem("fromSearch", true);
+  
+    navigate(`/self-drive-car-rentals/${formattedCity}/cars`, {
+      state: stateData,
+    });
   };
+  
 
   const handleTabClick = (tab) => {
     handleRSBClicks(tab);
@@ -381,33 +431,154 @@ const NewRSB = ({ urlcity }) => {
   
   useEffect(() => {
     // Retrieve cookies on component mount
-    const { location, startDate: savedStartDate, endDate: savedEndDate } = getBookingCookies();
-
-    if (location) {
-      setPlaceInput(location); // Set location from cookies
-    }
+    const { location, startDate: savedStartDate, endDate: savedEndDate, placeDetails } = getBookingCookies();
 
     const currentDate = new Date(getCurrentTime());
+
+    if (location) {
+      setPlaceInput(location); // Set location string
+
+      // Restore place details if available
+      if (placeDetails) {
+        setPlace(placeDetails);
+        
+        // Extract city from restored place details
+        const cityName = extractCityFromDetails({
+          addressComponents: placeDetails.addressComponents
+        });
+        setCity(cityName);
+      }
+    }
 
     if (savedStartDate) {
       const startDateObj = new Date(savedStartDate);
       if (startDateObj < currentDate) {
-        // If start date is in the past, set it to today's date
         setStartDate(currentDate);
-        setEndDate(null); // Reset end date if start date is in the past
-
+        setEndDate(null);
       } else {
         setStartDate(startDateObj);
-        setEndDate(new Date(savedEndDate)); // Set end date from cookies
+        setEndDate(savedEndDate ? new Date(savedEndDate) : null);
       }
     } else {
-      // If no start date in cookies, set it to today's date
       setStartDate(currentDate);
-      setEndDate(null); // Reset end date if no start date in cookies  
-
-    } 
+      setEndDate(null);
+    }
 
   }, []);
+
+  useEffect(() => {
+    // Retrieve cookies on component mount
+    const { location, startDate: savedStartDate, endDate: savedEndDate, placeDetails } = getBookingCookies();
+
+    const currentDate = new Date(getCurrentTime());
+
+    if (location) {
+      setPlaceInput(location);
+
+      if (placeDetails) {
+        // Set place object
+        setPlace(placeDetails);
+        
+        // Set address
+        setAddress(placeDetails.name || location);
+
+        // Extract and set city
+        if (placeDetails.addressComponents) {
+          const cityName = extractCityFromDetails({
+            addressComponents: placeDetails.addressComponents
+          });
+          setCity(cityName);
+        }
+      }
+    }
+
+    // Handle dates
+    if (savedStartDate && savedEndDate) {
+      const startDateObj = new Date(savedStartDate);
+      const endDateObj = new Date(savedEndDate);
+      
+      if (startDateObj < currentDate) {
+        setStartDate(currentDate);
+        setEndDate(null);
+      } else {
+        setStartDate(startDateObj);
+        setEndDate(endDateObj);
+        // Calculate duration for restored dates
+        calculateDuration(startDateObj, endDateObj);
+      }
+    } else {
+      setStartDate(currentDate);
+      setEndDate(null);
+    }
+  }, []);
+
+ // Remove all existing initialization useEffects and replace with this one:
+useEffect(() => {
+  console.log('Initializing from cookies...');
+  // Retrieve cookies on component mount
+  const cookieData = getBookingCookies();
+  console.log('Cookie data retrieved:', cookieData);
+
+  const currentDate = new Date(getCurrentTime());
+
+  if (cookieData.location) {
+    setPlaceInput(cookieData.location);
+    console.log('Setting placeInput:', cookieData.location);
+
+    if (cookieData.placeDetails) {
+      // Set place object with all required fields
+      const placeData = {
+        name: cookieData.placeDetails.name,
+        lat: cookieData.placeDetails.lat,
+        lng: cookieData.placeDetails.lng,
+        addressComponents: cookieData.placeDetails.addressComponents
+      };
+      setPlace(placeData);
+      console.log('Setting place:', placeData);
+      
+      // Set address
+      setAddress(cookieData.placeDetails.name || cookieData.location);
+      console.log('Setting address:', cookieData.placeDetails.name || cookieData.location);
+
+      // Extract and set city
+      if (cookieData.placeDetails.addressComponents?.length > 0) {
+        const cityName = extractCityFromDetails({
+          addressComponents: cookieData.placeDetails.addressComponents
+        });
+        console.log('Setting city from cookies:', cityName);
+        setCity(cityName || cookieData.location.split(',')[0]);
+      } else {
+        const cityFromLocation = cookieData.location.split(',')[0];
+        console.log('Setting city from location:', cityFromLocation);
+        setCity(cityFromLocation);
+      }
+    }
+  }
+
+  // Handle dates
+  if (cookieData.startDate && cookieData.endDate) {
+    const startDateObj = new Date(cookieData.startDate);
+    const endDateObj = new Date(cookieData.endDate);
+    
+    if (startDateObj < currentDate) {
+      console.log('Start date is in past, using current date');
+      setStartDate(currentDate);
+      setEndDate(null);
+    } else {
+      console.log('Setting dates from cookies:', {
+        start: startDateObj,
+        end: endDateObj
+      });
+      setStartDate(startDateObj);
+      setEndDate(endDateObj);
+      calculateDuration(startDateObj, endDateObj);
+    }
+  } else {
+    console.log('No saved dates, using current date');
+    setStartDate(currentDate);
+    setEndDate(null);
+  }
+}, []); // Run once on mount
 
   return (
     <>
