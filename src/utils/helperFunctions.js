@@ -33,6 +33,7 @@ const toPascalCase = (str) => {
 
 // Format fare/prices
 const formatFare = (fare) => {
+  console.log("Fare before formatting:", fare);
   if (!fare) {
     return;
   }
@@ -42,8 +43,9 @@ const formatFare = (fare) => {
   }
 
   const formatter = new Intl.NumberFormat("en-IN", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+    useGrouping: true,
   });
 
   return `₹${formatter.format(fare)}`;

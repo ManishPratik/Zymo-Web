@@ -36,10 +36,10 @@ const Card = ({ car }) => {
               {/* Tab part - positioned to match the image */}
               {/* <div className="absolute -right-8 top-16 h-40 w-60 bg-[#eeff8c]  rounded-2xl transform -rotate-15 z-10"></div> */}
             {/* </div> */}
-
-          <div className="absolute top-1 left-3 w-[71%] h-[110%] bg-yellow-200 rounded-tr-3xl rounded-tl-3xl rounded-bl-3xl z-0"></div>
+{/* Changed the color  */}
+          <div className="absolute top-1 left-3 w-[71%] h-[110%] bg-[#faffa4] rounded-tr-3xl rounded-tl-3xl rounded-bl-3xl z-0"></div>
           {/* Second yellow rectangle */}
-          <div className="absolute top-8 left-12 w-[71%] h-[110%] bg-yellow-200 rounded-tr-3xl rounded-br-3xl rounded-bl-3xl z-0"></div>
+          <div className="absolute top-8 left-12 w-[71%] h-[110%] bg-[#faffa4] rounded-tr-3xl rounded-br-3xl rounded-bl-3xl z-0"></div>
 
             {/* Car image */}
           <div className='relative z-10'>

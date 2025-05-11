@@ -47,6 +47,7 @@ const ErrorPage = ({ title }) => {
             className="w-[300px] md:w-[400px] lg:w-[500px] max-w-full"
           />
           <h1 className="text-2xl md:text-3xl font-bold mt-4">404 - Page Not Found</h1>
+          <a href="/" className='text-[#faffa4]'>Back to Main Page</a>
         </div>
       </div>
     </>

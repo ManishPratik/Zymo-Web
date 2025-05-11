@@ -1,6 +1,83 @@
 import { useEffect, useState } from "react";
 import Cookies from "js-cookie";
 
+// This function will be used throughout your app to try to store cookies
+export const setBookingCookies = (location, startDate, endDate, place) => {
+  const hasConsented = Cookies.get("cookiesConsent") === "true";
+  console.log('Setting cookies with consent:', hasConsented);
+
+  if (hasConsented) {
+    // Set expiration to 7 days from now
+    const expirationDate = new Date();
+    expirationDate.setDate(expirationDate.getDate() + 7);
+
+    const cookieOptions = {
+      expires: expirationDate,
+      path: '/',
+      sameSite: 'lax',
+      secure: window.location.protocol === 'https:'
+    };
+
+    // Store basic info with proper options
+    Cookies.set("location", location, cookieOptions);
+    Cookies.set("startDate", startDate, cookieOptions);
+    Cookies.set("endDate", endDate, cookieOptions);
+    
+    // Store place details with same options
+    if (place) {
+      const placeData = {
+        name: place.name,
+        lat: place.lat,
+        lng: place.lng,
+        addressComponents: place.addressComponents
+      };
+      Cookies.set("placeDetails", JSON.stringify(placeData), cookieOptions);
+    }
+
+    console.log('Cookies set with options:', {
+      location,
+      startDate,
+      endDate,
+      placeDetails: place ? 'present' : 'missing',
+      options: cookieOptions
+    });
+  }
+};
+
+export const getBookingCookies = () => {
+  const hasConsented = Cookies.get("cookiesConsent") === "true";
+  console.log('Cookie consent status:', hasConsented);
+
+  if (!hasConsented) {
+    console.log('No cookie consent, returning empty values');
+    return {
+      location: false,
+      startDate: false,
+      endDate: false,
+      placeDetails: false
+    };
+  }
+  
+  const location = Cookies.get("location");
+  const startDate = Cookies.get("startDate");
+  const endDate = Cookies.get("endDate");
+  const placeDetails = Cookies.get("placeDetails");
+
+  console.log('Retrieved cookies:', {
+    location,
+    startDate,
+    endDate,
+    placeDetails: placeDetails ? 'present' : 'missing'
+  });
+
+  return {
+    location: location || false,
+    startDate: startDate || false,
+    endDate: endDate || false,
+    placeDetails: placeDetails ? JSON.parse(placeDetails) : false
+  };
+};
+
 const CookiesConsent = () => {
   const [showBanner, setShowBanner] = useState(false);
 
@@ -68,5 +145,6 @@ const CookiesConsent = () => {
     </div>
   );
 };
+
 
 export default CookiesConsent;

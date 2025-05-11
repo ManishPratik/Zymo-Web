@@ -20,7 +20,6 @@ const zoomPass = prod
 // Token Generators
 async function getZoomToken() {
   try {
-    
     const zoomTokenUrl = `${zoomApiUrl}authenticate/token`;
     const basicAuth = `Basic ${Buffer.from(`${zoomId}:${zoomPass}`).toString(
       "base64"
@@ -123,6 +122,24 @@ router.post("/bookings/create-booking", async (req, res) => {
   }
 });
 
+// cancel confirmation booking
+router.post("/bookings/cancel-confirm", async (req, res) => {
+  try {
+    const cancelBookingURL = `${zoomApiUrl}${apiVer}bookings/cancel/confirm?booking_id=${req.body.data.booking_id}&city=${req.body.data.city}`;
+    const header = await userTokenHeader(req.body.data.uid);
+    const response = await axios.post(cancelBookingURL, null, {
+      headers: header,
+    });
+
+    res.json(response.data);
+  } catch (error) {
+    console.log(error.response?.data);
+    res.status(error.response?.status || 500).json({
+      error: error.response?.data || "Unknown error",
+    });
+  }
+});
+
 router.post("/bookings/details", async (req, res) => {
   try {
     const { booking_id, uid } = req.body.data;
@@ -215,25 +232,22 @@ const updatePaymentStatus = async (bookingDetails) => {
   return response.data;
 };
 
-router.post(
-  "/bookings/cancel-booking",
-  async (req, res) => {
-    try {
-      const cancelBookingURL = `${zoomApiUrl}${apiVer}bookings/cancel/initiate?booking_id=${req.body.data.booking_id}&city=${req.body.data.city}`;
+router.post("/bookings/cancel-booking", async (req, res) => {
+  try {
+    const cancelBookingURL = `${zoomApiUrl}${apiVer}bookings/cancel/initiate?booking_id=${req.body.data.booking_id}&city=${req.body.data.city}`;
 
-      const header = await userTokenHeader(req.body.data.uid);
-      const response = await axios.post(cancelBookingURL, null, {
-        headers: header,
-      });
+    const header = await userTokenHeader(req.body.data.uid);
+    const response = await axios.post(cancelBookingURL, null, {
+      headers: header,
+    });
 
-      res.json(response.data);
-    } catch (error) {
-      console.log(error.response?.data);
-      res.status(error.response?.status || 500).json({
-        error: error.response?.data || "Unknown error",
-      });
-    }
+    res.json(response.data);
+  } catch (error) {
+    console.log(error.response?.data);
+    res.status(error.response?.status || 500).json({
+      error: error.response?.data || "Unknown error",
+    });
   }
-);
+});
 
 module.exports = router;

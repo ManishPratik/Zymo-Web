@@ -1,17 +1,5 @@
 import { useEffect, useRef } from "react";
-
-// Import Images
-// import WNN from "public/images/FeaturedIn/WNN.png"; 
-// import INDNN from "public/images/FeaturedIn/INDNN.png";
-// import BINN from "public/images/FeaturedIn/BINN.png";
-// import ANI from "public/images/FeaturedIn/ANI.png";
-// import UPN from "public/images/FeaturedIn/UPN.png";
-// import TP from "public/images/FeaturedIn/TP.png";
-// import MD from "public/images/FeaturedIn/MD.png";
-// import LT from "public/images/FeaturedIn/LT.png";
-// import ZEE from "public/images/FeaturedIn/ZEE5.png";
-// import FNT from "public/images/FeaturedIn/FNT.png";
-// import BS from "public/images/FeaturedIn/BS.png";
+import Marquee from "react-fast-marquee";
 
 const FeaturedIn = () => {
   const Featured = [
@@ -83,57 +71,84 @@ const FeaturedIn = () => {
     },
     { id: 12, name: "MD", image: "/images/FeaturedIn/MD.png", url: "public/images/FeaturedIn/" },
   ];
-  const scrollRef = useRef(null);
+  
+//   const scrollRef = useRef(null);
+//   const scrollAmountRef = useRef(0);
 
-  useEffect(() => {
-    const scrollContainer = scrollRef.current;
-    let scrollAmount = 0;
 
-    const scrollInterval = setInterval(() => {
-      if (scrollContainer) {
-        scrollAmount += 1;
-        scrollContainer.scrollLeft = scrollAmount;
+// useEffect(() => {
+//   const scrollContainer = scrollRef.current;
+  
+//   // Initialize scroll position to the maximum (right edge)
+//   if (scrollContainer) {
+//     const maxScroll = scrollContainer.scrollWidth - scrollContainer.clientWidth;
+//     scrollAmountRef.current = maxScroll;
+//     scrollContainer.scrollLeft = maxScroll;
+//   }
 
-        if (scrollAmount >= scrollContainer.scrollWidth / 2) {
-          scrollAmount = 0; // Reset scroll
-        }
-      }
-    }, 30); // Adjust speed
+//   const scrollInterval = setInterval(() => {
+//     if (scrollContainer) {
+//       // Decrement to scroll left (opposite of original)
+//       scrollAmountRef.current -= 1;
+//       scrollContainer.scrollLeft = scrollAmountRef.current;
 
-    return () => clearInterval(scrollInterval);
-  }, []);
+//       // Reset when we reach the left edge
+//       if (scrollAmountRef.current <= 0) {
+//         // Reset to right edge
+//         const maxScroll = scrollContainer.scrollWidth - scrollContainer.clientWidth;
+//         scrollAmountRef.current = maxScroll;
+//         scrollContainer.scrollLeft = maxScroll;
+//       }
+//     }
+//   }, 20); 
 
-  return (
-    <div className="text-white py-10">
-      <h2 className="text-center text-xl font-bold mb-6">
-        Featured In
-      </h2>
-      <div className="bg-darkGrey2 rounded-lg p-6 py-8 mx-auto max-w-7xl overflow-hidden">
-        <div
-          ref={scrollRef}
-          className="flex space-x-6 overflow-hidden whitespace-nowrap scroll-container"
-        >
-          {[...Featured, ...Featured].map((featured, index) => (
-            <div
-              key={index}
-              className="flex flex-col items-center justify-center flex-shrink-0 w-32 h-32"
-            >
-              <a href={featured.url} target="_blank">
-                <div className="w-24 h-24 flex items-center justify-center bg-white rounded-lg">
-                  <img
-                    src={featured.image}
-                    alt={featured.name}
-                    className="w-full h-full object-contain"
-                  />
-                </div>
-              </a>
-              <span className="text-sm mt-2">{featured.name}</span>
-            </div>
-          ))}
-        </div>
+//   return () => clearInterval(scrollInterval);
+// }, []);
+
+return (
+  <div className="text-white py-10">
+    <h2 className="text-center text-xl font-bold mb-16">
+      Featured In
+    </h2>
+    
+    <div
+      className="flex space-x-10 md:space-x-16 overflow-hidden whitespace-nowrap scroll-container"
+      style={{
+                        maskImage:
+                            "linear-gradient(to right, transparent 0%, black 10%, black 90%, transparent 100%)",
+                        WebkitMaskImage:
+                            "linear-gradient(to right, transparent 0%, black 10%, black 90%, transparent 100%)",
+                    }}
+    >
+    <Marquee
+      autoFill
+      direction="right"
+    >
+      <div className="flex space-x-10 md:space-x-16 mr-10 md:mr-16">
+        {Featured.map((featured, index) => (
+          <div
+            key={index}
+            className="flex flex-col items-center justify-center flex-shrink-0 w-32 h-36"
+          >
+            <a href={featured.url} target="_blank">
+              <div className="w-20 h-20 md:w-24 md:h-24 flex items-center justify-center bg-white rounded-lg group hover:scale-105 transition-all duration-300">
+                <img
+                  src={featured.image}
+                  alt={featured.name}
+                  className="w-full h-full object-contain shadow-sm shadow-[#424242] group-hover:shadow-xl"
+                />
+              </div>
+            </a>
+            <span className="text-sm mt-4">{featured.name}</span>
+          </div>
+        ))}
       </div>
+    </Marquee>
+      
     </div>
-  );
+  </div>
+);
+
 };
 
 export default FeaturedIn;

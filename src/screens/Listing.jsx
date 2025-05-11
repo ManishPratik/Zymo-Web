@@ -7,7 +7,7 @@ import {
   Armchair,
   LocateFixed,
 } from "lucide-react";
-import { useEffect, useState, useRef, useCallback } from "react";
+import { useEffect, useState, useRef } from "react";
 import { FiMapPin } from "react-icons/fi";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
@@ -20,17 +20,34 @@ import {
 } from "../utils/mychoize";
 import {
   formatDate,
-  formatFare,
   getVendorDetails,
   retryFunction,
-  toPascalCase,
 } from "../utils/helperFunctions";
-import { collection, collectionGroup, getDocs } from "firebase/firestore";
+import { collection, getDocs } from "firebase/firestore";
 import { appDB } from "../utils/firebase";
 import useTrackEvent from "../hooks/useTrackEvent";
 import { Helmet } from "react-helmet-async";
 import { motion } from "framer-motion";
-import fetchAllTestCollections from "../utils/testCarFetcher";
+import { fetchFirebaseCars } from "../utils/cars/firebasePartnerCarsFetcher";
+import { getCarKeywords } from "../utils/carClubbing";
+import Marquee from "react-fast-marquee";
+
+// Helper function to get normalized car name
+const getNormalizedCarName = (originalName, keywords) => {
+  if (!originalName) return "UNKNOWN";
+  let nameToProcess = String(originalName).toLowerCase();
+  let normalizedNameResult = String(originalName); // Default to original name if no keyword matches
+
+  if (Array.isArray(keywords)) {
+    for (const keyword of keywords) {
+      if (keyword && nameToProcess.includes(String(keyword).toLowerCase())) {
+        normalizedNameResult = String(keyword); // Use the keyword itself as the normalized name
+        break; // Found a keyword, no need to check further
+      }
+    }
+  }
+  return normalizedNameResult.toUpperCase(); // Return the keyword or original name, uppercased
+};
 
 const Listing = ({ title }) => {
   const location = useLocation();
@@ -55,16 +72,26 @@ const Listing = ({ title }) => {
   const hasRun = useRef(false);
 
   const [loading, setLoading] = useState(true);
-  const [carList, setCarList] = useState([]);
+  const [, setCarList] = useState([]);
   const [clubbedCarList, setClubbedCarList] = useState([]);
   const [priceRange, setPriceRange] = useState("lowToHigh");
   const [seats, setSeats] = useState("");
   const [fuel, setFuel] = useState("");
   const [transmission, setTransmission] = useState("");
   const [filteredList, setFilteredList] = useState(clubbedCarList);
-  const [carCount, setCarCount] = useState("");
+  const [, setCarCount] = useState("");
   const [expandedStates, setExpandedStates] = useState({});
-  const [vendersDetails, setVendersDetails] = useState({});
+  const [, setVendersDetails] = useState({});
+
+  const brands = [
+    { name: "WheelUp", logo: "/images/ServiceProvider/wheelup.png" },
+    { name: "Avis", logo: "/images/ServiceProvider/avis.png" },
+    { name: "Zoomcars", logo: "/images/ServiceProvider/Zoomcar_Logo.jpg" },
+    { name: "MyChoize", logo: "/images/ServiceProvider/mychoize.png" },
+    { name: "Carronrent", logo: "/images/ServiceProvider/carronrent.png" },
+    { name: "Doorcars", logo: "/images/ServiceProvider/doorcars1.png" },
+    { name: "Renx", logo: "/images/ServiceProvider/renx.jpeg" }
+  ];
 
   const toggleDeals = (key) => {
     setExpandedStates((prev) => ({
@@ -129,64 +156,66 @@ const Listing = ({ title }) => {
       ...doc.data(),
     }));
     setVendersDetails(vendorData);
-  };  
+  };
 
   //It group the cars by name and brand and find the minimum fare for each group
-  const clubCarsByName = (carsArray) => {
-    console.log("Cars array received:", carsArray);
+  const clubCarsByName = async (carsArray) => {
+    console.log("Cars Array:", carsArray); // For debugging
+    const clubbingCarNames = (await getCarKeywords()) || [];
+    // console.log("Car Grouping Keywords:", clubbingCarNames); // For debugging
+
     if (!Array.isArray(carsArray) || carsArray.length === 0) {
       return [];
     }
 
-    // Group cars by name
-    const groupedCars = carsArray.reduce((acc, car) => {
-      if (!car) {
+    // Step 1: Group cars by normalized name
+    const carsGroupedByNormalizedName = carsArray.reduce((acc, car) => {
+      if (car.brand === "Karyana") console.log(car);
+      if (!car || !car.name || typeof car.fare !== 'string') {
         return acc;
       }
 
-      // Make sure we have valid values for these fields
-      const name = car.name || "Unknown";
-      const brand = car.brand || "Partner";
-
-      const fare = car.fare;
-
-      if (typeof fare !== "string") {
-        return acc;
+      const normalizedNameKey = getNormalizedCarName(car.name, clubbingCarNames);
+      
+      if (!acc[normalizedNameKey]) {
+        console.log("New group created:", normalizedNameKey); // For debugging
+        acc[normalizedNameKey] = [];
       }
-
-      const key = `${name}|${brand}`;
-
-      if (!acc[key]) {
-        acc[key] = {
-          name: car.name,
-          brand: car.brand,
-          cars: [],
-        };
-      }
-      acc[key].cars.push(car);
+      // console.log("Adding car to group:", normalizedNameKey, car); // For debugging
+      acc[normalizedNameKey].push(car);
       return acc;
     }, {});
 
-    // Transform groups and find the minimun fare
-    return Object.values(groupedCars).map((group) => {
-      const minFare = group.cars.reduce((min, car) => {
-        const currentFare = parseInt(car.fare?.replace(/[^0-9]/g, ""));
-        if (isNaN(currentFare)) return min;
-        const minFareNum = parseInt(min.replace(/[^0-9]/g, ""));
-        return currentFare < minFareNum ? car.fare : min;
-      }, group.cars[0].fare);
+    // Step 2: Transform groups into the desired output structure
+    return Object.entries(carsGroupedByNormalizedName).map(([normalizedGroupName, carsInGroup]) => {
+      if (!carsInGroup || carsInGroup.length === 0) {
+        return null;
+      }
 
-      const minFareCar = group.cars.find((car) => car.fare === minFare);
-      const seat = minFareCar.options.find((opt) => opt.includes("Seats"));
+      // Sort cars within the group by price (ascending)
+      const sortedCarsInGroup = [...carsInGroup].sort((a, b) => {
+        const fareA = parseInt(a.fare?.replace(/[^0-9]/g, "") || "0");
+        const fareB = parseInt(b.fare?.replace(/[^0-9]/g, "") || "0");
+        return fareA - fareB;
+      });
+
+      const minFareCar = sortedCarsInGroup[0];
+      if (!minFareCar) {
+        return null; 
+      }
+
+      const minFare = minFareCar.fare;
+      const seat = minFareCar.options?.find((opt) => typeof opt === 'string' && opt.includes("Seats")) || "N/A";
+      const brand = minFareCar.brand; // Brand of the car with the minimum fare
 
       return {
-        brand: group.brand,
-        name: group.name,
+        brand: brand,
+        name: normalizedGroupName, // The normalized group name (e.g., "SWIFT")
         fare: minFare,
         seat: seat,
-        cars: group.cars,
+        cars: sortedCarsInGroup, // All cars in this normalized group, sorted by price
       };
-    });
+    }).filter(group => group !== null); // Remove any null groups
   };
 
   useEffect(() => {
@@ -220,7 +249,7 @@ const Listing = ({ title }) => {
     //     return;
     //   }
     // }
-
+    
     fetchVendorDetails();
 
     const search = async () => {
@@ -228,186 +257,6 @@ const Listing = ({ title }) => {
       try {
         const url = import.meta.env.VITE_FUNCTIONS_API_URL;
         // const url = "http://127.0.0.1:5001/zymo-prod/us-central1/api";
-
-        const fetchFirebaseCars = async () => {
-          try {
-            // Step 1: Get partners from partnerWebApp collection that serve the requested city
-            const partnersSnapshot = await getDocs(collection(appDB, "partnerWebApp"));
-
-            // Step 2: Filter partners by city and get their details
-            const partnersInCity = partnersSnapshot.docs
-              .filter((doc) => {
-                const partner = doc.data();
-                return (
-                  partner.cities &&
-                  Array.isArray(partner.cities) &&
-                  partner.cities.some(
-                    (c) => c && city && c.toLowerCase() === city.toLowerCase()
-                  )
-                );
-              })
-              .map((doc) => {
-                const data = doc.data();
-                return {
-                  id: doc.id,
-                  accountType: data.accountType || "company",
-                  bankAccount: data.bankAccount || "",
-                  bankAccountName: data.bankAccountName || "",
-                  brandName: data.brandName || "",
-                  carsRange: data.carsRange || "",
-                  cities: data.cities || [],
-                  createdAt: data.createdAt,
-                  email: data.email || "",
-                  fullName: data.fullName || "Unknown",
-                  gstNumber: data.gstNumber || "",
-                  ifscCode: data.ifscCode || "",
-                  isApproved: data.isApproved || false,
-                  logo: data.logo || null,
-                  phone: data.phone || "",
-                  updatedAt: data.updatedAt,
-                  upiId: data.upiId || null,
-                  username: data.username || "",
-                  // Fields used in UI
-                  brandLogo: data.logo || null,
-                  ...data
-                };
-              });
-
-            // Step 3: Now fetch cars for each partner
-            let allCars = [];
-
-            for (const partner of partnersInCity) {
-              try {
-                // Get the uploadedCars subcollection for this partner
-                const carsSnapshot = await getDocs(
-                  collection(appDB, "partnerWebApp", partner.id, "uploadedCars")
-                );
-
-                if (!carsSnapshot.empty) {
-                  const partnerCars = carsSnapshot.docs.map((doc) => {
-                    const carData = doc.data();
-                    return {
-                      id: doc.id,
-                      partnerId: partner.id,
-                      partnerName: partner.fullName,
-                      partnerBrandName: partner.brandName || "Zymo",
-                      partnerLogo: partner.logo,
-                      partnerPhone: partner.phone,
-                      partnerEmail: partner.email,
-                      carName: carData.carName || carData.name,
-                      carType: carData.carType || carData.type,
-                      carBrand: carData.carBrand || carData.brand,
-                      transmissionType: carData.transmissionType,
-                      fuelType: carData.fuelType,
-                      noOfSeats: carData.noOfSeats || 5,
-                      hourlyRental: carData.hourlyRental || {
-                        limit: "Limited",
-                        limited: {
-                          packages: [{
-                            hourlyRate: parseInt(carData.hourly_amount) || 0
-                          }]
-                        }
-                      },
-                      images: carData.images || ["/images/Cars/default-car.png"],
-                      securityDeposit: carData.securityDeposit || 0,
-                      deliveryCharges: carData.deliveryCharges || false,
-                      source: "Zymo",
-                      sourceImg: partner.logo || "/images/ServiceProvider/zymo.png",
-                      location_est: city,
-                      ...carData
-                    };
-                  });
-
-                  console.log(
-                    `Found ${partnerCars.length} cars for partner ${partner.fullName}`
-                  );
-                  // allCars = [...allCars, ...partnerCars];
-                }
-              } catch (err) {
-                console.error(
-                  `Error fetching cars for partner ${partner.id}:`,
-                  err
-                );
-              }
-            }
-
-            // Step 4: Fetch cars from all test collections
-            console.log(`Fetching test collection cars for ${city}...`);
-            const testCollections = await fetchAllTestCollections(appDB , formatFare ,city, tripDurationHours);
-
-            if (testCollections && testCollections.length > 0) {
-              console.log(
-                `Successfully fetched ${testCollections.length} test cars`
-              );
-              allCars = [...allCars, ...testCollections];
-            } else {
-              console.log(`No test collection cars found for ${city}`);
-            }
-
-            console.log(
-              `Total cars found across all sources: ${allCars.length}`
-            );
-
-            const hourlyRate = (car) => {
-              if (!car.hourlyRental) return 0;
-
-              return car.hourlyRental.limit === "Limited" &&
-                car.hourlyRental.limited?.packages?.[0]?.hourlyRate
-                ? car.hourlyRental.limited.packages[0].hourlyRate
-                : car.hourlyRental.unlimited?.fixedHourlyRate || 0;
-            };
-
-            // Step 5: Map car data to the expected format
-            const filterdData = allCars
-              .filter((car) => {
-                // Skip cars with no data or undefined required fields
-                if (!car || !car.id) {
-                  console.log("Skipping invalid car:", car);
-                  return false;
-                }
-                return true;
-              })
-              .map((car) => {
-                // Calculate fare if not provided
-                const calculatedHourlyRate = hourlyRate(car);
-                const calculatedFare = calculatedHourlyRate ? formatFare(calculatedHourlyRate * tripDurationHours) : '₹0';
-                console.log("car", car)
-                return {
-                  id: car.carId || car.id,
-                  brand: car.partnerBrandName || "Zymo",
-                  name: car.carName || car.name || car.model || car.type || "Car",
-                  type: car.carType || car.type || "",
-                  options: [
-                    car.transmissionType || car.options?.[0] || "N/A",
-                    car.fuelType || car.options?.[1] || "N/A",
-                    car.noOfSeats ? `${car.noOfSeats} Seats` : car.options?.[2] || "5 Seats"
-                  ],
-                  address: car.pickupLocations?.[toPascalCase(city)] || car.address || "",
-                  images: car.images || car.image_urls || ["/images/Cars/default-car.png"],
-                  fare: car.fare || calculatedFare,
-                  inflated_fare: car.inflated_fare || `₹${Math.round((parseInt(calculatedFare.replace(/[^0-9]/g, "")) || 0) * 1.2)}`,
-                  hourly_amount: car.hourly_amount || calculatedHourlyRate || 0,
-                  extrakm_charge: car.extrakm_charge || "0",
-                  extrahour_charge: car.extrahour_charge || 0,
-                  slabRates: car.slabRates || [],
-                  securityDeposit: car.securityDeposit || 0,
-                  deliveryCharges: car.deliveryCharges || false,
-                  yearOfRegistration: car.yearOfRegistration || "N/A",
-                  ratingData: car.ratingData || { text: "No ratings available", rating: 4.0 },
-                  trips: car.trips || "N/A",
-                  source: car.source || "Zymo",
-                  sourceImg: car.sourceImg || car.partnerLogo || "/images/ServiceProvider/zymo.png",
-                  location_est: car.location_est || city
-                };
-              });
-
-            console.log("Firebase Filtered Data:", filterdData);
-            return filterdData;
-          } catch (error) {
-            console.error("Error fetching Firebase cars:", error);
-            return [];
-          }
-        };
 
         let allCarData = [];
 
@@ -451,17 +300,15 @@ const Listing = ({ title }) => {
 
           const zoomPromise = retryFunction(fetchZoomcarData);
 
-          const mychoizePromise =
-            parseInt(tripDurationHours) < 24
-              ? null
-              : fetchMyChoizeCars(
-                CityName,
-                formattedPickDate,
-                formattedDropDate,
-                tripDurationHours
-              );
+          const mychoizePromise = fetchMyChoizeCars(
+            CityName,
+            formattedPickDate,
+            formattedDropDate,
+            tripDurationHours
+          );
 
-          const firebasePromise = fetchFirebaseCars(); // Enable Firebase data fetch
+          // fetch firebase partners cars
+          const firebasePromise = fetchFirebaseCars(city, tripDurationHours);
 
           // Execute all API calls in parallel
           const [zoomData, mychoizeData, firebaseData] =
@@ -512,7 +359,7 @@ const Listing = ({ title }) => {
               sourceImg: "/images/ServiceProvider/zoomcarlogo.png",
               rateBasis: "DR",
             }));
-            /*console.log("Zoomcar Data:", zoomCarData);*/
+
             allCarData = [...allCarData, ...zoomCarData];
           } else {
             console.error("Zoomcar API failed:", zoomData.reason);
@@ -535,8 +382,8 @@ const Listing = ({ title }) => {
             autoClose: 5000,
           });
         }
-        /*console.log("All Cars:", allCarData);*/
-        const groupCarList = clubCarsByName(allCarData);
+        console.log("All Car Data:", allCarData); // For debugging
+        const groupCarList = await clubCarsByName(allCarData);
 
         setCarList(allCarData);
         setClubbedCarList(groupCarList);
@@ -552,22 +399,9 @@ const Listing = ({ title }) => {
     };
 
     search();
-  }, [
-    city,
-    startDate,
-    endDate,
-    activeTab,
-    lat,
-    lng,
-    tripDurationHours,
-  ]);
+  }, [city, startDate, endDate, activeTab, lat, lng, tripDurationHours]);
 
-  // // Filter functionality
-  // useEffect(() => {
-  //   setFilteredList(clubbedCarList);
-  // }, [clubbedCarList]);
-
-  // New Filter functionality
+  // Filter functionality
   useEffect(() => {
     applyFiltersToGroupedCars();
   }, [clubbedCarList, priceRange, seats, fuel, transmission]);
@@ -612,14 +446,16 @@ const Listing = ({ title }) => {
           return null;
         }
 
-        // Recalculate minimum fare for the filtered cars
-        const minFare = filteredCars.reduce((min, car) => {
-          const currentFare = parseInt(car.fare.replace(/[^0-9]/g, ""));
-          const minFareNum = parseInt(min.replace(/[^0-9]/g, ""));
-          return currentFare < minFareNum ? car.fare : min;
-        }, filteredCars[0].fare);
+        // Sort filtered cars by fare
+        const sortedFilteredCars = [...filteredCars].sort((a, b) => {
+          const fareA = parseInt(a.fare.replace(/[^0-9]/g, ""));
+          const fareB = parseInt(b.fare.replace(/[^0-9]/g, ""));
+          return fareA - fareB;
+        });
 
-        const minFareCar = filteredCars.find((car) => car.fare === minFare);
+        // The first car in sorted list has the minimum fare
+        const minFareCar = sortedFilteredCars[0];
+        const minFare = minFareCar.fare;
         const seat =
           minFareCar.options.find((opt) => opt.includes("Seats")) || "Unknown";
 
@@ -628,14 +464,14 @@ const Listing = ({ title }) => {
           brand: group.brand,
           seat: seat,
           fare: minFare,
-          cars: filteredCars,
+          cars: sortedFilteredCars,
         };
       })
       .filter((group) => group !== null);
 
     // Handle no results
     if (filteredGroups.length === 0) {
-      noCarsFound();
+      //noCarsFound();
       return;
     }
 
@@ -647,11 +483,17 @@ const Listing = ({ title }) => {
         return priceRange === "lowToHigh" ? priceA - priceB : priceB - priceA;
       });
     }
+    let totalCars = filteredGroups.reduce(
+      (count, group) => count + group.cars.length,
+      0
+    );
 
     setFilteredList(filteredGroups);
-    setCarCount(
-      filteredGroups.reduce((count, group) => count + group.cars.length, 0)
-    );
+    setCarCount(totalCars);
+    //filteredGroups.reduce((count, group) => count + group.cars.length, 0)
+    if (totalCars === 0) {
+      noCarsFound();
+    }
   };
 
   const handleSelectedCar = (label) => {
@@ -660,18 +502,51 @@ const Listing = ({ title }) => {
 
   const goToDetails = (car) => {
     handleSelectedCar(`${car.brand} ${car.name} - ${car.source}`);
-    navigate(`/self-drive-car-rentals/${city}/cars/booking-details`, {
-      state: {
-        startDate,
-        endDate,
-        car,
-        activeTab,
-      },
-    });
+
+    // For Karyana cars, ensure they have all required fields
+    if (car.source && car.source.toLowerCase() === "karyana") {
+      // Clone car to avoid modifying the original object
+      const carWithDefaults = {
+        ...car,
+        // Ensure package-related fields exist
+        rateBasis: car.rateBasis || (tripDurationHours >= 24 ? "MP" : "hourly"),
+        total_km:
+          car.total_km || (tripDurationHours >= 24 ? { MP: 300 } : undefined),
+      };
+
+      navigate(`/self-drive-car-rentals/${city}/cars/booking-details`, {
+        state: {
+          startDate,
+          endDate,
+          car: carWithDefaults,
+          activeTab,
+        },
+      });
+    } else {
+      // Normal flow for other providers
+      navigate(`/self-drive-car-rentals/${city}/cars/booking-details`, {
+        state: {
+          startDate,
+          endDate,
+          car,
+          activeTab,
+        },
+      });
+    }
   };
 
   const goToPackages = (car) => {
     handleSelectedCar(`${car.brand} ${car.name}`);
+
+    // Check if this is a Karyana car with multiple packages (rateBasisFare property exists)
+    const isKaryana = car.source === "Karyana";
+    const hasPackages =
+      car.rateBasisFare && Object.keys(car.rateBasisFare).length > 0;
+
+    console.log(
+      `Car ${car.name} - Karyana: ${isKaryana}, Has packages: ${hasPackages}, Trip hours: ${tripDurationHours}`
+    );
+
     navigate(`/self-drive-car-rentals/${city}/cars/packages`, {
       state: {
         startDate,
@@ -680,20 +555,6 @@ const Listing = ({ title }) => {
       },
     });
   };
-
-  // useEffect(() => {
-  //   const timer = setTimeout(() => {
-  //     setPriceRange("lowToHigh"); // set Low-High
-  //     applyFiltersToGroupedCars(); // apply filter after setting
-
-  //     setFilteredList(clubbedCarList);
-
-  //     console.log("Auto-applied Low-High after 2 seconds");
-  //   }, 2000); // 2000ms = 2 seconds
-
-  //   return () => clearTimeout(timer); // cleanup
-  // }, []);
-
 
   return (
     <>
@@ -766,7 +627,6 @@ const Listing = ({ title }) => {
                 value={priceRange}
                 onChange={(e) => setPriceRange(e.target.value)}
               >
-                {/* <option value="" disabled hidden>Price Range</option> */}
                 <option value="lowToHigh">Low - High</option>
                 <option value="highToLow">High - Low</option>
               </select>
@@ -817,7 +677,6 @@ const Listing = ({ title }) => {
 
             <button
               onClick={() => {
-                // applyFilters();
                 applyFiltersToGroupedCars();
               }}
               className="bg-[#faffa4] px-4 py-2 rounded-lg text-black text-lg lg:text-base font-semibold h-10 w-[calc(50%-0.25rem)] sm:w-[140px]"
@@ -827,28 +686,53 @@ const Listing = ({ title }) => {
           </div>
         </div>
 
-        {/* <div className="mb-6">
-          <h1 className="text-[#eeff87] text-3xl font-bold">
-            Choose from {carCount} cars
-          </h1>
-        </div> */}
-
         {/* Car Grid */}
         {loading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-2 gap-5 w-full max-w-6xl">
-            {[...Array(6)].map((_, index) => (
-              <div
-                key={index}
-                className="bg-[#404040] p-4 rounded-lg shadow-lg animate-pulse"
-              >
-                <div className="w-full h-40 bg-gray-700 rounded-lg"></div>
-                <div className="mt-3 h-5 bg-gray-600 w-3/4 rounded"></div>
-                <div className="mt-2 h-4 bg-gray-500 w-1/2 rounded"></div>
-              </div>
-            ))}
-          </div>
+          <>
+            <h3 className="text-[#faffa4] text-lg text-center">We compare multiple sites to get you the best deal</h3>
+
+            <div 
+              className="sm:max-w-[40rem] max-w-80"
+              style={{
+                maskImage:
+                  "linear-gradient(to right, transparent 0%, black 10%, black 90%, transparent 100%)",
+                WebkitMaskImage:
+                  "linear-gradient(to right, transparent 0%, black 10%, black 90%, transparent 100%)",
+              }}  
+            >
+              <Marquee autoFill>
+                <div className="flex space-x-10 md:space-x-10 my-5 mr-10 md:mr-10">
+                  {brands.map((brand, index) => (
+                    <div
+                      key={index}
+                      className="flex items-center justify-center rounded-full bg-white w-16 h-16"
+                    >
+                      <img 
+                        src={brand.logo}
+                        alt={brand.name}
+                        className="w-12 h-8"
+                      />
+                    </div>
+                  ))}
+                </div>
+              </Marquee>
+            </div>   
+
+            <div className="grid grid-cols-1 lg:w-[56%] items-start gap-5">
+              {[...Array(6)].map((_, index) => (
+                <div
+                  key={index}
+                  className="bg-[#404040] p-4 rounded-lg shadow-lg animate-pulse"
+                >
+                  <div className="w-full h-40 bg-gray-700 rounded-lg"></div>
+                  <div className="mt-3 h-5 bg-gray-600 w-3/4 rounded"></div>
+                  <div className="mt-2 h-4 bg-gray-500 w-1/2 rounded"></div>
+                </div>
+              ))}
+            </div>
+          </>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-2 gap-4 w-full max-w-5xl items-start">
+          <div className="grid grid-cols-1 lg:w-[56%] items-start gap-5">
             {filteredList.map((car) => {
               const uniqueKey = `${car.name}-${car.brand}`;
               return (
@@ -866,9 +750,7 @@ const Listing = ({ title }) => {
                     />
                     <div className="mt-3 flex justify-between items-start">
                       <div>
-                        <h3 className="text-md font-semibold">
-                          {car.brand} {car.name}
-                        </h3>
+                        <h3 className="text-md font-semibold">{car.name}</h3>
                         <p className="text-sm text-gray-400">
                           {car.cars[0].options[2]}
                         </p>
@@ -882,11 +764,14 @@ const Listing = ({ title }) => {
                         </div>
                       </div>
                       <div className="text-right">
+                        <p className="text-sm text-[#faffa4]">
+                          {car.cars.length} deal{car.cars.length > 1 ? "s" : ""} available
+                        </p>
                         <p className="text-sm text-gray-400">Starts at</p>
-                        <p className="text-sm text-gray-500 line-through decoration-2">
+                        <p className="text-sm text-gray-500 !line-through !decoration-2">
                           {car.cars[0].inflated_fare}
                         </p>
-                        <p className="font-semibold text-md">{car.fare}</p>
+                        <p className="font-semibold text-lg">{car.fare}</p>
                         <p className="text-[10px] text-gray-400">(GST incl)</p>
                       </div>
                     </div>
@@ -924,7 +809,7 @@ const Listing = ({ title }) => {
                       <div className="flex flex-col text-white w-1/4 justify-between">
                         <div>
                           <h3 className="text-xl font-semibold mb-1">
-                            {car.brand} {car.name}
+                            {car.name}
                           </h3>
                         </div>
                         <div>
@@ -956,11 +841,14 @@ const Listing = ({ title }) => {
                       {/* Right Side Info */}
                       <div className="flex flex-col justify-between text-right w-1/4 border-l border-gray-400 pl-4">
                         <div>
+                          <p className="text-sm text-[#faffa4]">
+                            {car.cars.length} deal{car.cars.length > 1 ? "s" : ""} available
+                          </p>
                           <p className="text-xs text-gray-400">Starts at</p>
-                          <p className="text-md text-gray-400 line-through decoration-2">
+                          <p className="text-md text-gray-400 !line-through !decoration-[2px]">
                             {car.cars[0].inflated_fare}
                           </p>
-                          <p className="text-xl font-semibold text-white">
+                          <p className="text-2xl font-semibold text-white">
                             {car.fare}
                           </p>
                           <p className="text-xs text-gray-400">(GST incl)</p>
@@ -1012,7 +900,9 @@ const Listing = ({ title }) => {
                             </div>
                             <p className="text-xs text-[#eeff87] flex items-center gap-1">
                               Rating:{" "}
-                              {renderStarRating(individualCar?.ratingData?.rating)}
+                              {renderStarRating(
+                                individualCar?.ratingData?.rating
+                              )}
                             </p>
                             <p className="text-xs text-[#eeff87] flex items-center gap-1">
                               <Armchair className="w-3 h-3" />
@@ -1033,7 +923,7 @@ const Listing = ({ title }) => {
                           </div>
                           <div className="text-center flex flex-col items-center gap-3">
                             <div>
-                              <p className="text-sm text-gray-400 line-through decoration-2">
+                              <p className="text-sm text-gray-400 !line-through !decoration-[2px]">
                                 {individualCar.inflated_fare}
                               </p>
                               <p className="text-xl sm:text-md font-semibold">
@@ -1049,6 +939,8 @@ const Listing = ({ title }) => {
                                     goToDetails(individualCar);
                                   } else if (activeTab === "subscribe") {
                                     goToDetails(individualCar);
+                                  } else if (individualCar.source === "Karyana") {
+                                    goToPackages(car); // Show packages for Karyana cars with multiple packages
                                   } else {
                                     goToPackages(individualCar);
                                   }
@@ -1072,5 +964,4 @@ const Listing = ({ title }) => {
     </>
   );
 };
-
 export default Listing;

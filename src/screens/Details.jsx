@@ -23,13 +23,20 @@ const CarDetails = ({ title }) => {
   const trackEvent = useTrackEvent();
   const { startDate, endDate, car, activeTab } = location.state || {};
 
+  // Calculate trip duration
+  const startTime = new Date(startDate);
+  const endTime = new Date(endDate);
+  const tripDurationHours = Math.ceil((endTime - startTime) / (1000 * 60 * 60));
+
   const startDateFormatted = formatDate(startDate);
   const endDateFormatted = formatDate(endDate);
 
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false); // State to control modal visibility
   const [authUser, setAuthUser] = useState(null);
   const [currentIndex, setCurrentIndex] = useState(0);
-
+  const [availableKMs, setAvailableKMs] = useState(0);
+  const [hourlyRate, setHourlyRate] = useState(0);
+  // console.log("Car Details", car);
   useEffect(() => {
     if (authUser) {
       goToBooking(authUser);
@@ -52,7 +59,7 @@ const CarDetails = ({ title }) => {
   const handleBooking = () => {
     handleCarBooking("Book");
     const user = appAuth.currentUser;
-    console.log(user);
+    // console.log(user);
     if (!user) {
       setIsLoginModalOpen(true); // Open modal if not logged in
     } else {
@@ -81,36 +88,57 @@ const CarDetails = ({ title }) => {
     );
   };
 
+  // handle values for different vendors
+  useEffect(() => {
+    if (car?.source === "zoomcar") {
+      setAvailableKMs("Unlimited KMs");
+    } else if (car?.source === "mychoize") {
+      setHourlyRate(car?.hourly_amount);
+      setAvailableKMs("3600 KMs");
+    } else if (car?.source === "Zymo") {
+      setHourlyRate(car?.hourlyRates[car.selectedPackage]);
+      setAvailableKMs(car?.total_km[car.selectedPackage] + " KMs");
+    } else if (car?.source.toLowerCase() === "karyana") {
+      setAvailableKMs(
+        tripDurationHours < 24
+          ? car.total_km["hourly"] + " KMs"
+          : car.total_km[car.rateBasis] + " KMs"
+      );
+    } else {
+      setAvailableKMs(car?.total_km[car.rateBasis]);
+    }
+  }, []);
+
   //ga for car booking
   const handleCarBooking = (label) => {
     trackEvent("Car Booking Section", "Rent Section Button Clicked", label);
   };
-
+  console.log(car);
   const carDetails = [
     {
-      name: `${car.brand} ${car.name}`,
+      name: `${car?.name}`,
       image: car?.images || [],
-      rating: car.ratingData.rating,
+      rating: car?.ratingData?.rating,
       features: [
         {
           icon: <Armchair className="m-2 w-8 min-h-8" />,
           label: "Seats",
-          value: car.options[2],
+          value: car?.options[2],
         },
         {
           icon: <Car className="m-2 w-8 min-h-8" />,
           label: "Trips",
-          value: car.trips,
+          value: car?.trips,
         },
         {
           icon: <Fuel className="m-2 w-8 min-h-8" />,
           label: "Fuel Type",
-          value: car.options[1],
+          value: car?.options[1],
         },
         {
           icon: <Joystick className="m-2 w-8 min-h-8" />,
           label: "Transmission",
-          value: car.options[0],
+          value: car?.options[0],
         },
       ],
       bookingInfo: {
@@ -118,17 +146,14 @@ const CarDetails = ({ title }) => {
         startDate: startDateFormatted,
         endDate: endDateFormatted,
         driveType: "Self Drive",
-        logo: car.sourceImg,
+        logo: car?.sourceImg,
       },
       specifications: [
-        { label: "Car Brand", value: car.brand },
-        { label: "Car Name", value: car.name },
+        { label: "Car Brand", value: car?.brand },
+        { label: "Car Name", value: car?.name },
         {
           label: "Hourly Amount",
-          value:
-            car.source === "mychoize"
-              ? `₹${car.hourly_amount}`
-              : car.hourly_amount,
+          value: `₹${hourlyRate}`
         },
         { label: "Seats", value: car.options[2] },
         { label: "Fuel Type", value: car.options[1] },
@@ -136,28 +161,30 @@ const CarDetails = ({ title }) => {
         {
           label: "Package",
           value:
-            activeTab === "subscribe"
-              ? "Subscription"
-              : car.source === "zoomcar"
+            car.source === "zoomcar"
               ? "Unlimited KMs"
-              : findPackage(car.rateBasis),
+              : car.source.toLowerCase() === "karyana" ||
+                car?.source.toLowerCase() === "zymo"
+              ? tripDurationHours < 24
+                ? "Hourly Package"
+                : "Daily Package"
+              : findPackage(car?.rateBasis),
         },
         {
           label: "Available KMs",
-          value:
-            car.source === "zoomcar"
-              ? "Unlimited KMs"
-              : activeTab === "subscribe" && car.source === "mychoize"
-              ? " 3600 KMs"
-              : car.total_km[car.rateBasis],
+          value: availableKMs,
         },
 
         {
           label: "Extra KM Charge",
-          value: car.rateBasis === "DR" ? "No Charge" : car.extrakm_charge,
+          value:
+            car.source === "zoomcar" || car.rateBasis === "DR"
+              ? "No Charge"
+              : `₹${car.extrakm_charge}/km`,
         },
       ],
-      price: car.fare,
+      price:
+        car.source === "Zymo" ? car?.all_fares[car.selectedPackage] : car.fare,
     },
   ];
 
@@ -364,7 +391,11 @@ const CarDetails = ({ title }) => {
               {carDetails[0].price}
             </p>
             <span className="text-xs text-gray-400">
-              {car.source === "zoomcar" || car.source === 'Mychoize' ? "GST Included" : "GST Not Included"}
+              {car.source === "zoomcar" ||
+              car.source === "Mychoize" ||
+              car.source === "Zymo"
+                ? "GST Included"
+                : "GST Not Included"}
             </span>
             <button
               onClick={handleBooking}

@@ -1,12 +1,19 @@
-import { useState, useCallback, useEffect, useRef } from 'react';
-import { Check } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
-import useTrackEvent from '../hooks/useTrackEvent';
-// import { doc, where, query, getDocs, updateDoc, collection } from "firebase/firestore";
+import { useState, useCallback, useEffect, useRef } from "react";
+import { Check } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import useTrackEvent from "../hooks/useTrackEvent";
+import {
+  doc,
+  where,
+  query,
+  getDocs,
+  updateDoc,
+  collection,
+} from "firebase/firestore";
+import { appDB } from "../utils/firebase";
+import CancellationBookingPolicy from "../components/CancellationBookingPolicy";
 
-// import { appDB } from "../utils/firebase";
-
-// const { VITE_FIREBASE_CANCELLATION_KEY } = import.meta.env;
+const { VITE_FUNCTIONS_API_URL } = import.meta.env;
 
 // Changed to a named function and separated the export
 
@@ -14,38 +21,53 @@ import useTrackEvent from '../hooks/useTrackEvent';
 const CancelBookingModal = ({ isOpen, close, bookingData }) => {
   const navigate = useNavigate();
   const trackEvent = useTrackEvent();
-  const functionsUrl = import.meta.env.VITE_FUNCTIONS_API_URL;
+  const functionsUrl = VITE_FUNCTIONS_API_URL;
 
   const isProcessing = useRef(false);
   const processingComplete = useRef(false);
   const eventTracked = useRef(false);
 
-  const sendCancelWhatsAppMessage = useCallback(async (bookingData) => {
-    try {
-      const response = await fetch(`${functionsUrl}/message/booking-cancel-whatsapp-message`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ bookingData }),
-      });
+  const sendCancelWhatsAppMessage = useCallback(
+    async (bookingData) => {
+      try {
+        const response = await fetch(
+          `${functionsUrl}/message/booking-cancel-whatsapp-message`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ bookingData }),
+          }
+        );
 
-      const data = await response.json();
-      localStorage.clear();
-      sessionStorage.clear();
-    } catch (error) {
-      console.error('Error sending cancellation WhatsApp message:', error);
-    }
-  }, [functionsUrl]);
+        const data = await response.json();
+        localStorage.clear();
+        sessionStorage.clear();
+      } catch (error) {
+        console.error("Error sending cancellation WhatsApp message:", error);
+      }
+    },
+    [functionsUrl]
+  );
 
   useEffect(() => {
     const processCancellation = async () => {
-      if (!isOpen || !bookingData || isProcessing.current || processingComplete.current) {
+      if (
+        !isOpen ||
+        !bookingData ||
+        isProcessing.current ||
+        processingComplete.current
+      ) {
         return;
       }
 
       if (isOpen && !eventTracked.current) {
-        trackEvent('Booking Cancellation', 'Cancel Booking', 'Cancellation Confirmed');
+        trackEvent(
+          "Booking Cancellation",
+          "Cancel Booking",
+          "Cancellation Confirmed"
+        );
         eventTracked.current = true;
       }
 
@@ -54,7 +76,7 @@ const CancelBookingModal = ({ isOpen, close, bookingData }) => {
         await sendCancelWhatsAppMessage(bookingData);
         processingComplete.current = true;
       } catch (error) {
-        console.error('Error processing booking cancellation:', error);
+        console.error("Error processing booking cancellation:", error);
       } finally {
         isProcessing.current = false;
       }
@@ -68,7 +90,7 @@ const CancelBookingModal = ({ isOpen, close, bookingData }) => {
 
     const timer = setTimeout(() => {
       close();
-      navigate('/', { replace: true });
+      navigate("/", { replace: true });
     }, 8000);
 
     return () => clearTimeout(timer);
@@ -78,7 +100,7 @@ const CancelBookingModal = ({ isOpen, close, bookingData }) => {
     localStorage.clear();
     sessionStorage.clear();
     close();
-    navigate('/', { replace: true });
+    navigate("/", { replace: true });
   };
 
   if (!isOpen) return null;
@@ -106,59 +128,69 @@ const CancelBookingModal = ({ isOpen, close, bookingData }) => {
 };
 
 export default function UpcomingBookingCard({ bookingData }) {
-  // const handleCancelBooking = async (bookingId) => {
-  //   console.log("Cancelling booking:", bookingId, "for user:", bookingData.UserId);
+  const handleCancelBooking = async (bookingId) => {
+    console.log(
+      "Cancelling booking:",
+      bookingId,
+      "for user:",
+      bookingData.UserId
+    );
 
-  //   try {
-  //     const bookingsCollectionRef = collection(appDB, "CarsPaymentSuccessDetails");
-  //     const bookingQuery = query(
-  //       bookingsCollectionRef,
-  //       where("bookingId", "==", bookingId)
-  //     );
+    try {
+      const bookingsCollectionRef = collection(
+        appDB,
+        "CarsPaymentSuccessDetails"
+      );
+      const bookingQuery = query(
+        bookingsCollectionRef,
+        where("bookingId", "==", bookingId)
+      );
 
-  //     const bookingSnapshot = await getDocs(bookingQuery);
-  //     if (bookingSnapshot.empty) {
-  //       console.error("No booking found with the given ID");
-  //       return;
-  //     }
+      const bookingSnapshot = await getDocs(bookingQuery);
+      if (bookingSnapshot.empty) {
+        console.error("No booking found with the given ID");
+        return;
+      }
 
-  //     const bookingDoc = bookingSnapshot.docs[0];
-  //     console.log("Found booking document:", bookingDoc.id);
+      const bookingDoc = bookingSnapshot.docs[0];
+      console.log("Found booking document:", bookingDoc.id);
 
-  //     await updateDoc(doc(appDB, "CarsPaymentSuccessDetails", bookingDoc.id), {
-  //       'Cancelled': true,
-  //       'CancellationDate': new Date()
-  //     });
-  //     console.log("Booking marked as cancelled in Firestore");
+      await updateDoc(doc(appDB, "CarsPaymentSuccessDetails", bookingDoc.id), {
+        Cancelled: true,
+        CancellationDate: new Date(),
+      });
+      console.log("Booking marked as cancelled in Firestore");
 
-  //     // Now call the API to cancel the booking in the backend
-  //     try {
-  //       const cancelUrl = `${VITE_FIREBASE_CANCELLATION_KEY}cancelZoomBooking`;
+      // Now call the API to cancel the booking in the backend
+      if (bookingData.Vendor === "ZoomCar") {
+        try {
+          const cancelUrl = `${VITE_FUNCTIONS_API_URL}/zoomcar/bookings/cancel-confirm`;
 
-  //       const response = await fetch(cancelUrl, {
-  //         method: "POST",
-  //         headers: {
-  //           "Content-Type": "application/json",
-  //         },
-  //         body: JSON.stringify({
-  //           uid: bookingData.UserId,
-  //           bookingId: bookingId,
-  //         }),
-  //       });
-  //       if (!response.ok) {
-  //         throw new Error(`Server responded with status ${response.status}`);
-  //       }
+          const response = await fetch(cancelUrl, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              uid: bookingData?.UserId,
+              bookingId: bookingId,
+            }),
+          });
+          if (!response.ok) {
+            throw new Error(`Server responded with status ${response.status}`);
+          }
 
-  //       const result = await response.json();
-  //       console.log("Cancellation successful:", result);
-  //     } catch (e) {
-  //       console.error("Error in cancelling the booking:", e);
-  //     }
-  //   } catch (e) {
-  //     console.error("Error updating cancellation status:", e);
-  //     alert("Failed to cancel booking. Please try again.");
-  //   }
-  // };
+          const result = await response.json();
+          console.log("Cancellation successful:", result);
+        } catch (e) {
+          console.error("Error in cancelling the booking:", e);
+        }
+      }
+    } catch (e) {
+      console.error("Error updating cancellation status:", e);
+      alert("Failed to cancel booking. Please try again.");
+    }
+  };
 
   // implemented cancel btn logic
   const [showOverlay, setShowOverlay] = useState(false);
@@ -228,11 +260,15 @@ export default function UpcomingBookingCard({ bookingData }) {
           {/* <button className="bg-[#faffa4] text-black px-4 py-2 rounded-md">
             Extend Booking
           </button> */}
-          <button className="bg-[#faffa4] text-black px-4 py-2 rounded-md">
+          <button className="bg-[#faffa4] text-black px-4 py-2 rounded-md w-full">
             If Cancelled By Vendor
           </button>
-
-          {/* <button className="text-red-500 font-semibold" onClick={handleCancelClick}>Cancel </button> */}
+          <button
+            className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600 transition-colors w-full"
+            onClick={handleCancelBooking(bookingData.bookingId)}
+          >
+            Cancel Booking
+          </button>
 
           {showOverlay && (
             <div className="fixed inset-0 bg-[#404040] bg-opacity-50 flex justify-center items-center z-50">
