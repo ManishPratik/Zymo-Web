@@ -1,6 +1,7 @@
 import { collection, getDocs } from "firebase/firestore";
 import { appDB } from "../firebase";
 import fetchAllTestCollections from "../testCarFetcher";
+import fetchAllTestKosCollections from "./fetchtestkoscar";
 import { formatFare, toPascalCase } from "../helperFunctions";
 
 export const fetchFirebaseCars = async (city, tripDurationHours) => {
@@ -143,8 +144,24 @@ export const fetchFirebaseCars = async (city, tripDurationHours) => {
 
     if (testCollections && testCollections.length > 0) {
       allCars = [...allCars, ...testCollections];
+    } else {
+      console.log(`No test collection cars found for ${city}`);
+    }
+        // Step 4.5: Fetch cars from testKos collections
+    const testKosCollections = await fetchAllTestKosCollections(
+      appDB,
+      formatFare,
+      city,
+      tripDurationHours
+    );
     } 
 
+    if (testKosCollections && testKosCollections.length > 0) {
+      console.log(`Found ${testKosCollections.length} testKos collection cars for ${city}`);
+      allCars = [...allCars, ...testKosCollections];
+    } else {
+      console.log(`No testKos collection cars found for ${city}`);
+    }
     // Step 5: Map car data to the expected format
     const filterdData = allCars
       .filter((car) => {
