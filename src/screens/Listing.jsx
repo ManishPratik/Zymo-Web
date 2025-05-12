@@ -31,6 +31,8 @@ import { motion } from "framer-motion";
 import { fetchFirebaseCars } from "../utils/cars/firebasePartnerCarsFetcher";
 import { getCarKeywords } from "../utils/carClubbing";
 import Marquee from "react-fast-marquee";
+import { BsFuelPump } from "react-icons/bs";
+import { TbManualGearbox } from "react-icons/tb";
 
 // Helper function to get normalized car name
 const getNormalizedCarName = (originalName, keywords) => {
@@ -78,7 +80,8 @@ const Listing = ({ title }) => {
   const [seats, setSeats] = useState("");
   const [fuel, setFuel] = useState("");
   const [transmission, setTransmission] = useState("");
-  const [filteredList, setFilteredList] = useState(clubbedCarList);
+  const [filteredList, setFilteredList] = useState([]);
+  const [filtersApplied, setFiltersApplied] = useState(false);
   const [, setCarCount] = useState("");
   const [expandedStates, setExpandedStates] = useState({});
   const [, setVendersDetails] = useState({});
@@ -99,8 +102,6 @@ const Listing = ({ title }) => {
       [key]: !prev[key], // Toggle only the clicked car's state
     }));
   };
-
-  //lowtoHigh filter sets as default
 
   const renderStarRating = (rating) => {
     const maxStars = 5;
@@ -140,14 +141,6 @@ const Listing = ({ title }) => {
     );
   };
 
-  // Errors
-  const noCarsFound = () => {
-    toast.error("No cars found for specified filter(s)", {
-      position: "top-center",
-      autoClose: 1000 * 2,
-    });
-  };
-
   // fetch vendor discount, tax, and current rate of vehicle for that respective venders
   const fetchVendorDetails = async () => {
     const vendorsSnapshot = await getDocs(collection(appDB, "carvendors"));
@@ -158,7 +151,7 @@ const Listing = ({ title }) => {
     setVendersDetails(vendorData);
   };
 
-  //It group the cars by name and brand and find the minimum fare for each group
+  // It groups the cars by name and brand and finds the minimum fare for each group
   const clubCarsByName = async (carsArray) => {
     console.log("Cars Array:", carsArray); // For debugging
     const clubbingCarNames = (await getCarKeywords()) || [];
@@ -237,31 +230,15 @@ const Listing = ({ title }) => {
       return;
     }
 
-    // if (sessionStorage.getItem("fromSearch") !== "true") {
-    //   sessionStorage.setItem("fromSearch", false);
-    //   const cachedCarList = localStorage.getItem("carList");
-    //   if (cachedCarList) {
-    //     setCarList(JSON.parse(cachedCarList));
-    //     const groupedList = clubCarsByName(JSON.parse(cachedCarList));
-    //     setClubbedCarList(groupedList);
-    //     setCarCount(JSON.parse(cachedCarList).length);
-    //     setLoading(false);
-    //     return;
-    //   }
-    // }
-    
     fetchVendorDetails();
 
     const search = async () => {
       setLoading(true);
       try {
         const url = import.meta.env.VITE_FUNCTIONS_API_URL;
-        // const url = "http://127.0.0.1:5001/zymo-prod/us-central1/api";
-
         let allCarData = [];
 
         if (activeTab === "subscribe") {
-          // Fetch only subscription cars if activeTab is "subscribe"
           const subscriptionData = await fetchSubscriptionCars(
             CityName,
             formattedPickDate,
@@ -273,7 +250,6 @@ const Listing = ({ title }) => {
             console.error("Subscription API failed or returned empty data.");
           }
         } else {
-          // Fetch Zoomcar API
           const fetchZoomcarData = async () => {
             const response = await fetch(`${url}/zoomcar/search`, {
               method: "POST",
@@ -299,24 +275,19 @@ const Listing = ({ title }) => {
           };
 
           const zoomPromise = retryFunction(fetchZoomcarData);
-
           const mychoizePromise = fetchMyChoizeCars(
             CityName,
             formattedPickDate,
             formattedDropDate,
             tripDurationHours
           );
-
-          // fetch firebase partners cars
           const firebasePromise = fetchFirebaseCars(city, tripDurationHours);
 
-          // Execute all API calls in parallel
-          const [zoomData, mychoizeData, firebaseData] =
-            await Promise.allSettled([
-              zoomPromise ? zoomPromise : Promise.resolve(null),
-              mychoizePromise ? mychoizePromise : Promise.resolve(null),
-              firebasePromise,
-            ]);
+          const [zoomData, mychoizeData, firebaseData] = await Promise.allSettled([
+            zoomPromise ? zoomPromise : Promise.resolve(null),
+            mychoizePromise ? mychoizePromise : Promise.resolve(null),
+            firebasePromise,
+          ]);
 
           if (
             zoomData.status === "fulfilled" &&
@@ -382,11 +353,12 @@ const Listing = ({ title }) => {
             autoClose: 5000,
           });
         }
-        console.log("All Car Data:", allCarData); // For debugging
         const groupCarList = await clubCarsByName(allCarData);
 
         setCarList(allCarData);
         setClubbedCarList(groupCarList);
+        setFilteredList(groupCarList); // Set initial filtered list to full list
+        setFiltersApplied(false); // No filters applied initially
         setCarCount(
           groupCarList.reduce((count, group) => count + group.cars.length, 0)
         );
@@ -401,35 +373,24 @@ const Listing = ({ title }) => {
     search();
   }, [city, startDate, endDate, activeTab, lat, lng, tripDurationHours]);
 
-  // Filter functionality
-  useEffect(() => {
-    applyFiltersToGroupedCars();
-  }, [clubbedCarList, priceRange, seats, fuel, transmission]);
-
   useEffect(() => {
     document.title = title;
   }, [title]);
 
-  const resetFilters = () => {
-    setTransmission("");
-    setPriceRange("lowToHigh");
-    setSeats("");
-    setFuel("");
-    setFilteredList(clubbedCarList);
-    setCarCount(
-      clubbedCarList.reduce((count, group) => count + group.cars.length, 0)
-    );
-  };
+  // Apply filters dynamically when filter states change
+  useEffect(() => {
+    applyFilters();
+  }, [transmission, priceRange, seats, fuel, clubbedCarList]);
 
-  const applyFiltersToGroupedCars = () => {
+  const applyFilters = () => {
     if (!Array.isArray(clubbedCarList)) {
-      noCarsFound();
-      return [];
+      setFilteredList([]);
+      setFiltersApplied(true);
+      return;
     }
 
     let filteredGroups = clubbedCarList
       .map((group) => {
-        // Filter cars within the group
         const filteredCars = group.cars.filter((car) => {
           const transmissionFilter =
             !transmission ||
@@ -441,19 +402,16 @@ const Listing = ({ title }) => {
           return transmissionFilter && seatsFilter && fuelFilter;
         });
 
-        // If no cars remain, return null to exclude the group
         if (filteredCars.length === 0) {
           return null;
         }
 
-        // Sort filtered cars by fare
         const sortedFilteredCars = [...filteredCars].sort((a, b) => {
           const fareA = parseInt(a.fare.replace(/[^0-9]/g, ""));
           const fareB = parseInt(b.fare.replace(/[^0-9]/g, ""));
           return fareA - fareB;
         });
 
-        // The first car in sorted list has the minimum fare
         const minFareCar = sortedFilteredCars[0];
         const minFare = minFareCar.fare;
         const seat =
@@ -469,13 +427,6 @@ const Listing = ({ title }) => {
       })
       .filter((group) => group !== null);
 
-    // Handle no results
-    if (filteredGroups.length === 0) {
-      //noCarsFound();
-      return;
-    }
-
-    // Sort groups by minimum fare if priceRange is specified
     if (priceRange) {
       filteredGroups = filteredGroups.sort((a, b) => {
         const priceA = parseInt(a.fare.replace(/[^0-9]/g, ""));
@@ -483,17 +434,26 @@ const Listing = ({ title }) => {
         return priceRange === "lowToHigh" ? priceA - priceB : priceB - priceA;
       });
     }
-    let totalCars = filteredGroups.reduce(
+
+    setFilteredList(filteredGroups);
+    setFiltersApplied(true);
+    const totalCars = filteredGroups.reduce(
       (count, group) => count + group.cars.length,
       0
     );
-
-    setFilteredList(filteredGroups);
     setCarCount(totalCars);
-    //filteredGroups.reduce((count, group) => count + group.cars.length, 0)
-    if (totalCars === 0) {
-      noCarsFound();
-    }
+  };
+
+  const resetFilters = () => {
+    setTransmission("");
+    setPriceRange("lowToHigh");
+    setSeats("");
+    setFuel("");
+    setFilteredList(clubbedCarList);
+    setFiltersApplied(false);
+    setCarCount(
+      clubbedCarList.reduce((count, group) => count + group.cars.length, 0)
+    );
   };
 
   const handleSelectedCar = (label) => {
@@ -503,12 +463,9 @@ const Listing = ({ title }) => {
   const goToDetails = (car) => {
     handleSelectedCar(`${car.brand} ${car.name} - ${car.source}`);
 
-    // For Karyana cars, ensure they have all required fields
     if (car.source && car.source.toLowerCase() === "karyana") {
-      // Clone car to avoid modifying the original object
       const carWithDefaults = {
         ...car,
-        // Ensure package-related fields exist
         rateBasis: car.rateBasis || (tripDurationHours >= 24 ? "MP" : "hourly"),
         total_km:
           car.total_km || (tripDurationHours >= 24 ? { MP: 300 } : undefined),
@@ -523,7 +480,6 @@ const Listing = ({ title }) => {
         },
       });
     } else {
-      // Normal flow for other providers
       navigate(`/self-drive-car-rentals/${city}/cars/booking-details`, {
         state: {
           startDate,
@@ -538,15 +494,6 @@ const Listing = ({ title }) => {
   const goToPackages = (car) => {
     handleSelectedCar(`${car.brand} ${car.name}`);
 
-    // Check if this is a Karyana car with multiple packages (rateBasisFare property exists)
-    const isKaryana = car.source === "Karyana";
-    const hasPackages =
-      car.rateBasisFare && Object.keys(car.rateBasisFare).length > 0;
-
-    console.log(
-      `Car ${car.name} - Karyana: ${isKaryana}, Has packages: ${hasPackages}, Trip hours: ${tripDurationHours}`
-    );
-
     navigate(`/self-drive-car-rentals/${city}/cars/packages`, {
       state: {
         startDate,
@@ -556,9 +503,53 @@ const Listing = ({ title }) => {
     });
   };
 
+  const CarSpecBadges = ({ options }) => {
+    // Extract seat information from options
+    const seatInfo = options.find(opt => opt.includes("Seats")) || "N/A";
+    // Extract fuel type information (Petrol, Diesel, Electric)
+    const fuelInfo = options.find(opt => 
+      opt.includes("Petrol") || opt.includes("Diesel") || opt.includes("Electric")
+    ) || "N/A";
+    // Extract transmission information (Manual, Automatic)
+    const transmissionInfo = options.find(opt => 
+      opt.includes("Manual") || opt.includes("Automatic")
+    ) || "N/A";
+
+    return (
+      <div className="flex flex-wrap gap-2 my-2">
+        {/* Seats Badge */}
+        <div className="flex items-center bg-gray-200 rounded-md px-3 py-1">
+          <Armchair size={14} className="text-black" />
+          <span className="text-black font-medium text-sm mr-1">
+            {seatInfo.split(" ")[0]}
+          </span>
+        </div>
+        
+        {/* Fuel Type Badge */}
+        <div className="flex items-center bg-gray-200 rounded-md px-3 py-1">
+          <BsFuelPump size={14} className="text-black mr-1" />
+          <span className="text-black font-medium text-sm">
+            {fuelInfo.includes("Petrol") ? "Petrol" : 
+             fuelInfo.includes("Diesel") ? "Diesel" : 
+             fuelInfo.includes("Electric") ? "Electric" : "N/A"}
+          </span>
+        </div>
+        
+        {/* Transmission Badge */}
+        <div className="flex items-center bg-gray-200 rounded-md px-3 py-1">
+          <TbManualGearbox size={14} className="text-black mr-1" />
+          <span className="text-black font-medium text-sm">
+            {transmissionInfo.includes("Manual") ? "Manual" : 
+             transmissionInfo.includes("Automatic") ? "Automatic" : "N/A"}
+          </span>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <>
-      {/* ✅ Dynamic SEO Tags */}
+      {/* Dynamic SEO Tags */}
       <Helmet>
         <title>Available Cars in {city} | Zymo</title>
         <meta
@@ -575,7 +566,7 @@ const Listing = ({ title }) => {
           href={`https://zymo.app/self-drive-car-rentals/${city}/cars`}
         />
       </Helmet>
-      <div className="h-100% min-w-screen bg-grey-900 text-white flex flex-col items-center px-4 py-6">
+      <div className="h-100% min-w-screen bg-grey-900 text-white flex flex-col items-center px-8 py-10">
         <header className="w-full max-w-8xl flex flex-col md:flex-row justify-between items-center mb-4 text-center md:text-left">
           <div className="flex items-center gap-2 text-white text-lg">
             <button
@@ -586,7 +577,7 @@ const Listing = ({ title }) => {
             </button>
             <span>{tripDuration}</span>
           </div>
-          <div className="location-container ">
+          <div className="location-container">
             <span className="text-[#faffa4] text-lg flex items-center gap-1 mt-2 md:mt-0">
               <FiMapPin className="text-[#faffa4] w-5 h-5" />
               {address}
@@ -599,10 +590,10 @@ const Listing = ({ title }) => {
         </div>
 
         {/* Filters */}
-        <div className="flex flex-wrap justify-start gap-2 w-full max-w-4xl mb-6 items-center ">
+        <div className="flex flex-wrap justify-start gap-2 w-full max-w-4xl mb-6 items-center">
           <button
             onClick={resetFilters}
-            className="bg-[#404040] h-10 text-white px-4 py-2 rounded-lg text-lg  w-full sm:w-auto  font-semibold"
+            className="bg-[#404040] h-10 text-white px-4 py-2 rounded-lg text-lg w-full sm:w-auto font-semibold"
           >
             All
           </button>
@@ -642,8 +633,6 @@ const Listing = ({ title }) => {
                 onChange={(e) => setSeats(e.target.value)}
               >
                 <option value="">Seats</option>
-                <option value="3 Seats">3 Seats</option>
-                <option value="4 Seats">4 Seats</option>
                 <option value="5 Seats">5 Seats</option>
                 <option value="6 Seats">6 Seats</option>
                 <option value="7 Seats">7 Seats</option>
@@ -676,9 +665,7 @@ const Listing = ({ title }) => {
             </button>
 
             <button
-              onClick={() => {
-                applyFiltersToGroupedCars();
-              }}
+              onClick={applyFilters}
               className="bg-[#faffa4] px-4 py-2 rounded-lg text-black text-lg lg:text-base font-semibold h-10 w-[calc(50%-0.25rem)] sm:w-[140px]"
             >
               Apply
@@ -731,6 +718,14 @@ const Listing = ({ title }) => {
               ))}
             </div>
           </>
+        ) : filteredList.length === 0 ? (
+          <div className="text-center text-white mt-10">
+            {filtersApplied ? (
+              <p className="text-lg">No cars available for the specified filters. Try searching others.</p>
+            ) : (
+              <p className="text-lg">Please apply filters or check availability later.</p>
+            )}
+          </div>
         ) : (
           <div className="grid grid-cols-1 lg:w-[56%] items-start gap-5">
             {filteredList.map((car) => {
@@ -751,9 +746,7 @@ const Listing = ({ title }) => {
                     <div className="mt-3 flex justify-between items-start">
                       <div>
                         <h3 className="text-md font-semibold">{car.name}</h3>
-                        <p className="text-sm text-gray-400">
-                          {car.cars[0].options[2]}
-                        </p>
+                        <CarSpecBadges options={car.cars[0].options} />
                         <div className="img-container">
                           <img
                             loading="lazy"
@@ -776,7 +769,7 @@ const Listing = ({ title }) => {
                       </div>
                     </div>
                     <div className="flex justify-between items-center mt-3">
-                      <p className="text-sm text-[#faffa4]">
+                      <p className="text-sm text-[#f  text-[#faffa4]">
                         {car.cars[0].location_est}
                       </p>
                       <button
@@ -811,6 +804,7 @@ const Listing = ({ title }) => {
                           <h3 className="text-xl font-semibold mb-1">
                             {car.name}
                           </h3>
+                          <CarSpecBadges options={car.cars[0].options} />
                         </div>
                         <div>
                           <img
@@ -819,9 +813,6 @@ const Listing = ({ title }) => {
                             alt={car.cars[0].source}
                             className="h-5 rounded-sm bg-white p-1 text-black"
                           />
-                          <p className="text-xs text-gray-400 ">
-                            {car.cars[0].options[2]}
-                          </p>
                           <p className="text-xs text-[#faffa4]">
                             {car.cars[0].location_est}
                           </p>
@@ -964,4 +955,5 @@ const Listing = ({ title }) => {
     </>
   );
 };
+
 export default Listing;
