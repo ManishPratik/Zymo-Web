@@ -19,7 +19,7 @@ const BookingCard = ({ title }) => {
 
   const isKaryana =
     car?.brand === "Karyana" || car?.source?.toLowerCase() === "karyana";
-  const isMyChoize = car?.brand === "MyChoize" || car?.source === "MyChoize";
+  const isMyChoize = car?.source === "mychoize";
   const isZymoPartner = car?.source === "Zymo";
   useEffect(() => {
     const fetchVendorDetails = async () => {
@@ -79,6 +79,7 @@ const BookingCard = ({ title }) => {
         packageName: findPackage(variation.rateBasis || "FF"),
       };
     } else if (isMyChoize) {
+      console.log("Selected Car:", selectedCar);
       // For MyChoize cars with rateBasisFare
       const rateBasis = selectedCar;
       const baseFare = car.rateBasisFare[rateBasis];
@@ -104,7 +105,7 @@ const BookingCard = ({ title }) => {
         finalPrice,
         discountPrice,
         packageName: findPackage(rateBasis),
-        selectedPackage: rateBasis,
+        rateBasis: index,
       };
     } else {
       // For Zymo Partner cars
@@ -319,6 +320,7 @@ const BookingCard = ({ title }) => {
 
         {isZymoPartner &&
           car?.all_fares.map((fare, index) => {
+            // console.log("Car Details:", index);
             return (
               <div
                 key={`zymo-${index}`}
@@ -329,15 +331,8 @@ const BookingCard = ({ title }) => {
                     <h1 className="text-xl font-semibold flex items-center gap-2">
                       Fulfilled by
                       <span className="text-2xl text-[#E8FF81]">
-                        {vendorDetails?.vendor || "Zymo"}
+                        {car?.brand || "Zymo"}
                       </span>
-                      {vendorDetails?.Imageurl && (
-                        <img
-                          className="w-20 h-6 rounded-md object-contain"
-                          src={vendorDetails.Imageurl}
-                          alt="Zymo"
-                        />
-                      )}
                     </h1>
                     <ul className="text-gray-200 space-y-1 mt-4">
                       {car.options &&

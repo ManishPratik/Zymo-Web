@@ -29,6 +29,27 @@ import useTrackEvent from "../hooks/useTrackEvent";
 import { Helmet } from "react-helmet-async";
 import { motion } from "framer-motion";
 import { fetchFirebaseCars } from "../utils/cars/firebasePartnerCarsFetcher";
+import { getCarKeywords } from "../utils/carClubbing";
+import Marquee from "react-fast-marquee";
+import { BsFuelPump } from "react-icons/bs";
+import { TbManualGearbox } from "react-icons/tb";
+
+// Helper function to get normalized car name
+const getNormalizedCarName = (originalName, keywords) => {
+  if (!originalName) return "UNKNOWN";
+  let nameToProcess = String(originalName).toLowerCase();
+  let normalizedNameResult = String(originalName); // Default to original name if no keyword matches
+
+  if (Array.isArray(keywords)) {
+    for (const keyword of keywords) {
+      if (keyword && nameToProcess.includes(String(keyword).toLowerCase())) {
+        normalizedNameResult = String(keyword); // Use the keyword itself as the normalized name
+        break; // Found a keyword, no need to check further
+      }
+    }
+  }
+  return normalizedNameResult.toUpperCase(); // Return the keyword or original name, uppercased
+};
 
 const Listing = ({ title }) => {
   const location = useLocation();
@@ -59,10 +80,21 @@ const Listing = ({ title }) => {
   const [seats, setSeats] = useState("");
   const [fuel, setFuel] = useState("");
   const [transmission, setTransmission] = useState("");
-  const [filteredList, setFilteredList] = useState(clubbedCarList);
+  const [filteredList, setFilteredList] = useState([]);
+  const [filtersApplied, setFiltersApplied] = useState(false);
   const [, setCarCount] = useState("");
   const [expandedStates, setExpandedStates] = useState({});
   const [, setVendersDetails] = useState({});
+
+  const brands = [
+    { name: "WheelUp", logo: "/images/ServiceProvider/wheelup.png" },
+    { name: "Avis", logo: "/images/ServiceProvider/avis.png" },
+    { name: "Zoomcars", logo: "/images/ServiceProvider/Zoomcar_Logo.jpg" },
+    { name: "MyChoize", logo: "/images/ServiceProvider/mychoize.png" },
+    { name: "Carronrent", logo: "/images/ServiceProvider/carronrent.png" },
+    { name: "Doorcars", logo: "/images/ServiceProvider/doorcars1.png" },
+    { name: "Renx", logo: "/images/ServiceProvider/renx.jpeg" }
+  ];
 
   const toggleDeals = (key) => {
     setExpandedStates((prev) => ({
@@ -70,8 +102,6 @@ const Listing = ({ title }) => {
       [key]: !prev[key], // Toggle only the clicked car's state
     }));
   };
-
-  //lowtoHigh filter sets as default
 
   const renderStarRating = (rating) => {
     const maxStars = 5;
@@ -111,14 +141,6 @@ const Listing = ({ title }) => {
     );
   };
 
-  // Errors
-  const noCarsFound = () => {
-    toast.error("No cars found for specified filter(s)", {
-      position: "top-center",
-      autoClose: 1000 * 2,
-    });
-  };
-
   // fetch vendor discount, tax, and current rate of vehicle for that respective venders
   const fetchVendorDetails = async () => {
     const vendorsSnapshot = await getDocs(collection(appDB, "carvendors"));
@@ -129,61 +151,64 @@ const Listing = ({ title }) => {
     setVendersDetails(vendorData);
   };
 
-  //It group the cars by name and brand and find the minimum fare for each group
-  const clubCarsByName = (carsArray) => {
+  // It groups the cars by name and brand and finds the minimum fare for each group
+  const clubCarsByName = async (carsArray) => {
+    console.log("Cars Array:", carsArray); // For debugging
+    const clubbingCarNames = (await getCarKeywords()) || [];
+    // console.log("Car Grouping Keywords:", clubbingCarNames); // For debugging
+
     if (!Array.isArray(carsArray) || carsArray.length === 0) {
       return [];
     }
 
-    // Group cars by name
-    const groupedCars = carsArray.reduce((acc, car) => {
-      if (!car) {
+    // Step 1: Group cars by normalized name
+    const carsGroupedByNormalizedName = carsArray.reduce((acc, car) => {
+      if (car.brand === "Karyana") console.log(car);
+      if (!car || !car.name || typeof car.fare !== 'string') {
         return acc;
       }
-      console.log("Car data from club:", car);
-      // Make sure we have valid values for these fields
-      const name = car.name || "Unknown";
-      const brand = car.brand || "Partner";
+
+      const normalizedNameKey = getNormalizedCarName(car.name, clubbingCarNames);
       
-      const fare = car.fare;
-
-      if (typeof fare !== "string") {
-        return acc;
+      if (!acc[normalizedNameKey]) {
+        console.log("New group created:", normalizedNameKey); // For debugging
+        acc[normalizedNameKey] = [];
       }
-
-      const key = `${name}|${brand}`;
-
-      if (!acc[key]) {
-        acc[key] = {
-          name: car.name,
-          brand: car.brand,
-          cars: [],
-        };
-      }
-      acc[key].cars.push(car);
+      // console.log("Adding car to group:", normalizedNameKey, car); // For debugging
+      acc[normalizedNameKey].push(car);
       return acc;
     }, {});
 
-    // Transform groups and find the minimun fare
-    return Object.values(groupedCars).map((group) => {
-      const minFare = group.cars.reduce((min, car) => {
-        const currentFare = parseInt(car.fare?.replace(/[^0-9]/g, ""));
-        if (isNaN(currentFare)) return min;
-        const minFareNum = parseInt(min.replace(/[^0-9]/g, ""));
-        return currentFare < minFareNum ? car.fare : min;
-      }, group.cars[0].fare);
+    // Step 2: Transform groups into the desired output structure
+    return Object.entries(carsGroupedByNormalizedName).map(([normalizedGroupName, carsInGroup]) => {
+      if (!carsInGroup || carsInGroup.length === 0) {
+        return null;
+      }
 
-      const minFareCar = group.cars.find((car) => car.fare === minFare);
-      const seat = minFareCar.options.find((opt) => opt.includes("Seats"));
+      // Sort cars within the group by price (ascending)
+      const sortedCarsInGroup = [...carsInGroup].sort((a, b) => {
+        const fareA = parseInt(a.fare?.replace(/[^0-9]/g, "") || "0");
+        const fareB = parseInt(b.fare?.replace(/[^0-9]/g, "") || "0");
+        return fareA - fareB;
+      });
+
+      const minFareCar = sortedCarsInGroup[0];
+      if (!minFareCar) {
+        return null; 
+      }
+
+      const minFare = minFareCar.fare;
+      const seat = minFareCar.options?.find((opt) => typeof opt === 'string' && opt.includes("Seats")) || "N/A";
+      const brand = minFareCar.brand; // Brand of the car with the minimum fare
 
       return {
-        brand: group.brand,
-        name: group.name,
+        brand: brand,
+        name: normalizedGroupName, // The normalized group name (e.g., "SWIFT")
         fare: minFare,
         seat: seat,
-        cars: group.cars,
+        cars: sortedCarsInGroup, // All cars in this normalized group, sorted by price
       };
-    });
+    }).filter(group => group !== null); // Remove any null groups
   };
 
   useEffect(() => {
@@ -205,31 +230,15 @@ const Listing = ({ title }) => {
       return;
     }
 
-    // if (sessionStorage.getItem("fromSearch") !== "true") {
-    //   sessionStorage.setItem("fromSearch", false);
-    //   const cachedCarList = localStorage.getItem("carList");
-    //   if (cachedCarList) {
-    //     setCarList(JSON.parse(cachedCarList));
-    //     const groupedList = clubCarsByName(JSON.parse(cachedCarList));
-    //     setClubbedCarList(groupedList);
-    //     setCarCount(JSON.parse(cachedCarList).length);
-    //     setLoading(false);
-    //     return;
-    //   }
-    // }
-
     fetchVendorDetails();
 
     const search = async () => {
       setLoading(true);
       try {
         const url = import.meta.env.VITE_FUNCTIONS_API_URL;
-        // const url = "http://127.0.0.1:5001/zymo-prod/us-central1/api";
-
         let allCarData = [];
 
         if (activeTab === "subscribe") {
-          // Fetch only subscription cars if activeTab is "subscribe"
           const subscriptionData = await fetchSubscriptionCars(
             CityName,
             formattedPickDate,
@@ -241,7 +250,6 @@ const Listing = ({ title }) => {
             console.error("Subscription API failed or returned empty data.");
           }
         } else {
-          // Fetch Zoomcar API
           const fetchZoomcarData = async () => {
             const response = await fetch(`${url}/zoomcar/search`, {
               method: "POST",
@@ -267,24 +275,19 @@ const Listing = ({ title }) => {
           };
 
           const zoomPromise = retryFunction(fetchZoomcarData);
-
           const mychoizePromise = fetchMyChoizeCars(
             CityName,
             formattedPickDate,
             formattedDropDate,
             tripDurationHours
           );
-
-          // fetch firebase partners cars
           const firebasePromise = fetchFirebaseCars(city, tripDurationHours);
 
-          // Execute all API calls in parallel
-          const [zoomData, mychoizeData, firebaseData] =
-            await Promise.allSettled([
-              zoomPromise ? zoomPromise : Promise.resolve(null),
-              mychoizePromise ? mychoizePromise : Promise.resolve(null),
-              firebasePromise,
-            ]);
+          const [zoomData, mychoizeData, firebaseData] = await Promise.allSettled([
+            zoomPromise ? zoomPromise : Promise.resolve(null),
+            mychoizePromise ? mychoizePromise : Promise.resolve(null),
+            firebasePromise,
+          ]);
 
           if (
             zoomData.status === "fulfilled" &&
@@ -350,10 +353,12 @@ const Listing = ({ title }) => {
             autoClose: 5000,
           });
         }
-        const groupCarList = clubCarsByName(allCarData);
+        const groupCarList = await clubCarsByName(allCarData);
 
         setCarList(allCarData);
         setClubbedCarList(groupCarList);
+        setFilteredList(groupCarList); // Set initial filtered list to full list
+        setFiltersApplied(false); // No filters applied initially
         setCarCount(
           groupCarList.reduce((count, group) => count + group.cars.length, 0)
         );
@@ -368,40 +373,24 @@ const Listing = ({ title }) => {
     search();
   }, [city, startDate, endDate, activeTab, lat, lng, tripDurationHours]);
 
-  // // Filter functionality
-  // useEffect(() => {
-  //   setFilteredList(clubbedCarList);
-  // }, [clubbedCarList]);
-
-  // New Filter functionality
-  useEffect(() => {
-    applyFiltersToGroupedCars();
-  }, [clubbedCarList, priceRange, seats, fuel, transmission]);
-
   useEffect(() => {
     document.title = title;
   }, [title]);
 
-  const resetFilters = () => {
-    setTransmission("");
-    setPriceRange("lowToHigh");
-    setSeats("");
-    setFuel("");
-    setFilteredList(clubbedCarList);
-    setCarCount(
-      clubbedCarList.reduce((count, group) => count + group.cars.length, 0)
-    );
-  };
+  // Apply filters dynamically when filter states change
+  useEffect(() => {
+    applyFilters();
+  }, [transmission, priceRange, seats, fuel, clubbedCarList]);
 
-  const applyFiltersToGroupedCars = () => {
+  const applyFilters = () => {
     if (!Array.isArray(clubbedCarList)) {
-      noCarsFound();
-      return [];
+      setFilteredList([]);
+      setFiltersApplied(true);
+      return;
     }
 
     let filteredGroups = clubbedCarList
       .map((group) => {
-        // Filter cars within the group
         const filteredCars = group.cars.filter((car) => {
           const transmissionFilter =
             !transmission ||
@@ -413,19 +402,18 @@ const Listing = ({ title }) => {
           return transmissionFilter && seatsFilter && fuelFilter;
         });
 
-        // If no cars remain, return null to exclude the group
         if (filteredCars.length === 0) {
           return null;
         }
 
-        // Recalculate minimum fare for the filtered cars
-        const minFare = filteredCars.reduce((min, car) => {
-          const currentFare = parseInt(car.fare.replace(/[^0-9]/g, ""));
-          const minFareNum = parseInt(min.replace(/[^0-9]/g, ""));
-          return currentFare < minFareNum ? car.fare : min;
-        }, filteredCars[0].fare);
+        const sortedFilteredCars = [...filteredCars].sort((a, b) => {
+          const fareA = parseInt(a.fare.replace(/[^0-9]/g, ""));
+          const fareB = parseInt(b.fare.replace(/[^0-9]/g, ""));
+          return fareA - fareB;
+        });
 
-        const minFareCar = filteredCars.find((car) => car.fare === minFare);
+        const minFareCar = sortedFilteredCars[0];
+        const minFare = minFareCar.fare;
         const seat =
           minFareCar.options.find((opt) => opt.includes("Seats")) || "Unknown";
 
@@ -434,18 +422,11 @@ const Listing = ({ title }) => {
           brand: group.brand,
           seat: seat,
           fare: minFare,
-          cars: filteredCars,
+          cars: sortedFilteredCars,
         };
       })
       .filter((group) => group !== null);
 
-    // Handle no results
-    if (filteredGroups.length === 0) {
-      //noCarsFound();
-      return;
-    }
-
-    // Sort groups by minimum fare if priceRange is specified
     if (priceRange) {
       filteredGroups = filteredGroups.sort((a, b) => {
         const priceA = parseInt(a.fare.replace(/[^0-9]/g, ""));
@@ -453,15 +434,28 @@ const Listing = ({ title }) => {
         return priceRange === "lowToHigh" ? priceA - priceB : priceB - priceA;
       });
     }
-    let totalCars = filteredGroups.reduce((count, group) => count + group.cars.length, 0)
 
     setFilteredList(filteredGroups);
+    setFiltersApplied(true);
+    const totalCars = filteredGroups.reduce(
+      (count, group) => count + group.cars.length,
+      0
+    );
     setCarCount(totalCars);
-      //filteredGroups.reduce((count, group) => count + group.cars.length, 0)
-    if (totalCars === 0) {
-      noCarsFound(); 
-    };
-  }
+  };
+
+  const resetFilters = () => {
+    setTransmission("");
+    setPriceRange("lowToHigh");
+    setSeats("");
+    setFuel("");
+    setFilteredList(clubbedCarList);
+    setFiltersApplied(false);
+    setCarCount(
+      clubbedCarList.reduce((count, group) => count + group.cars.length, 0)
+    );
+  };
+
   const handleSelectedCar = (label) => {
     trackEvent("Car List Section", "Rent Section Car", label);
   };
@@ -469,12 +463,9 @@ const Listing = ({ title }) => {
   const goToDetails = (car) => {
     handleSelectedCar(`${car.brand} ${car.name} - ${car.source}`);
 
-    // For Karyana cars, ensure they have all required fields
     if (car.source && car.source.toLowerCase() === "karyana") {
-      // Clone car to avoid modifying the original object
       const carWithDefaults = {
         ...car,
-        // Ensure package-related fields exist
         rateBasis: car.rateBasis || (tripDurationHours >= 24 ? "MP" : "hourly"),
         total_km:
           car.total_km || (tripDurationHours >= 24 ? { MP: 300 } : undefined),
@@ -489,7 +480,6 @@ const Listing = ({ title }) => {
         },
       });
     } else {
-      // Normal flow for other providers
       navigate(`/self-drive-car-rentals/${city}/cars/booking-details`, {
         state: {
           startDate,
@@ -504,38 +494,6 @@ const Listing = ({ title }) => {
   const goToPackages = (car) => {
     handleSelectedCar(`${car.brand} ${car.name}`);
 
-    // Check if this is a Karyana car with multiple packages (rateBasisFare property exists)
-    const isKaryana = car.source === "Karyana";
-    const hasPackages =
-      car.rateBasisFare && Object.keys(car.rateBasisFare).length > 0;
-
-    console.log(
-      `Car ${car.name} - Karyana: ${isKaryana}, Has packages: ${hasPackages}, Trip hours: ${tripDurationHours}`
-    );
-
-    // if (isKaryana && !hasPackages) {
-    //   console.log("Karyana car without packages - directing to booking details");
-    //   // Direct to booking details for Karyana cars without packages
-    //   navigate(`/self-drive-car-rentals/${city}/cars/booking-details`, {
-    //     state: {
-    //       startDate,
-    //       endDate,
-    //       car,
-    //     },
-    //   });
-    // } else if (isKaryana && hasPackages) {
-    //   console.log("Karyana car with packages - directing to package selection");
-    //   console.log("Packages:", car.rateBasisFare);
-    //   // For Karyana cars with multiple packages, show package selection like MyChoize
-    //   navigate(`/self-drive-car-rentals/${city}/cars/packages`, {
-    //     state: {
-    //       startDate,
-    //       endDate,
-    //       car,
-    //     },
-    //   });
-    // } else {
-    // Normal flow for other vendors (Mychoize, etc.)
     navigate(`/self-drive-car-rentals/${city}/cars/packages`, {
       state: {
         startDate,
@@ -543,25 +501,55 @@ const Listing = ({ title }) => {
         car,
       },
     });
-    // }
   };
 
-  // useEffect(() => {
-  //   const timer = setTimeout(() => {
-  //     setPriceRange("lowToHigh"); // set Low-High
-  //     applyFiltersToGroupedCars(); // apply filter after setting
+  const CarSpecBadges = ({ options }) => {
+    // Extract seat information from options
+    const seatInfo = options.find(opt => opt.includes("Seats")) || "N/A";
+    // Extract fuel type information (Petrol, Diesel, Electric)
+    const fuelInfo = options.find(opt => 
+      opt.includes("Petrol") || opt.includes("Diesel") || opt.includes("Electric")
+    ) || "N/A";
+    // Extract transmission information (Manual, Automatic)
+    const transmissionInfo = options.find(opt => 
+      opt.includes("Manual") || opt.includes("Automatic")
+    ) || "N/A";
 
-  //     setFilteredList(clubbedCarList);
-
-  //     console.log("Auto-applied Low-High after 2 seconds");
-  //   }, 2000); // 2000ms = 2 seconds
-
-  //   return () => clearTimeout(timer); // cleanup
-  // }, []);
+    return (
+      <div className="flex flex-wrap gap-2 my-2">
+        {/* Seats Badge */}
+        <div className="flex items-center bg-gray-200 rounded-md px-3 py-1">
+          <Armchair size={14} className="text-black" />
+          <span className="text-black font-medium text-sm mr-1">
+            {seatInfo.split(" ")[0]}
+          </span>
+        </div>
+        
+        {/* Fuel Type Badge */}
+        <div className="flex items-center bg-gray-200 rounded-md px-3 py-1">
+          <BsFuelPump size={14} className="text-black mr-1" />
+          <span className="text-black font-medium text-sm">
+            {fuelInfo.includes("Petrol") ? "Petrol" : 
+             fuelInfo.includes("Diesel") ? "Diesel" : 
+             fuelInfo.includes("Electric") ? "Electric" : "N/A"}
+          </span>
+        </div>
+        
+        {/* Transmission Badge */}
+        <div className="flex items-center bg-gray-200 rounded-md px-3 py-1">
+          <TbManualGearbox size={14} className="text-black mr-1" />
+          <span className="text-black font-medium text-sm">
+            {transmissionInfo.includes("Manual") ? "Manual" : 
+             transmissionInfo.includes("Automatic") ? "Automatic" : "N/A"}
+          </span>
+        </div>
+      </div>
+    );
+  };
 
   return (
     <>
-      {/* ✅ Dynamic SEO Tags */}
+      {/* Dynamic SEO Tags */}
       <Helmet>
         <title>Available Cars in {city} | Zymo</title>
         <meta
@@ -578,7 +566,7 @@ const Listing = ({ title }) => {
           href={`https://zymo.app/self-drive-car-rentals/${city}/cars`}
         />
       </Helmet>
-      <div className="h-100% min-w-screen bg-grey-900 text-white flex flex-col items-center px-4 py-6">
+      <div className="h-100% min-w-screen bg-grey-900 text-white flex flex-col items-center px-8 py-10">
         <header className="w-full max-w-8xl flex flex-col md:flex-row justify-between items-center mb-4 text-center md:text-left">
           <div className="flex items-center gap-2 text-white text-lg">
             <button
@@ -589,7 +577,7 @@ const Listing = ({ title }) => {
             </button>
             <span>{tripDuration}</span>
           </div>
-          <div className="location-container ">
+          <div className="location-container">
             <span className="text-[#faffa4] text-lg flex items-center gap-1 mt-2 md:mt-0">
               <FiMapPin className="text-[#faffa4] w-5 h-5" />
               {address}
@@ -602,10 +590,10 @@ const Listing = ({ title }) => {
         </div>
 
         {/* Filters */}
-        <div className="flex flex-wrap justify-start gap-2 w-full max-w-4xl mb-6 items-center ">
+        <div className="flex flex-wrap justify-start gap-2 w-full max-w-4xl mb-6 items-center">
           <button
             onClick={resetFilters}
-            className="bg-[#404040] h-10 text-white px-4 py-2 rounded-lg text-lg  w-full sm:w-auto  font-semibold"
+            className="bg-[#404040] h-10 text-white px-4 py-2 rounded-lg text-lg w-full sm:w-auto font-semibold"
           >
             All
           </button>
@@ -630,7 +618,6 @@ const Listing = ({ title }) => {
                 value={priceRange}
                 onChange={(e) => setPriceRange(e.target.value)}
               >
-                {/* <option value="" disabled hidden>Price Range</option> */}
                 <option value="lowToHigh">Low - High</option>
                 <option value="highToLow">High - Low</option>
               </select>
@@ -646,8 +633,6 @@ const Listing = ({ title }) => {
                 onChange={(e) => setSeats(e.target.value)}
               >
                 <option value="">Seats</option>
-                <option value="3 Seats">3 Seats</option>
-                <option value="4 Seats">4 Seats</option>
                 <option value="5 Seats">5 Seats</option>
                 <option value="6 Seats">6 Seats</option>
                 <option value="7 Seats">7 Seats</option>
@@ -680,10 +665,7 @@ const Listing = ({ title }) => {
             </button>
 
             <button
-              onClick={() => {
-                // applyFilters();
-                applyFiltersToGroupedCars();
-              }}
+              onClick={applyFilters}
               className="bg-[#faffa4] px-4 py-2 rounded-lg text-black text-lg lg:text-base font-semibold h-10 w-[calc(50%-0.25rem)] sm:w-[140px]"
             >
               Apply
@@ -691,28 +673,61 @@ const Listing = ({ title }) => {
           </div>
         </div>
 
-        {/* <div className="mb-6">
-          <h1 className="text-[#eeff87] text-3xl font-bold">
-            Choose from {carCount} cars
-          </h1>
-        </div> */}
-
         {/* Car Grid */}
         {loading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-2 gap-5 w-full max-w-6xl">
-            {[...Array(6)].map((_, index) => (
-              <div
-                key={index}
-                className="bg-[#404040] p-4 rounded-lg shadow-lg animate-pulse"
-              >
-                <div className="w-full h-40 bg-gray-700 rounded-lg"></div>
-                <div className="mt-3 h-5 bg-gray-600 w-3/4 rounded"></div>
-                <div className="mt-2 h-4 bg-gray-500 w-1/2 rounded"></div>
-              </div>
-            ))}
+          <>
+            <h3 className="text-[#faffa4] text-lg text-center">We compare multiple sites to get you the best deal</h3>
+
+            <div 
+              className="sm:max-w-[40rem] max-w-80"
+              style={{
+                maskImage:
+                  "linear-gradient(to right, transparent 0%, black 10%, black 90%, transparent 100%)",
+                WebkitMaskImage:
+                  "linear-gradient(to right, transparent 0%, black 10%, black 90%, transparent 100%)",
+              }}  
+            >
+              <Marquee autoFill>
+                <div className="flex space-x-10 md:space-x-10 my-5 mr-10 md:mr-10">
+                  {brands.map((brand, index) => (
+                    <div
+                      key={index}
+                      className="flex items-center justify-center rounded-full bg-white w-16 h-16"
+                    >
+                      <img 
+                        src={brand.logo}
+                        alt={brand.name}
+                        className="w-12 h-8"
+                      />
+                    </div>
+                  ))}
+                </div>
+              </Marquee>
+            </div>   
+
+            <div className="grid grid-cols-1 lg:w-[56%] items-start gap-5">
+              {[...Array(6)].map((_, index) => (
+                <div
+                  key={index}
+                  className="bg-[#404040] p-4 rounded-lg shadow-lg animate-pulse"
+                >
+                  <div className="w-full h-40 bg-gray-700 rounded-lg"></div>
+                  <div className="mt-3 h-5 bg-gray-600 w-3/4 rounded"></div>
+                  <div className="mt-2 h-4 bg-gray-500 w-1/2 rounded"></div>
+                </div>
+              ))}
+            </div>
+          </>
+        ) : filteredList.length === 0 ? (
+          <div className="text-center text-white mt-10">
+            {filtersApplied ? (
+              <p className="text-lg">No cars available for the specified filters. Try searching others.</p>
+            ) : (
+              <p className="text-lg">Please apply filters or check availability later.</p>
+            )}
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-2 gap-4 w-full max-w-5xl items-start">
+          <div className="grid grid-cols-1 lg:w-[56%] items-start gap-5">
             {filteredList.map((car) => {
               const uniqueKey = `${car.name}-${car.brand}`;
               return (
@@ -731,9 +746,7 @@ const Listing = ({ title }) => {
                     <div className="mt-3 flex justify-between items-start">
                       <div>
                         <h3 className="text-md font-semibold">{car.name}</h3>
-                        <p className="text-sm text-gray-400">
-                          {car.cars[0].options[2]}
-                        </p>
+                        <CarSpecBadges options={car.cars[0].options} />
                         <div className="img-container">
                           <img
                             loading="lazy"
@@ -744,26 +757,19 @@ const Listing = ({ title }) => {
                         </div>
                       </div>
                       <div className="text-right">
+                        <p className="text-sm text-[#faffa4]">
+                          {car.cars.length} deal{car.cars.length > 1 ? "s" : ""} available
+                        </p>
                         <p className="text-sm text-gray-400">Starts at</p>
                         <p className="text-sm text-gray-500 !line-through !decoration-2">
-                          {
-                            car.cars.sort((a, b) => {
-                              const fareA = parseInt(
-                                a.fare.replace(/[^0-9]/g, "")
-                              );
-                              const fareB = parseInt(
-                                b.fare.replace(/[^0-9]/g, "")
-                              );
-                              return fareA - fareB;
-                            })[0].inflated_fare
-                          }
+                          {car.cars[0].inflated_fare}
                         </p>
-                        <p className="font-semibold text-md">{car.fare}</p>
+                        <p className="font-semibold text-lg">{car.fare}</p>
                         <p className="text-[10px] text-gray-400">(GST incl)</p>
                       </div>
                     </div>
                     <div className="flex justify-between items-center mt-3">
-                      <p className="text-sm text-[#faffa4]">
+                      <p className="text-sm text-[#f  text-[#faffa4]">
                         {car.cars[0].location_est}
                       </p>
                       <button
@@ -798,6 +804,7 @@ const Listing = ({ title }) => {
                           <h3 className="text-xl font-semibold mb-1">
                             {car.name}
                           </h3>
+                          <CarSpecBadges options={car.cars[0].options} />
                         </div>
                         <div>
                           <img
@@ -806,9 +813,6 @@ const Listing = ({ title }) => {
                             alt={car.cars[0].source}
                             className="h-5 rounded-sm bg-white p-1 text-black"
                           />
-                          <p className="text-xs text-gray-400 ">
-                            {car.cars[0].options[2]}
-                          </p>
                           <p className="text-xs text-[#faffa4]">
                             {car.cars[0].location_est}
                           </p>
@@ -828,11 +832,14 @@ const Listing = ({ title }) => {
                       {/* Right Side Info */}
                       <div className="flex flex-col justify-between text-right w-1/4 border-l border-gray-400 pl-4">
                         <div>
+                          <p className="text-sm text-[#faffa4]">
+                            {car.cars.length} deal{car.cars.length > 1 ? "s" : ""} available
+                          </p>
                           <p className="text-xs text-gray-400">Starts at</p>
                           <p className="text-md text-gray-400 !line-through !decoration-[2px]">
                             {car.cars[0].inflated_fare}
                           </p>
-                          <p className="text-xl font-semibold text-white">
+                          <p className="text-2xl font-semibold text-white">
                             {car.fare}
                           </p>
                           <p className="text-xs text-gray-400">(GST incl)</p>
@@ -923,11 +930,7 @@ const Listing = ({ title }) => {
                                     goToDetails(individualCar);
                                   } else if (activeTab === "subscribe") {
                                     goToDetails(individualCar);
-                                  }
-                                  //  else if (individualCar.source.toLowerCase() === "karyana" && !individualCar.rateBasisFare) {
-                                  //   goToDetails(individualCar); // Direct to booking for Karyana cars without packages
-                                  // }
-                                  else if (individualCar.source === "Karyana") {
+                                  } else if (individualCar.source === "Karyana") {
                                     goToPackages(car); // Show packages for Karyana cars with multiple packages
                                   } else {
                                     goToPackages(individualCar);
@@ -952,4 +955,5 @@ const Listing = ({ title }) => {
     </>
   );
 };
+
 export default Listing;
