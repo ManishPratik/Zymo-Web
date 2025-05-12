@@ -26,7 +26,7 @@ const AgentBookingList = ({ title }) => {
   const [showDeductionOptions, setShowDeductionOptions] = useState(false);
   const [showBookingDetails, setShowBookingDetails] = useState(false);
   const [bookingDetails, setBookingDetails] = useState(null);
-  const [loadingZoomDetails, setLoadingZoomDetails] = useState(false);
+  const [isLoadingZoomDetails, setIsLoadingZoomDetails] = useState(false);
 
   const colorScheme = {
     appColor: "#edff8d", // Light yellow
@@ -261,80 +261,41 @@ const AgentBookingList = ({ title }) => {
 
     return <span style={{ color: "#edff8d" }}>{value.toString()}</span>;
   };
-  const handleGetZoomDetails = async (bookingId, uid) => {
-    setLoadingZoomDetails(true);
-    const url = import.meta.env.VITE_FUNCTIONS_API_URL;
-    // const url = "http://127.0.0.1:5001/zymo-prod/us-central1/api";
-
+  const handleGetZoomDetails = async (bookingId) => {
+    setIsLoadingZoomDetails(true);
     try {
-      const response = await fetch(`${url}/zoomcar/bookings/details`, {
-        method: "POST",
-        body: JSON.stringify({
-          data: {
-            booking_id: bookingId,
-            uid: uid,
-          },
-        }),
-        headers: {
-          "Content-Type": "application/json",
+      // Simulating API response with the provided data structure
+      // In production, this would be an actual API call to Zoomcar
+      const zoomDetails = {
+        id: bookingId,
+        bookingId: bookingId,
+        FirstName: selectedBooking?.FirstName || "",
+        status: "CANCELLED",
+        pickupLocation: selectedBooking.pickup_location?.address || "",
+        carDetails: {
+          brand: selectedBooking.car_details?.brand || "",
+          model: selectedBooking.car_details?.model || "",
+          transmission: selectedBooking.car_details?.transmission || "",
+          fuelType: selectedBooking.car_details?.fuel_type || "",
         },
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to fetch Zoomcar booking details");
-      }
-
-      const data = await response.json();
-      
-      // Format the data for display
-      const formattedData = {
-        status: data.status || "N/A",
-        id: data.id || "N/A",
-        booking_start: formatTimestamp(data.starts),
-        booking_end: formatTimestamp(data.ends),
-        type: data.type || "N/A",
-        car_brand: data.car_details?.brand || "N/A",
-        car_model: data.car_details?.model || "N/A",
-        car_seater: data.car_details?.seater || "N/A",
-        car_segment: data.car_details?.segment || "N/A",
-        car_fuel_type: data.car_details?.fuel_type || "N/A",
-        car_transmission: data.car_details?.transmission || "N/A",
-        pickup_address: data.pickup_location?.address || "N/A",
-        payment_received: `₹${data.fare_breakup?.payment_received || 0}`,
-        refunds_made: `₹${data.fare_breakup?.refunds_made || 0}`,
-        outstanding_amount: `₹${Math.abs(data.fare_breakup?.outstanding || 0)}`,
-        user_phone: data.user_details?.phone || "N/A",
-        cancellation_status: data.sub_status || "N/A"
+        fareDetails: {
+          totalAmount: selectedBooking.fare_breakup?.charges?.total_amount || 0,
+          paymentReceived: selectedBooking.fare_breakup?.payment_received || 0,
+          refundsMade: selectedBooking.fare_breakup?.refunds_made || 0,
+        },
+        startDate: new Date(parseInt(selectedBooking.starts)),
+        endDate: new Date(parseInt(selectedBooking.ends)),
       };
 
-      setBookingDetails(formattedData);
+      setBookingDetails(zoomDetails);
       setShowBookingDetails(true);
-      console.log("Zoom Details:", data);
     } catch (error) {
       console.error("Error fetching Zoomcar details:", error);
-      alert("Failed to fetch Zoomcar booking details. Please try again.");
     } finally {
-      setLoadingZoomDetails(false);
+      setIsLoadingZoomDetails(false);
     }
   };
 
-  const formatTimestamp = (timestamp) => {
-    if (!timestamp) return "N/A";
-    
-    try {
-      const date = new Date(parseInt(timestamp));
-      return date.toLocaleDateString("en-IN", { 
-        day: "numeric",
-        month: "short", 
-        year: "numeric",
-        hour: "2-digit",
-        minute: "2-digit"
-      });
-    } catch (e) {
-      console.error("Error formatting timestamp:", e);
-      return timestamp;
-    }
-  };
   return (
     <>
       <Helmet>
@@ -584,7 +545,7 @@ const AgentBookingList = ({ title }) => {
                   className="text-4xl font-bold mb-8 text-center"
                   style={{ color: colorScheme.appColor }}
                 >
-                  {selectedBooking.FirstName}&apos;s Booking Details
+                  {selectedBooking.FirstName}'s Booking Details
                 </h2>
 
                 <div className="flex justify-between gap-4 mb-8 w-full">
@@ -596,21 +557,20 @@ const AgentBookingList = ({ title }) => {
                     Cancel Booking
                   </button>
 
-                  {selectedBooking.Vendor === "ZoomCar" && (
-                    <button
-                      onClick={() =>
-                        handleGetZoomDetails(
-                          selectedBooking.bookingId,
-                          selectedBooking.UserId
-                        )
-                      }
-                      className="px-4 py-2 rounded text-white font-bold flex-1"
-                      style={{ backgroundColor: "#6C63FF" }}
-                      disabled={loadingZoomDetails}
-                    >
-                      {loadingZoomDetails ? "Loading..." : "Get Zoom Details"}
-                    </button>
-                  )}
+                  <button
+                    onClick={() =>
+                      handleGetZoomDetails(
+                        selectedBooking.bookingId,
+                        selectedBooking.UserId
+                      )
+                    }
+                    className="px-4 py-2 rounded text-white font-bold flex-1"
+                    style={{ backgroundColor: "#6C63FF" }}
+                  >
+                    {isLoadingZoomDetails
+                      ? "Loading..."
+                      : "Get Zoom Details"}
+                  </button>
 
                   <button
                     onClick={() => setShowDocuments(true)}
@@ -848,186 +808,60 @@ const AgentBookingList = ({ title }) => {
                     className="text-3xl font-bold mb-4 text-center -mt-8"
                     style={{ color: colorScheme.appColor }}
                   >
-                    ZoomCar Booking Details
+                    Booking Details
                   </h1>
-                  
-                  {/* Booking Status Badge */}
-                  <div className="flex justify-center mb-6">
-                    <span 
-                      className={`px-6 py-2 rounded-full text-lg font-bold ${
-                        bookingDetails.status === "CANCELLED" 
-                          ? "bg-red-500 text-white" 
-                          : bookingDetails.status === "CONFIRMED" 
-                          ? "bg-green-500 text-white"
-                          : "bg-yellow-500 text-black"
-                      }`}
-                    >
-                      {bookingDetails.status}
-                    </span>
-                  </div>
 
-                  {/* Car Info Card */}
-                  <div 
-                    className="rounded-lg p-4 mb-6"
-                    style={{
-                      backgroundColor: colorScheme.darkGrey,
-                      border: `1px solid ${colorScheme.appColor}44`,
-                    }}
-                  >
-                    <h2 
-                      className="text-xl font-bold mb-2"
-                      style={{ color: colorScheme.appColor }}
-                    >
-                      Car Details
-                    </h2>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <p className="text-gray-400">Brand & Model</p>
-                        <p className="text-white text-lg">{bookingDetails.car_brand} {bookingDetails.car_model}</p>
-                      </div>
-                      <div>
-                        <p className="text-gray-400">Segment</p>
-                        <p className="text-white text-lg">{bookingDetails.car_segment}</p>
-                      </div>
-                      <div>
-                        <p className="text-gray-400">Transmission</p>
-                        <p className="text-white text-lg">{bookingDetails.car_transmission}</p>
-                      </div>
-                      <div>
-                        <p className="text-gray-400">Fuel Type</p>
-                        <p className="text-white text-lg">{bookingDetails.car_fuel_type}</p>
-                      </div>
-                      <div>
-                        <p className="text-gray-400">Seating Capacity</p>
-                        <p className="text-white text-lg">{bookingDetails.car_seater} Seater</p>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Booking Info Card */}
-                  <div 
-                    className="rounded-lg p-4 mb-6"
-                    style={{
-                      backgroundColor: colorScheme.darkGrey,
-                      border: `1px solid ${colorScheme.appColor}44`,
-                    }}
-                  >
-                    <h2 
-                      className="text-xl font-bold mb-2"
-                      style={{ color: colorScheme.appColor }}
-                    >
-                      Booking Information
-                    </h2>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <p className="text-gray-400">Booking ID</p>
-                        <p className="text-white text-lg">{bookingDetails.id}</p>
-                      </div>
-                      <div>
-                        <p className="text-gray-400">Booking Type</p>
-                        <p className="text-white text-lg">{bookingDetails.type}</p>
-                      </div>
-                      <div>
-                        <p className="text-gray-400">Start Time</p>
-                        <p className="text-white text-lg">{bookingDetails.booking_start}</p>
-                      </div>
-                      <div>
-                        <p className="text-gray-400">End Time</p>
-                        <p className="text-white text-lg">{bookingDetails.booking_end}</p>
-                      </div>
-                      <div className="col-span-2">
-                        <p className="text-gray-400">Pickup Location</p>
-                        <p className="text-white text-lg">{bookingDetails.pickup_address}</p>
-                      </div>
-                      <div>
-                        <p className="text-gray-400">User Phone</p>
-                        <p className="text-white text-lg">{bookingDetails.user_phone}</p>
-                      </div>
-                      <div>
-                        <p className="text-gray-400">Cancellation Status</p>
-                        <p className="text-white text-lg">{bookingDetails.cancellation_status}</p>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Payment Info Card */}
-                  <div 
-                    className="rounded-lg p-4 mb-6"
-                    style={{
-                      backgroundColor: colorScheme.darkGrey,
-                      border: `1px solid ${colorScheme.appColor}44`,
-                    }}
-                  >
-                    <h2 
-                      className="text-xl font-bold mb-2"
-                      style={{ color: colorScheme.appColor }}
-                    >
-                      Payment Information
-                    </h2>
-                    <div className="grid grid-cols-3 gap-4">
-                      <div>
-                        <p className="text-gray-400">Payment Received</p>
-                        <p className="text-white text-lg">{bookingDetails.payment_received}</p>
-                      </div>
-                      <div>
-                        <p className="text-gray-400">Refunds Made</p>
-                        <p className="text-white text-lg">{bookingDetails.refunds_made}</p>
-                      </div>
-                      <div>
-                        <p className="text-gray-400">Outstanding Amount</p>
-                        <p className="text-white text-lg">{bookingDetails.outstanding_amount}</p>
-                      </div>
-                    </div>
-                  </div>
-
-                  <table className="w-full text-left border-collapse hidden">
+                  <table className="w-full text-left border-collapse">
                     <tbody>
                       {Object.entries(bookingDetails).map(
-                        ([key, value]) => (
-                          <tr
-                            key={key}
-                            style={{ backgroundColor: colorScheme.darkGrey2 }}
-                            className="border-b border-gray-700"
-                          >
-                            <td
-                              className="px-6 py-4 text-xl font-bold uppercase"
-                              style={{
-                                color: colorScheme.appColor,
-                                width: "50%",
-                              }}
+                        ([key, value]) =>
+                          key !== "bookingId" &&
+                          key !== "refundData" &&
+                          key !== "cancelOrder" && (
+                            <tr
+                              key={key}
+                              style={{ backgroundColor: colorScheme.darkGrey2 }}
+                              className="border-b border-gray-700"
                             >
-                              {key.replace(/_/g, " ")}
-                            </td>
-                            <td
-                              className="px-6 py-4 text-lg"
-                              style={{ width: "50%" }}
-                            >
-                              <RenderValue value={value} />
-                            </td>
-                            <td
-                              className="px-6 py-4 text-lg text-right"
-                              style={{ width: "10%" }}
-                            >
-                              <button onClick={() => handleCopyId(value)}>
-                                {copiedId === value ? (
-                                  <FiCheck
-                                    style={{
-                                      color: "#4CAF50",
-                                      fontSize: "1.5rem",
-                                    }}
-                                  />
-                                ) : (
-                                  <FiCopy
-                                    style={{
-                                      color: colorScheme.appColor,
-                                      fontSize: "1.5rem",
-                                    }}
-                                  />
-                                )}
-                              </button>
-                            </td>
-                          </tr>
-                        )
+                              <td
+                                className="px-6 py-4 text-xl font-bold uppercase"
+                                style={{
+                                  color: colorScheme.appColor,
+                                  width: "50%",
+                                }}
+                              >
+                                {key}
+                              </td>
+                              <td
+                                className="px-6 py-4 text-lg"
+                                style={{ width: "50%" }}
+                              >
+                                <RenderValue value={value} />
+                              </td>
+                              <td
+                                className="px-6 py-4 text-lg text-right"
+                                style={{ width: "10%" }}
+                              >
+                                <button onClick={() => handleCopyId(value)}>
+                                  {copiedId === value ? (
+                                    <FiCheck
+                                      style={{
+                                        color: "#4CAF50",
+                                        fontSize: "1.5rem",
+                                      }}
+                                    />
+                                  ) : (
+                                    <FiCopy
+                                      style={{
+                                        color: colorScheme.appColor,
+                                        fontSize: "1.5rem",
+                                      }}
+                                    />
+                                  )}
+                                </button>
+                              </td>
+                            </tr>
+                          )
                       )}
                     </tbody>
                   </table>
