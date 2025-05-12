@@ -154,7 +154,7 @@ export const fetchFirebaseCars = async (city, tripDurationHours) => {
       city,
       tripDurationHours
     );
-    } 
+    
 
     if (testKosCollections && testKosCollections.length > 0) {
       console.log(`Found ${testKosCollections.length} testKos collection cars for ${city}`);
