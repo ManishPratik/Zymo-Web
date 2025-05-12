@@ -202,7 +202,7 @@ const ChatBotModal = ({ forApp }) => {
                     <div className="text-white font-bold text-1xl text-center mt-6 mb-1">Frequently asked Questions</div>
 
                     <div className="popular-prompts" style={{ display: 'flex', gap: '10px', justifyContent: 'center', alignItems: 'stretch', flexWrap: 'wrap' }}>
-                        {['How can I book a car with Zymo?', 'What about the fuel?', 'What is your cancellation policy?'].map((prompt, index) => (
+                        {['How to book a car with Zymo?', 'Is fuel included in the rental price?', 'What is your cancellation policy?'].map((prompt, index) => (
                             <button
                                 className="popular-prompt-text"
                                 key={index}
