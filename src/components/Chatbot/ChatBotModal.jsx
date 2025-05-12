@@ -8,6 +8,7 @@ import Modal from 'react-bootstrap/Modal';
 import { useNavigate } from 'react-router-dom';
 import zymo3 from './images/zymo3.png';
 import promptContent from './Prompt/botprompt';
+import faqs from './FAQs'
 const ChatBotModal = ({ forApp }) => {
     const [chatHistory, setChatHistory] = useState([]);
     const [showRelatedQuestions, setShowRelatedQuestions] = useState(false);
@@ -23,6 +24,26 @@ const ChatBotModal = ({ forApp }) => {
 
     const handleClose = () => setShow(false);
     const handleShow = () => setShow(true);
+
+    const getSimilarity = (a, b) => {
+        a = a.toLowerCase();
+        b = b.toLowerCase();
+        const common = a.split(' ').filter(word => b.includes(word)).length;
+        return common / Math.max(a.split(' ').length, b.split(' ').length);
+    };
+    
+    const getMatchingFAQ = (userInput, threshold = 0.5) => {
+        let bestMatch = null;
+        let highestScore = 0;
+        for (const faq of faqs) {
+            const score = getSimilarity(userInput, faq.question);
+            if (score > highestScore && score >= threshold) {
+                bestMatch = faq;
+                highestScore = score;
+            }
+        }
+        return bestMatch;
+    };
 
     useEffect(() => {
         if (apiKey) {
@@ -50,6 +71,15 @@ const ChatBotModal = ({ forApp }) => {
         const userMessage = { role: 'user', parts: [{ text: userInput }] };
         setChatHistory((prev) => [...prev, userMessage]);
         setLoading(true);
+
+        const matchedFAQ = getMatchingFAQ(userInput);
+        if(matchedFAQ) {
+            const botResponse = {role: 'bot', parts:[{ text : matchedFAQ.answer}] };
+            setChatHistory((prev) => [...prev, botResponse]);
+            setUserInput('');
+            setLoading(false);
+            return;
+        }
 
         try {
             const model = genAI.getGenerativeModel({
@@ -172,7 +202,7 @@ const ChatBotModal = ({ forApp }) => {
                     <div className="text-white font-bold text-1xl text-center mt-6 mb-1">Frequently asked Questions</div>
 
                     <div className="popular-prompts" style={{ display: 'flex', gap: '10px', justifyContent: 'center', alignItems: 'stretch', flexWrap: 'wrap' }}>
-                        {['How can I book a car with Zymo?', 'What about the fuel?', 'What is your cancellation policy?'].map((prompt, index) => (
+                        {['How to book a car with Zymo?', 'Is fuel included in the rental price?', 'What is your cancellation policy?'].map((prompt, index) => (
                             <button
                                 className="popular-prompt-text"
                                 key={index}
@@ -233,10 +263,21 @@ const ChatBotModal = ({ forApp }) => {
                                                 </button>
                                             ) : null
                                         ) : (
-                                            <span dangerouslySetInnerHTML={{ __html: messageText }} />
+                                            // <span dangerouslySetInnerHTML={{ __html: messageText }} />
+                                            <span 
+                                                style={{ whiteSpace: 'pre-line' }}
+                                                dangerouslySetInnerHTML={{__html: messageText.replace(/\[TAB\]/g, '<span style="display:inline-block;width:2em;"></span>')
+                                                }}
+                                            />
                                         )
                                     ) : (
-                                        <span dangerouslySetInnerHTML={{ __html: messageText }} />
+                                        // <span dangerouslySetInnerHTML={{ __html: messageText }} />
+                                        <span 
+                                            style={{ whiteSpace: 'pre-line' }}
+                                            dangerouslySetInnerHTML={{__html: messageText.replace(/\[TAB\]/g, '<span style="display:inline-block;width:2em;"></span>')
+                                            }}
+                                        />
+                                        // <span style={{ whiteSpace: 'pre-line' }}>{messageText}</span>
                                     )}
                                 </div>
                             );
