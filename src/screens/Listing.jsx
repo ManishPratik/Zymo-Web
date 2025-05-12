@@ -249,7 +249,7 @@ const Listing = ({ title }) => {
     //     return;
     //   }
     // }
-
+    
     fetchVendorDetails();
 
     const search = async () => {
@@ -401,12 +401,7 @@ const Listing = ({ title }) => {
     search();
   }, [city, startDate, endDate, activeTab, lat, lng, tripDurationHours]);
 
-  // // Filter functionality
-  // useEffect(() => {
-  //   setFilteredList(clubbedCarList);
-  // }, [clubbedCarList]);
-
-  // New Filter functionality
+  // Filter functionality
   useEffect(() => {
     applyFiltersToGroupedCars();
   }, [clubbedCarList, priceRange, seats, fuel, transmission]);
@@ -451,14 +446,16 @@ const Listing = ({ title }) => {
           return null;
         }
 
-        // Recalculate minimum fare for the filtered cars
-        const minFare = filteredCars.reduce((min, car) => {
-          const currentFare = parseInt(car.fare.replace(/[^0-9]/g, ""));
-          const minFareNum = parseInt(min.replace(/[^0-9]/g, ""));
-          return currentFare < minFareNum ? car.fare : min;
-        }, filteredCars[0].fare);
+        // Sort filtered cars by fare
+        const sortedFilteredCars = [...filteredCars].sort((a, b) => {
+          const fareA = parseInt(a.fare.replace(/[^0-9]/g, ""));
+          const fareB = parseInt(b.fare.replace(/[^0-9]/g, ""));
+          return fareA - fareB;
+        });
 
-        const minFareCar = filteredCars.find((car) => car.fare === minFare);
+        // The first car in sorted list has the minimum fare
+        const minFareCar = sortedFilteredCars[0];
+        const minFare = minFareCar.fare;
         const seat =
           minFareCar.options.find((opt) => opt.includes("Seats")) || "Unknown";
 
@@ -467,7 +464,7 @@ const Listing = ({ title }) => {
           brand: group.brand,
           seat: seat,
           fare: minFare,
-          cars: filteredCars,
+          cars: sortedFilteredCars,
         };
       })
       .filter((group) => group !== null);
@@ -498,6 +495,7 @@ const Listing = ({ title }) => {
       noCarsFound();
     }
   };
+
   const handleSelectedCar = (label) => {
     trackEvent("Car List Section", "Rent Section Car", label);
   };
@@ -549,29 +547,6 @@ const Listing = ({ title }) => {
       `Car ${car.name} - Karyana: ${isKaryana}, Has packages: ${hasPackages}, Trip hours: ${tripDurationHours}`
     );
 
-    // if (isKaryana && !hasPackages) {
-    //   console.log("Karyana car without packages - directing to booking details");
-    //   // Direct to booking details for Karyana cars without packages
-    //   navigate(`/self-drive-car-rentals/${city}/cars/booking-details`, {
-    //     state: {
-    //       startDate,
-    //       endDate,
-    //       car,
-    //     },
-    //   });
-    // } else if (isKaryana && hasPackages) {
-    //   console.log("Karyana car with packages - directing to package selection");
-    //   console.log("Packages:", car.rateBasisFare);
-    //   // For Karyana cars with multiple packages, show package selection like MyChoize
-    //   navigate(`/self-drive-car-rentals/${city}/cars/packages`, {
-    //     state: {
-    //       startDate,
-    //       endDate,
-    //       car,
-    //     },
-    //   });
-    // } else {
-    // Normal flow for other vendors (Mychoize, etc.)
     navigate(`/self-drive-car-rentals/${city}/cars/packages`, {
       state: {
         startDate,
@@ -579,21 +554,7 @@ const Listing = ({ title }) => {
         car,
       },
     });
-    // }
   };
-
-  // useEffect(() => {
-  //   const timer = setTimeout(() => {
-  //     setPriceRange("lowToHigh"); // set Low-High
-  //     applyFiltersToGroupedCars(); // apply filter after setting
-
-  //     setFilteredList(clubbedCarList);
-
-  //     console.log("Auto-applied Low-High after 2 seconds");
-  //   }, 2000); // 2000ms = 2 seconds
-
-  //   return () => clearTimeout(timer); // cleanup
-  // }, []);
 
   return (
     <>
@@ -666,7 +627,6 @@ const Listing = ({ title }) => {
                 value={priceRange}
                 onChange={(e) => setPriceRange(e.target.value)}
               >
-                {/* <option value="" disabled hidden>Price Range</option> */}
                 <option value="lowToHigh">Low - High</option>
                 <option value="highToLow">High - Low</option>
               </select>
@@ -717,7 +677,6 @@ const Listing = ({ title }) => {
 
             <button
               onClick={() => {
-                // applyFilters();
                 applyFiltersToGroupedCars();
               }}
               className="bg-[#faffa4] px-4 py-2 rounded-lg text-black text-lg lg:text-base font-semibold h-10 w-[calc(50%-0.25rem)] sm:w-[140px]"
@@ -727,65 +686,53 @@ const Listing = ({ title }) => {
           </div>
         </div>
 
-        {/* <div className="mb-6">
-          <h1 className="text-[#eeff87] text-3xl font-bold">
-            Choose from {carCount} cars
-          </h1>
-        </div> */}
-
         {/* Car Grid */}
         {loading ? (
           <>
-          <h3 className="text-[#faffa4] text-lg text-center">We compare multiple sites to get you the best deal</h3>
+            <h3 className="text-[#faffa4] text-lg text-center">We compare multiple sites to get you the best deal</h3>
 
-          <div 
-            className="sm:max-w-[40rem] max-w-80"
-            style={{
-                        maskImage:
-                            "linear-gradient(to right, transparent 0%, black 10%, black 90%, transparent 100%)",
-                        WebkitMaskImage:
-                            "linear-gradient(to right, transparent 0%, black 10%, black 90%, transparent 100%)",
-                    }}  
+            <div 
+              className="sm:max-w-[40rem] max-w-80"
+              style={{
+                maskImage:
+                  "linear-gradient(to right, transparent 0%, black 10%, black 90%, transparent 100%)",
+                WebkitMaskImage:
+                  "linear-gradient(to right, transparent 0%, black 10%, black 90%, transparent 100%)",
+              }}  
             >
-            <Marquee
-              autoFill
-            >
-              <div
-              className="flex space-x-10 md:space-x-10 my-5 mr-10 md:mr-10"
-            >
-                {
-                brands.map((brand, index) => (
-                  <div
-                    key={index}
-                    className="flex items-center justify-center rounded-full bg-white w-16 h-16"
-                  >
-                  <img 
-                    src={brand.logo}
-                    alt={brand.name}
-                    className="w-12 h-8"
-                  />
-                  </div>
-                ))
-              }
+              <Marquee autoFill>
+                <div className="flex space-x-10 md:space-x-10 my-5 mr-10 md:mr-10">
+                  {brands.map((brand, index) => (
+                    <div
+                      key={index}
+                      className="flex items-center justify-center rounded-full bg-white w-16 h-16"
+                    >
+                      <img 
+                        src={brand.logo}
+                        alt={brand.name}
+                        className="w-12 h-8"
+                      />
+                    </div>
+                  ))}
+                </div>
+              </Marquee>
+            </div>   
+
+            <div className="grid grid-cols-1 lg:w-[56%] items-start gap-5">
+              {[...Array(6)].map((_, index) => (
+                <div
+                  key={index}
+                  className="bg-[#404040] p-4 rounded-lg shadow-lg animate-pulse"
+                >
+                  <div className="w-full h-40 bg-gray-700 rounded-lg"></div>
+                  <div className="mt-3 h-5 bg-gray-600 w-3/4 rounded"></div>
+                  <div className="mt-2 h-4 bg-gray-500 w-1/2 rounded"></div>
+                </div>
+              ))}
             </div>
-            </Marquee>
-          </div>   
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-2 gap-5 w-full max-w-6xl">
-            {[...Array(6)].map((_, index) => (
-              <div
-                key={index}
-                className="bg-[#404040] p-4 rounded-lg shadow-lg animate-pulse"
-              >
-                <div className="w-full h-40 bg-gray-700 rounded-lg"></div>
-                <div className="mt-3 h-5 bg-gray-600 w-3/4 rounded"></div>
-                <div className="mt-2 h-4 bg-gray-500 w-1/2 rounded"></div>
-              </div>
-            ))}
-          </div>
           </>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-2 gap-4 w-full max-w-5xl items-start">
+          <div className="grid grid-cols-1 lg:w-[56%] items-start gap-5">
             {filteredList.map((car) => {
               const uniqueKey = `${car.name}-${car.brand}`;
               return (
@@ -817,21 +764,14 @@ const Listing = ({ title }) => {
                         </div>
                       </div>
                       <div className="text-right">
+                        <p className="text-sm text-[#faffa4]">
+                          {car.cars.length} deal{car.cars.length > 1 ? "s" : ""} available
+                        </p>
                         <p className="text-sm text-gray-400">Starts at</p>
                         <p className="text-sm text-gray-500 !line-through !decoration-2">
-                          {
-                            car.cars.sort((a, b) => {
-                              const fareA = parseInt(
-                                a.fare.replace(/[^0-9]/g, "")
-                              );
-                              const fareB = parseInt(
-                                b.fare.replace(/[^0-9]/g, "")
-                              );
-                              return fareA - fareB;
-                            })[0].inflated_fare
-                          }
+                          {car.cars[0].inflated_fare}
                         </p>
-                        <p className="font-semibold text-md">{car.fare}</p>
+                        <p className="font-semibold text-lg">{car.fare}</p>
                         <p className="text-[10px] text-gray-400">(GST incl)</p>
                       </div>
                     </div>
@@ -901,11 +841,14 @@ const Listing = ({ title }) => {
                       {/* Right Side Info */}
                       <div className="flex flex-col justify-between text-right w-1/4 border-l border-gray-400 pl-4">
                         <div>
+                          <p className="text-sm text-[#faffa4]">
+                            {car.cars.length} deal{car.cars.length > 1 ? "s" : ""} available
+                          </p>
                           <p className="text-xs text-gray-400">Starts at</p>
                           <p className="text-md text-gray-400 !line-through !decoration-[2px]">
                             {car.cars[0].inflated_fare}
                           </p>
-                          <p className="text-xl font-semibold text-white">
+                          <p className="text-2xl font-semibold text-white">
                             {car.fare}
                           </p>
                           <p className="text-xs text-gray-400">(GST incl)</p>
@@ -996,11 +939,7 @@ const Listing = ({ title }) => {
                                     goToDetails(individualCar);
                                   } else if (activeTab === "subscribe") {
                                     goToDetails(individualCar);
-                                  }
-                                  //  else if (individualCar.source.toLowerCase() === "karyana" && !individualCar.rateBasisFare) {
-                                  //   goToDetails(individualCar); // Direct to booking for Karyana cars without packages
-                                  // }
-                                  else if (individualCar.source === "Karyana") {
+                                  } else if (individualCar.source === "Karyana") {
                                     goToPackages(car); // Show packages for Karyana cars with multiple packages
                                   } else {
                                     goToPackages(individualCar);
