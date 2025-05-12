@@ -156,7 +156,8 @@ body.chatbot-open {
 }
 
 .chat-message.bot {
-    background-color: #f1f1f1;
+    background-color: #000000;
+    color: #faffa4;
     align-self: flex-start;
 }
 
