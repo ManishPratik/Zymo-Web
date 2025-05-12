@@ -181,7 +181,7 @@ const CareerPanel = () => {
             <ul className="space-y-3">
               <li>
                 <button 
-                  onClick={() => setActiveTab("all")}
+                  onClick={() => {setActiveTab("all"); setShowDetails(false)}}
                   className="w-full text-left py-4 px-4 rounded-lg flex items-center text-lg font-medium"
                   style={{ 
                     backgroundColor: activeTab === "all" ? colors.darkGrey2 : 'transparent',
@@ -194,7 +194,7 @@ const CareerPanel = () => {
               </li>
               <li>
                 <button 
-                  onClick={() => setActiveTab("accepted")}
+                  onClick={() => {setActiveTab("accepted"); setShowDetails(false)}}
                   className="w-full text-left py-4 px-4 rounded-lg flex items-center text-lg font-medium"
                   style={{ 
                     backgroundColor: activeTab === "accepted" ? colors.darkGrey2 : 'transparent',
