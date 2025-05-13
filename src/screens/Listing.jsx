@@ -721,7 +721,7 @@ const Listing = ({ title }) => {
         ) : filteredList.length === 0 ? (
           <div className="text-center text-white mt-10">
             {filtersApplied ? (
-              <p className="text-lg">No cars available for the specified filters. Try searching others.</p>
+              <p className="text-lg">No cars available for the specified filters. Try searching other filters or press the refresh button 🔄.</p>
             ) : (
               <p className="text-lg">Please apply filters or check availability later.</p>
             )}
