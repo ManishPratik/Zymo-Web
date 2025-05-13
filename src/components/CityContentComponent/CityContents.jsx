@@ -18,6 +18,33 @@ import SiliguriContent from "./SiliguriContent";
 import SuratContent from "./SuratContent";
 import TrichyContent from "./TrichyContent";
 import VadodaraContent from "./VadodaraContent";
+import MangaloreContent from "./MangaloreContent";
+import DombivliContent from "./DombivliContent";
+import PalavaContent from "./PalavaContent";
+import BhubaneswarContent from "./BhubaneswarContent";
+import ChandigarhContent from "./ChandigarhContent";
+import KochiContent from "./KochiContent";
+import NashikContent from "./NashikContent";
+import MadhuraiContent from "./MaduraiContent";
+import GhaziabadContent from "./GhaziabadContent";
+import GoaContent from "./GoaContent";
+import BhopalContent from "./BhopalContent";
+import GuwahatiContent from "./GuwahatiContent";
+import CochinContent from "./CochinContent";
+import MysoreContent from "./MysoreContent";
+import ModinagarContent from "./ModinagarContent";
+import MuradnagarContent from "./MuradnagarContent";
+import GurugramContent from "./GurugramContent";
+import VijayawadaContent from "./VijayawadaContent";
+import UdaipurContent from "./UdaipurContent";
+import UdupiContent from "./UdupiContent";
+import RishikeshContent from "./RishikeshContent";
+import JodhpurContent from "./JodhpurContent";
+import HaridwarContent from "./HaridwarContent";
+import VizagContent from "./VizagContent";
+import NagpurContent from "./NagpurContent";
+import AhemdabadContent from "./AhmdabadContent";
+import MaduraiContent from "./MaduraiContent";
 
 const CityContent = ({ city }) => {
   switch (city.toLowerCase()) {
@@ -41,11 +68,11 @@ const CityContent = ({ city }) => {
       return <CoimbatoreContent />;
     case "indore":
       return <IndoreContent />;
-    case "jaipor":
+    case "jaipur":
       return <JaipurContent />;
     case "kolkata":
       return <KolkataContent />;
-    case "luckhnow":
+    case "lucknow":
       return <LucknowContent />;
     case "merrut":
       return <MerrutContent />;
@@ -61,7 +88,59 @@ const CityContent = ({ city }) => {
       return <TrichyContent />;
     case "vadodara":
       return <VadodaraContent />;
-   
+    case "mangalore":
+      return <MangaloreContent />;
+    case "dombivili":
+      return <DombivliContent />;
+    case "palava":
+      return <PalavaContent />;
+    case "bhubaneswar":
+      return <BhubaneswarContent/>;
+    case "chandigarh":
+      return <ChandigarhContent/>;
+    case "kochi":
+      return <KochiContent/>;
+    case "nashik":
+      return <NashikContent/>;
+    case "madurai":
+      return <MaduraiContent/>;
+    case "ghaziabad":
+      return <GhaziabadContent/>;
+    case "goa":
+      return <GoaContent/>;
+    case "bhopal":
+      return <BhopalContent/>;
+    case "guwahati":
+      return <GuwahatiContent/>;
+    case "cochin":
+      return <CochinContent/>;
+    case "mysore":
+      return <MysoreContent/>;
+    case "modinagar":
+      return <ModinagarContent/>;
+    case "muradnagar":
+      return <MuradnagarContent/>;
+    case "gurugram":
+      return <GurugramContent/>;
+    case "vijaywada":
+      return <VijayawadaContent/>;
+    case "udupi":
+      return <UdupiContent/>;
+    case "udaipur":
+      return <UdaipurContent/>;
+    case "rishikesh":
+      return <RishikeshContent/>;
+    case "jodhpur":
+      return <JodhpurContent/>;
+    case "haridwar":
+      return <HaridwarContent/>;
+    case "vizag":
+      return <VizagContent/>;
+    case "nagpur":
+      return <NagpurContent/>;
+    case "ahmedabad":
+      return <AhemdabadContent/>;
+
     default:
       return <div>No content available for {city}</div>;
   }
