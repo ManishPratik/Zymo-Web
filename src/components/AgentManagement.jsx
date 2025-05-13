@@ -9,6 +9,8 @@ import {
   FiCheck,
   FiUsers,
   FiFileText,
+  FiGift,
+  FiDownload,
 } from "react-icons/fi";
 
 const AgentBookingList = ({ title }) => {
@@ -179,7 +181,8 @@ const AgentBookingList = ({ title }) => {
     return (
       booking.bookingId?.toLowerCase().includes(searchLower) ||
       booking.UserId?.toLowerCase().includes(searchLower) ||
-      booking.FirstName?.toLowerCase().includes(searchLower)
+      booking.FirstName?.toLowerCase().includes(searchLower) ||
+      booking.PhoneNumber?.includes(searchQuery) 
     );
   });
 
@@ -390,6 +393,42 @@ const AgentBookingList = ({ title }) => {
             <FiUsers className="text-3xl mb-2" />
             <span className="text-xs font-bold text-center">Master Agent</span>
           </Link>
+           <Link
+            to="/add-voucher"
+            className={`w-full p-4 rounded-lg flex flex-col items-center justify-center gap-2 transition-all duration-300 hover:bg-gray-700 ${
+              location.pathname === "/agent-info" ? "bg-gray-700" : ""
+            }`}
+            style={{
+              color: colorScheme.appColor,
+              boxShadow:
+                location.pathname === "/agent-info"
+                  ? `0 0 10px ${colorScheme.appColor}33`
+                  : "none",
+            }}
+          >
+            <FiGift className="text-3xl mb-2" />
+            <span className="text-xs font-bold text-center">
+              Add Voucher
+            </span>
+          </Link>
+          <Link
+            to="/add-voucher"
+            className={`w-full p-4 rounded-lg flex flex-col items-center justify-center gap-2 transition-all duration-300 hover:bg-gray-700 ${
+              location.pathname === "/agent-info" ? "bg-gray-700" : ""
+            }`}
+            style={{
+              color: colorScheme.appColor,
+              boxShadow:
+                location.pathname === "/agent-info"
+                  ? `0 0 10px ${colorScheme.appColor}33`
+                  : "none",
+            }}
+          >
+            <FiDownload className="text-3xl mb-2" />
+            <span className="text-xs font-bold text-center">
+              download dump data
+            </span>
+          </Link>
         </nav>
         <style>
           {`
@@ -421,7 +460,7 @@ const AgentBookingList = ({ title }) => {
           <div className="mb-8 flex justify-between items-center">
             <input
               type="text"
-              placeholder="Search by Booking ID, User ID or Name"
+              placeholder="Search by Booking ID or phone number"
               className="px-4 py-2 rounded-lg"
               style={{
                 backgroundColor: colorScheme.darkGrey2,

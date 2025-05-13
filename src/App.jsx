@@ -43,6 +43,7 @@ import { Navigate } from "react-router-dom";
 import CookiesConsent from "./components/CookiesConsent.jsx";
 import AgentList from "./components/AgentList.jsx";
 import ChatBotModal from "./components/Chatbot/ChatBotModal.jsx";
+import AddVoucher from "./components/AddVoucher.jsx";
 const App = () => {
   return (
     <HelmetProvider>
@@ -207,6 +208,10 @@ const App = () => {
           <Route
             path="/master-agent"
             element={<MasterAgentLogin title="Master Agent Login - Zymo" />}
+          />
+           <Route
+            path="/add-voucher"
+            element={<AddVoucher title="add voucher - Zymo" />}
           />
           <Route
             path="/agent-list"
