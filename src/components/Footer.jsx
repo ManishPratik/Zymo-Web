@@ -18,7 +18,9 @@ const Footer = () => {
     <div className="text-white p-8 flex flex-row justify-between text-left gap-4 flex-wrap">
       {/* Contact Section */}
       <div className="flex flex-col gap-2 min-w-[100px]">
-        <div className="font-bold text-lg mb-2 text-[#faffa4]">Zymo</div>
+        <div className="font-bold text-lg mb-2 text-[#faffa4]">
+          <a href="https://www.zymo.app">Zymo</a>
+          </div>
         <p>Contact:</p>
         <p>
           Email:{" "}
