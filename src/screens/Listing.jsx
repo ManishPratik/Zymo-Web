@@ -165,6 +165,7 @@ const Listing = ({ title }) => {
     const carsGroupedByNormalizedName = carsArray.reduce((acc, car) => {
       if (car.brand === "Karyana") console.log(car);
       if (!car || !car.name || typeof car.fare !== 'string') {
+        console.log("Invalid car data:", car); // For debugging
         return acc;
       }
 

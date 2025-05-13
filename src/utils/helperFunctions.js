@@ -33,7 +33,6 @@ const toPascalCase = (str) => {
 
 // Format fare/prices
 const formatFare = (fare) => {
-  console.log("Fare before formatting:", fare);
   if (!fare) {
     return;
   }
