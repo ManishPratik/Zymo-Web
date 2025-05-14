@@ -63,10 +63,15 @@ const Card = ({ car }) => {
           <p className="text-xs text-gray-500 text-right">Avg. Ex-Showroom price</p>
         </div>
         <Link to={`/buy/car-details/${car.carId}`} state={{ car }} className="mt-2">
-          <button className="w-20 h-10 rounded-lg bg-[#faffa4] flex items-center justify-center hover:bg-[#dff566] transition-colors">
-            <span className="fa-solid fa-arrow-right text-gray-800"></span>
+          <button className="w-20 h-10 rounded-lg bg-[#faffa4] flex items-center justify-center overflow-hidden group hover:bg-[#303030] hover:border-appColor hover:border-2 transition-colors">
+            <span className="relative flex items-center justify-center w-5 h-5 text-darkGrey2 group-hover:text-appColor">
+              <span className="group-hover:animate-arrow-loop transition-transform">
+                <i className="fa-solid fa-arrow-right"></i>
+              </span>
+            </span>
           </button>
         </Link>
+
       </div>
     </div>
   );
