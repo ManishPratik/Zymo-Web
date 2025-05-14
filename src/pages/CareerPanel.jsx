@@ -3,6 +3,7 @@ import { collection, getDocs, query, orderBy, limit, startAfter, updateDoc, doc,
 import { webDB } from "../utils/firebase";
 import { Helmet } from "react-helmet-async";
 import { motion } from "framer-motion";
+import { Link } from "react-router-dom";
 import { 
   Users, 
   CheckCircle, 
@@ -10,11 +11,12 @@ import {
   ChevronDown, 
   Briefcase, 
   FileText,
-  Eye
+  Eye,
+  User
 } from "lucide-react";
 
 // Custom color scheme
-const colors = {
+const colorScheme = {
   appColor: "#edff8d",
   darkGrey: "#212121",
   darkGrey2: "#424242", 
@@ -167,11 +169,11 @@ const CareerPanel = () => {
         <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
       </Helmet>
       
-      <div className="min-h-screen" style={{ backgroundColor: colors.darkGrey, color: colors.white, fontFamily: "'Poppins', sans-serif" }}>
+      <div className="min-h-screen" style={{ backgroundColor:colorScheme.darkGrey, color:colorScheme.white, fontFamily: "'Poppins', sans-serif" }}>
         {/* Sidebar */}
-        <div className="fixed h-full w-64 py-8 px-4 z-10" style={{ backgroundColor: colors.black, borderRight: `1px solid ${colors.darkGrey2}` }}>
+        <div className="fixed h-full w-64 py-8 px-4 z-10" style={{ backgroundColor:colorScheme.black, borderRight: `1px solid ${colorScheme.darkGrey2}` }}>
           <div className="mb-8">
-            <h2 className="text-2xl font-bold flex items-center" style={{ color: colors.appColor }}>
+            <h2 className="text-2xl font-bold flex items-center" style={{ color:colorScheme.appColor }}>
               <Briefcase className="mr-2" size={28} />
               <span>Career Panel</span>
             </h2>
@@ -184,8 +186,8 @@ const CareerPanel = () => {
                   onClick={() => {setActiveTab("all"); setShowDetails(false)}}
                   className="w-full text-left py-4 px-4 rounded-lg flex items-center text-lg font-medium"
                   style={{ 
-                    backgroundColor: activeTab === "all" ? colors.darkGrey2 : 'transparent',
-                    color: activeTab === "all" ? colors.appColor : colors.white
+                    backgroundColor: activeTab === "all" ?colorScheme.darkGrey2 : 'transparent',
+                    color: activeTab === "all" ?colorScheme.appColor :colorScheme.white
                   }}
                 >
                   <Users className="mr-3" size={22} />
@@ -197,8 +199,8 @@ const CareerPanel = () => {
                   onClick={() => {setActiveTab("accepted"); setShowDetails(false)}}
                   className="w-full text-left py-4 px-4 rounded-lg flex items-center text-lg font-medium"
                   style={{ 
-                    backgroundColor: activeTab === "accepted" ? colors.darkGrey2 : 'transparent',
-                    color: activeTab === "accepted" ? colors.appColor : colors.white
+                    backgroundColor: activeTab === "accepted" ?colorScheme.darkGrey2 : 'transparent',
+                    color: activeTab === "accepted" ?colorScheme.appColor :colorScheme.white
                   }}
                 >
                   <CheckCircle className="mr-3" size={22} />
@@ -210,13 +212,26 @@ const CareerPanel = () => {
                   onClick={() => setActiveTab("rejected")}
                   className="w-full text-left py-4 px-4 rounded-lg flex items-center text-lg font-medium"
                   style={{ 
-                    backgroundColor: activeTab === "rejected" ? colors.darkGrey2 : 'transparent',
-                    color: activeTab === "rejected" ? colors.appColor : colors.white
+                    backgroundColor: activeTab === "rejected" ?colorScheme.darkGrey2 : 'transparent',
+                    color: activeTab === "rejected" ?colorScheme.appColor :colorScheme.white
                   }}
                 >
                   <XCircle className="mr-3" size={22} />
                   <span>Rejected</span>
                 </button>
+              </li>
+              <li>
+                <Link 
+                  to="/career-login/career-panel/HR-login"
+                  className="w-full text-left py-4 px-4 rounded-lg flex items-center text-lg font-medium"
+                  style={{ 
+                    backgroundColor: 'transparent',
+                    color: colorScheme.white
+                  }}
+                >
+                  <User className="mr-3" size={22} />
+                  <span>HR Manager</span>
+                </Link>
               </li>
             </ul>
           </nav>
@@ -230,7 +245,7 @@ const CareerPanel = () => {
             transition={{ duration: 0.5 }}
             className="text-center mb-14"
           >
-            <h1 className="text-5xl font-bold mb-3" style={{ color: colors.appColor }}>
+            <h1 className="text-5xl font-bold mb-3" style={{ color:colorScheme.appColor }}>
               Career Panel
             </h1>
             <p className="text-xl opacity-80">Manage and review job applications</p>
@@ -238,21 +253,21 @@ const CareerPanel = () => {
           
           <div className="mb-8 flex items-center">
             <h2 className="text-3xl font-semibold" style={{ 
-              color: activeTab === "accepted" ? colors.appColor : 
-                    activeTab === "rejected" ? "#ff6b6b" : colors.appColor 
+              color: activeTab === "accepted" ?colorScheme.appColor : 
+                    activeTab === "rejected" ? "#ff6b6b" :colorScheme.appColor 
             }}>
               {activeTab === "accepted" ? "Accepted Applications" : 
                activeTab === "rejected" ? "Rejected Applications" : 
                "All Applications"}
             </h2>
-            <div className="ml-4 px-4 py-1 rounded-full text-base" style={{ backgroundColor: colors.darkGrey2 }}>
+            <div className="ml-4 px-4 py-1 rounded-full text-base" style={{ backgroundColor:colorScheme.darkGrey2 }}>
               {applications.length} {applications.length === 1 ? "application" : "applications"}
             </div>
           </div>
           
           {loading && applications.length === 0 ? (
             <div className="flex justify-center items-center h-64">
-              <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2" style={{ borderColor: colors.appColor }}></div>
+              <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2" style={{ borderColor:colorScheme.appColor }}></div>
             </div>
           ) : (
             <>
@@ -270,10 +285,10 @@ const CareerPanel = () => {
                       variants={itemVariants}
                       className="rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-all"
                       style={{ 
-                        backgroundColor: colors.darkGrey2,
-                        border: `2px solid ${app.status === "accepted" ? colors.appColor : 
+                        backgroundColor:colorScheme.darkGrey2,
+                        border: `2px solid ${app.status === "accepted" ?colorScheme.appColor : 
                                             app.status === "rejected" ? "#ff6b6b" : 
-                                            colors.darkGrey2}`
+                                           colorScheme.darkGrey2}`
                       }}
                     >
                       <div className="p-6">
@@ -283,7 +298,7 @@ const CareerPanel = () => {
                             backgroundColor: app.status === "accepted" ? "rgba(237, 255, 141, 0.2)" : 
                                            app.status === "rejected" ? "rgba(255, 107, 107, 0.2)" : 
                                            "rgba(255, 193, 7, 0.2)",
-                            color: app.status === "accepted" ? colors.appColor : 
+                            color: app.status === "accepted" ?colorScheme.appColor : 
                                   app.status === "rejected" ? "#ff6b6b" : 
                                   "#ffc107"
                           }}>
@@ -294,11 +309,11 @@ const CareerPanel = () => {
                         
                         <div className="space-y-4">
                           <div className="flex items-center opacity-90">
-                            <Briefcase size={20} className="mr-3" style={{ color: colors.appColor }} />
+                            <Briefcase size={20} className="mr-3" style={{ color:colorScheme.appColor }} />
                             <span className="text-lg">Primary Skill: <span className="font-medium">{app.primarySkill}</span></span>
                           </div>
                           <div className="flex items-center opacity-90">
-                            <FileText size={20} className="mr-3" style={{ color: colors.appColor }} />
+                            <FileText size={20} className="mr-3" style={{ color:colorScheme.appColor }} />
                             <span className="text-lg">Applying for: <span className="font-medium">{app.applyFor || app.jobType}</span></span>
                           </div>
                         </div>
@@ -307,7 +322,7 @@ const CareerPanel = () => {
                           <button
                             onClick={() => handleViewDetails(app)}
                             className="flex items-center px-5 py-3 rounded-lg hover:opacity-90 transition-opacity text-base font-medium"
-                            style={{ backgroundColor: colors.appColor, color: colors.black }}
+                            style={{ backgroundColor:colorScheme.appColor, color:colorScheme.black }}
                           >
                             <Eye size={20} className="mr-2" />
                             View Details
@@ -323,7 +338,7 @@ const CareerPanel = () => {
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ duration: 0.3 }}
                   className="rounded-xl shadow-xl p-8"
-                  style={{ backgroundColor: colors.darkGrey2, border: `2px solid ${colors.darkGrey}` }}
+                  style={{ backgroundColor:colorScheme.darkGrey2, border: `2px solid ${colorScheme.darkGrey}` }}
                 >
                   <div className="flex justify-between items-center mb-8">
                     <div>
@@ -333,7 +348,7 @@ const CareerPanel = () => {
                           backgroundColor: selectedApplication.status === "accepted" ? "rgba(237, 255, 141, 0.2)" : 
                                          selectedApplication.status === "rejected" ? "rgba(255, 107, 107, 0.2)" : 
                                          "rgba(255, 193, 7, 0.2)",
-                          color: selectedApplication.status === "accepted" ? colors.appColor : 
+                          color: selectedApplication.status === "accepted" ?colorScheme.appColor : 
                                 selectedApplication.status === "rejected" ? "#ff6b6b" : 
                                 "#ffc107"
                         }}>
@@ -347,8 +362,8 @@ const CareerPanel = () => {
                         onClick={() => updateApplicationStatus(selectedApplication.id, "accepted")}
                         className="px-5 py-3 rounded-lg flex items-center text-lg"
                         style={{ 
-                          backgroundColor: selectedApplication.status === "accepted" ? colors.appColor : colors.darkGrey,
-                          color: selectedApplication.status === "accepted" ? colors.black : colors.white,
+                          backgroundColor: selectedApplication.status === "accepted" ?colorScheme.appColor :colorScheme.darkGrey,
+                          color: selectedApplication.status === "accepted" ?colorScheme.black :colorScheme.white,
                           minWidth: "150px"
                         }}
                       >
@@ -359,8 +374,8 @@ const CareerPanel = () => {
                         onClick={() => updateApplicationStatus(selectedApplication.id, "rejected")}
                         className="px-5 py-3 rounded-lg flex items-center text-lg"
                         style={{ 
-                          backgroundColor: selectedApplication.status === "rejected" ? "#ff6b6b" : colors.darkGrey,
-                          color: colors.white,
+                          backgroundColor: selectedApplication.status === "rejected" ? "#ff6b6b" :colorScheme.darkGrey,
+                          color:colorScheme.white,
                           minWidth: "150px"
                         }}
                       >
@@ -371,8 +386,8 @@ const CareerPanel = () => {
                         onClick={() => setShowDetails(false)}
                         className="px-5 py-3 rounded-lg text-lg"
                         style={{ 
-                          backgroundColor: colors.darkGrey, 
-                          color: colors.white,
+                          backgroundColor:colorScheme.darkGrey, 
+                          color:colorScheme.white,
                           minWidth: "150px"
                         }}
                       >
@@ -383,7 +398,7 @@ const CareerPanel = () => {
                   
                   <div className="overflow-x-auto">
                     <table className="w-full text-left border-collapse">
-                      <tbody className="divide-y" style={{ borderColor: colors.darkGrey }}>
+                      <tbody className="divide-y" style={{ borderColor:colorScheme.darkGrey }}>
                         <tr>
                           <td className="py-4 pl-0 pr-4 font-medium w-1/4 text-lg opacity-80">Full Name</td>
                           <td className="py-4 px-4 text-lg">{selectedApplication.fullName}</td>
@@ -438,7 +453,7 @@ const CareerPanel = () => {
                             <button
                               onClick={() => window.open(selectedApplication.resume, "_blank")}
                               className="px-5 py-3 rounded-lg flex items-center"
-                              style={{ backgroundColor: colors.appColor, color: colors.black }}
+                              style={{ backgroundColor:colorScheme.appColor, color:colorScheme.black }}
                             >
                               <FileText size={20} className="mr-2" />
                               View Resume
@@ -455,7 +470,7 @@ const CareerPanel = () => {
                 <div className="mt-12 text-center">
                   {loading ? (
                     <div className="flex justify-center">
-                      <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2" style={{ borderColor: colors.appColor }}></div>
+                      <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2" style={{ borderColor:colorScheme.appColor }}></div>
                     </div>
                   ) : hasMore ? (
                     <motion.button
@@ -463,7 +478,7 @@ const CareerPanel = () => {
                       whileTap={{ scale: 0.95 }}
                       onClick={loadMore}
                       className="px-8 py-4 rounded-lg font-semibold text-lg shadow-lg flex items-center mx-auto"
-                      style={{ backgroundColor: colors.appColor, color: colors.black }}
+                      style={{ backgroundColor:colorScheme.appColor, color:colorScheme.black }}
                     >
                       Load More
                       <ChevronDown className="ml-2" size={20} />
@@ -476,7 +491,7 @@ const CareerPanel = () => {
               
               {applications.length === 0 && !loading && (
                 <div className="flex flex-col items-center justify-center py-16">
-                  <div className="text-8xl mb-6" style={{ color: colors.appColor }}>📋</div>
+                  <div className="text-8xl mb-6" style={{ color:colorScheme.appColor }}>📋</div>
                   <h3 className="text-2xl font-medium mb-2">No applications found</h3>
                   <p className="text-lg opacity-70">
                     {activeTab === "accepted" ? "No accepted applications yet." : 

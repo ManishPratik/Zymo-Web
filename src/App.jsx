@@ -44,6 +44,10 @@ import CookiesConsent from "./components/CookiesConsent.jsx";
 import AgentList from "./components/AgentList.jsx";
 import ChatBotModal from "./components/Chatbot/ChatBotModal.jsx";
 import AddVoucher from "./components/AddVoucher.jsx";
+import CareerLogin from "./pages/careerLogin.jsx";
+import HRLogin from "./pages/HRloginPage.jsx";
+import CareerAgentList from "./pages/CareerAgentList.jsx";
+import VoucherDisplay from "./components/YourVouchers.jsx";
 const App = () => {
   return (
     <HelmetProvider>
@@ -152,7 +156,19 @@ const App = () => {
             element={<CareerForm title="Careers at Zymo" />}
           />
           <Route
-            path="/careerpanel"
+            path="/career-login"
+            element={<CareerLogin title="Careers at Zymo" />}
+          />
+          <Route
+            path="/career-login/career-panel/HR-login"
+            element={<HRLogin title="Careers at Zymo" />}
+          />
+          <Route
+            path="/career-login/career-panel/HR-login/CareerAgent-list"
+            element={<CareerAgentList title="Careers at Zymo" />}
+          />
+          <Route
+            path="/career-login/career-panel"
             element={<CareerPanel title="Careers at Zymo" />}
           />
           <Route
@@ -196,6 +212,10 @@ const App = () => {
           <Route
             path="/your-details"
             element={<YourDetails title="Your Details - Zymo" />}
+          />
+          <Route
+            path="/your-vouchers"
+            element={<VoucherDisplay title="Your Details - Zymo" />}
           />
           <Route
             path="/agent-login"
