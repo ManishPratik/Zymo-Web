@@ -45,6 +45,7 @@ import VizagContent from "./VizagContent";
 import NagpurContent from "./NagpurContent";
 import AhemdabadContent from "./AhmdabadContent";
 import MaduraiContent from "./MaduraiContent";
+import VishakapatnamContent from "./VishakapatnamContent";
 
 const CityContent = ({ city }) => {
   switch (city.toLowerCase()) {
@@ -140,6 +141,8 @@ const CityContent = ({ city }) => {
       return <NagpurContent/>;
     case "ahmedabad":
       return <AhemdabadContent/>;
+    case "vishakapatnam":
+      return <VishakapatnamContent/>;
 
     default:
       return <div>No content available for {city}</div>;
