@@ -9,6 +9,7 @@ import ReactGA from "react-ga4";
 import NavBar from "./NavBar";
 import Footer from "./Footer";
 import LoginPage from "./LoginPage";
+import { MdDiscount } from "react-icons/md";
 
 function UserNavigation(label) {
   ReactGA.event({
@@ -125,6 +126,19 @@ const Profile = ({ title }) => {
                     <FaCar className="text-gray-700 text-lg" />
                     <span className="text-gray-800 font-medium">
                       Your Bookings
+                    </span>
+                  </div>
+                </div>
+              </Link>
+                <Link
+                to="/your-vouchers"
+                onClick={() => UserNavigation("Your Vouchers")}
+              >
+                <div className="bg-gray-50 p-3 rounded-lg mb-3 flex items-center justify-between">
+                  <div className="flex items-center space-x-3">
+                    <MdDiscount className="text-gray-700 text-lg" />
+                    <span className="text-gray-800 font-medium">
+                      Your Vouchers
                     </span>
                   </div>
                 </div>

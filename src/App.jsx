@@ -47,6 +47,7 @@ import AddVoucher from "./components/AddVoucher.jsx";
 import CareerLogin from "./pages/careerLogin.jsx";
 import HRLogin from "./pages/HRloginPage.jsx";
 import CareerAgentList from "./pages/CareerAgentList.jsx";
+import VoucherDisplay from "./components/YourVouchers.jsx";
 const App = () => {
   return (
     <HelmetProvider>
@@ -211,6 +212,10 @@ const App = () => {
           <Route
             path="/your-details"
             element={<YourDetails title="Your Details - Zymo" />}
+          />
+          <Route
+            path="/your-vouchers"
+            element={<VoucherDisplay title="Your Details - Zymo" />}
           />
           <Route
             path="/agent-login"
