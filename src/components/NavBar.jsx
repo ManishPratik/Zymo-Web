@@ -62,8 +62,6 @@ const NavBar = ({ city }) => {
         return () => unsubscribe();
     }, []);
 
-    console.log("User Info:", user);
-    console.log("Photo URL:", user?.photoURL);
 
     return (
         <nav className="bg-[#212121] text-white p-4 relative z-50 w-full">
