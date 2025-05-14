@@ -10,6 +10,7 @@ import { collection, getDocs } from "firebase/firestore";
 import { webDB } from "../../utils/firebase";
 import { Helmet } from "react-helmet-async";
 import LoadingCard from '../../components/buycomponent/LoadingCard'
+import TestOwnership from "../../components/buycomponent/TestOwnership";
   
 const NearestCar = ({ title }) => {
   const navigate = useNavigate();
@@ -90,9 +91,9 @@ const NearestCar = ({ title }) => {
         {/* Dark overlay */}
         {/* <div className="absolute inset-0 bg-black/50"></div> */}
         
-        <img src="/images/BuyCars/Electric_Hero_yellow.png" alt="Yellow Hero" 
+        {/* <img src="/images/BuyCars/Electric_Hero_yellow.png" alt="Yellow Hero" 
           className="absolute w-full sm:w-screen h-full object-cover z-0"
-         />
+         /> */}
         {/* <div 
           className="absolute inset-0 w-full h-full"
           style={{
@@ -102,22 +103,7 @@ const NearestCar = ({ title }) => {
             backgroundRepeat: 'no-repeat'
           }}
         /> */}
-
-        {/* Content container */}
-        <div className="relative z-10 h-full container mx-auto px-4 py-4">
-          <div className="flex flex-col sm:flex-row justify-center items-center sm:items-start h-full mt-48 sm:mt-10 pr-0 sm:mr-11 sm:pr-8">
-            {/* <div className="space-y-4"> */}
-            <div>
-              <h1 className="text-xl sm:text-5xl font-bold text-white opacity-0 animate-slide-up">
-                Your EV Trial, Supercharged!
-              </h1>
-              {/* <p className="text-gray-200 text-lg max-w-xl opacity-0 animate-slide-up-delayed">
-                Find your perfect electric vehicle today
-              </p> */}
-            </div>
-
-          </div>
-        </div>
+        <TestOwnership />
       </div>
 
       {/* <Filter setFilterCar={setFilteredCars} /> */}
