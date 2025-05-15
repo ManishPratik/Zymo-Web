@@ -131,7 +131,8 @@ const BookingCard = ({ title }) => {
   useEffect(() => {
     document.title = title;
   }, [title]);
-  console.log("Car Details:", car);
+  console.log("Car Details hi :", car);
+  console.log("car options:", car?.options);
   return (
     <>
       <Helmet>
@@ -163,7 +164,7 @@ const BookingCard = ({ title }) => {
         {!loading && vendorDetails ? (
           <>
             {/* Render MyChoize cars */}
-            {!isKaryana &&
+            {isMyChoize &&
               car?.total_km &&
               typeof car.total_km === "object" &&
               Object.entries(car.total_km).map(([rateBasis, kms], index) => (
@@ -326,6 +327,7 @@ const BookingCard = ({ title }) => {
                       </span>
                     </h1>
                     <ul className="text-gray-200 space-y-1 mt-4">
+                      
                       {car.options &&
                         Array.isArray(car.options) &&
                         car.options.map((option, idx) => (
@@ -336,9 +338,9 @@ const BookingCard = ({ title }) => {
                             <span>• {option}</span>
                           </li>
                         ))}
-                      {console.log("Car Details:", index, car.total_km)}
+                      {console.log("Car Details hello:", index, car.total_km)}
                       <li className="flex items-center gap-2 text-md">
-                        <span>• {`Total KMs: ${car.total_km[index]}`}</span>
+                        <span>• {`Total KMs : ${car.total_km[index]}`}</span>
                       </li>
                       <li className="flex items-center gap-2 text-md">
                         <span>
