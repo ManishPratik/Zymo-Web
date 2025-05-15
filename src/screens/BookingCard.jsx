@@ -19,6 +19,7 @@ const BookingCard = ({ title }) => {
 
   const isKaryana =
     car?.brand === "Karyana" || car?.source?.toLowerCase() === "karyana";
+  const isZT = car?.brand?.toLowerCase() === "zt";
   const isMyChoize = car?.source === "mychoize";
   const isZymoPartner = car?.source === "Zymo";
   useEffect(() => {
@@ -31,9 +32,9 @@ const BookingCard = ({ title }) => {
         }));
         const selectedVendor = vendorData.find(
           (vendor) =>
-            vendor.id?.toLowerCase() ===
-            (isKaryana ? "karyana" : car?.source?.toLowerCase())
+           ( vendor.id?.toLowerCase() === (isKaryana ? "karyana" : car?.source?.toLowerCase())) || (vendor.id?.toLowerCase() === ("zt"))
         );
+        console.log("Selected Vendor:", selectedVendor);
         if (selectedVendor) {
           setVendorDetails(selectedVendor);
           console.log("Vendor Details:", selectedVendor);
@@ -44,7 +45,7 @@ const BookingCard = ({ title }) => {
       setLoading(false);
     };
     fetchVendorDetails();
-  }, [car, isKaryana]);
+  }, [car, isKaryana, isZT]);
 
   // Helper function to find package name based on rateBasis
   const findPackage = (rateBasis) => {
@@ -67,7 +68,7 @@ const BookingCard = ({ title }) => {
 
     let updatedCar;
 
-    if (isKaryana) {
+    if (isKaryana || isZT) {
       // For Karyana cars, we use the selected variation from the cars array
       const variation = car.cars[0].variations[index];
 
@@ -177,13 +178,6 @@ const BookingCard = ({ title }) => {
                         <span className="text-2xl text-[#E8FF81]">
                           {vendorDetails?.vendor || "MyChoize"}
                         </span>
-                        {vendorDetails?.Imageurl && (
-                          <img
-                            className="w-20 h-6 rounded-md object-contain"
-                            src={vendorDetails.Imageurl}
-                            alt="Vendor"
-                          />
-                        )}
                       </h1>
                       <ul className="text-gray-200 space-y-1 mt-4">
                         {car.options &&
@@ -239,76 +233,73 @@ const BookingCard = ({ title }) => {
               ))}
 
             {/* Render Karyana cars */}
-            {isKaryana &&
+            {console.log(isKaryana, isZT, car?.cars)}
+            {(isKaryana || isZT) &&
               car?.cars &&
               Array.isArray(car.cars) &&
-              car.cars[0].variations.map((variation, index) => (
-                <div
-                  key={`karyana-${index}`}
-                  className="text-white flex flex-col items-center py-4 my-4 bg-[#303030] rounded-lg shadow-lg max-w-2xl w-full mx-auto"
-                >
-                  <div className="flex justify-between items-center w-full px-4 py-2">
-                    <div className="flex flex-col">
-                      <h1 className="text-xl font-semibold flex items-center gap-2">
-                        Fulfilled by
-                        <span className="text-2xl text-[#E8FF81]">
-                          {vendorDetails?.vendor || "Karyana"}
-                        </span>
-                        {vendorDetails?.Imageurl && (
-                          <img
-                            className="w-20 h-6 rounded-md object-contain"
-                            src={vendorDetails.Imageurl}
-                            alt="Karyana"
-                          />
-                        )}
-                      </h1>
-                      <ul className="text-gray-200 space-y-1 mt-4">
-                        {variation.options &&
-                          Array.isArray(variation.options) &&
-                          variation.options.map((option, idx) => (
-                            <li
-                              key={idx}
-                              className="flex items-center gap-2 text-md"
-                            >
-                              <span>• {option}</span>
-                            </li>
-                          ))}
-                        <li className="flex items-center gap-2 text-md">
-                          <span>
-                            •{" "}
-                            {`Total KMs: ${
-                              variation.total_km?.FF || "350 KMs"
-                            }`}
+              car.cars[0].variations.map((variation, index) => {
+                console.log("Car Details:", index, variation);
+                return (
+                  <div
+                    key={`karyana-${index}`}
+                    className="text-white flex flex-col items-center py-4 my-4 bg-[#303030] rounded-lg shadow-lg max-w-2xl w-full mx-auto"
+                  >
+                    <div className="flex justify-between items-center w-full px-4 py-2">
+                      <div className="flex flex-col">
+                        <h1 className="text-xl font-semibold flex items-center gap-2">
+                          Fulfilled by
+                          <span className="text-2xl text-[#E8FF81]">
+                            {vendorDetails?.vendor || "Karyana"}
                           </span>
-                        </li>
-                        <li className="flex items-center gap-2 text-md">
-                          <span>
-                            • Extra KMs charged at{" "}
-                            {variation.extrakm_charge || "10"}/km
-                          </span>
-                        </li>
-                      </ul>
+                        </h1>
+                        <ul className="text-gray-200 space-y-1 mt-4">
+                          {variation.options &&
+                            Array.isArray(variation.options) &&
+                            variation.options.map((option, idx) => (
+                              <li
+                                key={idx}
+                                className="flex items-center gap-2 text-md"
+                              >
+                                <span>• {option}</span>
+                              </li>
+                            ))}
+                          <li className="flex items-center gap-2 text-md">
+                            <span>
+                              •{" "}
+                              {`Total KMs: ${
+                                variation.total_km?.FF || "350 KMs"
+                              }`}
+                            </span>
+                          </li>
+                          <li className="flex items-center gap-2 text-md">
+                            <span>
+                              • Extra KMs charged at{" "}
+                              {variation.extrakm_charge || "10"}/km
+                            </span>
+                          </li>
+                        </ul>
+                      </div>
+                      <div className="flex flex-col items-center space-y-1">
+                        <div className="text-xl font-bold text-white">
+                          {variation.fare}
+                        </div>
+                        <div className="text-md text-[#E8FF81]">
+                          {variation.total_km?.FF || "350"} Package
+                        </div>
+                        <button
+                          onClick={() => goToDetails(null, index)}
+                          className="bg-[#E8FF81] text-black font-bold text-md py-2 px-5 rounded-xl hover:bg-[#d7e46d] transition duration-300 ease-in-out mt-2"
+                        >
+                          Go to booking
+                        </button>
+                      </div>
                     </div>
-                    <div className="flex flex-col items-center space-y-1">
-                      <div className="text-xl font-bold text-white">
-                        {variation.fare}
-                      </div>
-                      <div className="text-md text-[#E8FF81]">
-                        {variation.total_km?.FF || "350"} Package
-                      </div>
-                      <button
-                        onClick={() => goToDetails(null, index)}
-                        className="bg-[#E8FF81] text-black font-bold text-md py-2 px-5 rounded-xl hover:bg-[#d7e46d] transition duration-300 ease-in-out mt-2"
-                      >
-                        Go to booking
-                      </button>
+                    <div className="mt-3 text-[#E8FF81] font-normal text-md py-2 px-5 border border-[#E8FF81] rounded-lg">
+                      Home Delivery Available
                     </div>
                   </div>
-                  <div className="mt-3 text-[#E8FF81] font-normal text-md py-2 px-5 border border-[#E8FF81] rounded-lg">
-                    Home Delivery Available
-                  </div>
-                </div>
-              ))}
+                );
+              })}
           </>
         ) : (
           !isZymoPartner && (
@@ -365,11 +356,11 @@ const BookingCard = ({ title }) => {
                       Standard Package
                     </div>
                     <button
-                        onClick={() => goToDetails(car, index)}
-                        className="bg-[#E8FF81] text-black font-bold text-md py-2 px-5 rounded-xl hover:bg-[#d7e46d] transition duration-300 ease-in-out"
-                      >
-                        Go to booking
-                      </button>
+                      onClick={() => goToDetails(car, index)}
+                      className="bg-[#E8FF81] text-black font-bold text-md py-2 px-5 rounded-xl hover:bg-[#d7e46d] transition duration-300 ease-in-out"
+                    >
+                      Go to booking
+                    </button>
                   </div>
                 </div>
               </div>

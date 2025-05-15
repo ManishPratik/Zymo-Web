@@ -931,7 +931,8 @@ const Listing = ({ title }) => {
                                     goToDetails(individualCar);
                                   } else if (activeTab === "subscribe") {
                                     goToDetails(individualCar);
-                                  } else if (individualCar.source === "Karyana") {
+                                  } else if (individualCar.source === "Karyana" || individualCar.source === "ZT") {
+                                    console.log("Karyana car selected:", individualCar);
                                     goToPackages(car); // Show packages for Karyana cars with multiple packages
                                   } else {
                                     goToPackages(individualCar);
