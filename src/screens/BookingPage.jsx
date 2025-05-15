@@ -43,9 +43,7 @@ function BookingPage() {
   const location = useLocation();
   const { city } = useParams();
   const { startDate, endDate, userData, car } = location.state || {};
-
   const trackEvent = useTrackEvent();
-
   const startDateFormatted = formatDate(startDate);
   const endDateFormatted = formatDate(endDate);
 
