@@ -145,7 +145,7 @@ export const fetchFirebaseCars = async (city, tripDurationHours) => {
       }
     }
 
-    // Step 4: Fetch cars from all test collections
+    // Step 4: Fetch cars from all test collections Karyana cars
     const testCollections = await fetchAllTestCollections(
       appDB,
       formatFare,
