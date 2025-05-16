@@ -7,7 +7,7 @@ const ServiceProvider = () => {
         // { name: "Doorcars", logo: "/images/ServiceProvider/doorcars.jpeg" },
         // { name: "Rnex", logo: "/images/ServiceProvider/renx.jpeg" },
         // { name: "Wheelup", logo: "/images/ServiceProvider/wheelup.png" },
-        { name: "Zoomcars", logo: "/images/ServiceProvider/zoomcars.png" },
+        { name: "Zoomcars", logo: "/images/ServiceProvider/zoomcar-logo-new.png" },
         { name: "MyChoize", logo: "/images/ServiceProvider/mychoize.png" },
     ];
 

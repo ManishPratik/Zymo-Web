@@ -79,7 +79,7 @@ export default function TestDriveFormPage({ title }) {
       
       sessionStorage.setItem('formData', JSON.stringify(dataToStore));
 
-      navigate('/buy/test-drive-confirmpage', { 
+      navigate('/buy-car/test-drive-confirmpage', { 
         state: { 
           car, 
           userData: {

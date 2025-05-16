@@ -26,7 +26,7 @@ const ExtendedTestDriveDatePicker = ({ title }) => {
     }, [title]);
   
     const onSubmit = () => {
-      navigate('/buy/upload-info',
+      navigate('/buy-car/upload-info',
         { 
           state: { 
             car:car , startDate:startDateFormatted , endDate:endDateFormatted

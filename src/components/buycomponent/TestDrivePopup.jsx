@@ -9,7 +9,7 @@ const TestDrivePopup = ({  title ,isOpen, close, id , carDetail}) => {
   }, [title]);
 
   const handleNavigate = () => {
-    navigate(`/buy/summary/${id}`, {
+    navigate(`/buy-car/summary/${id}`, {
       state: { car: carDetail}, 
     });
   };

@@ -328,7 +328,7 @@ const Listing = ({ title }) => {
               ratingData: car.car_data.rating_v3,
               trips: car.car_data.trip_count,
               source: "zoomcar",
-              sourceImg: "/images/ServiceProvider/zoomcarlogo.png",
+              sourceImg: "/images/ServiceProvider/zoomcar-logo-new.png",
               rateBasis: "DR",
             }));
 
