@@ -519,7 +519,7 @@ const Listing = ({ title }) => {
     return (
       <div className="flex flex-wrap gap-2 my-2">
         {/* Seats Badge */}
-        <div className="flex items-center bg-gray-200 rounded-md px-3 py-1">
+        <div className="flex items-center bg-gray-300 rounded-md px-3 py-1">
           <Armchair size={14} className="text-black" />
           <span className="text-black font-medium text-sm mr-1">
             {seatInfo.split(" ")[0]}
@@ -527,7 +527,7 @@ const Listing = ({ title }) => {
         </div>
 
         {/* Fuel Type Badge */}
-        <div className="flex items-center bg-gray-200 rounded-md px-3 py-1">
+        <div className="flex items-center bg-gray-300 rounded-md px-3 py-1">
           <BsFuelPump size={14} className="text-black mr-1" />
           <span className="text-black font-medium text-sm">
             {fuelInfo.includes("Petrol") ? "Petrol" :
@@ -537,7 +537,7 @@ const Listing = ({ title }) => {
         </div>
 
         {/* Transmission Badge */}
-        <div className="flex items-center bg-gray-200 rounded-md px-3 py-1">
+        <div className="flex items-center bg-gray-300 rounded-md px-3 py-1">
           <TbManualGearbox size={14} className="text-black mr-1" />
           <span className="text-black font-medium text-sm">
             {transmissionInfo.includes("Manual") ? "Manual" :
@@ -748,8 +748,9 @@ const Listing = ({ title }) => {
                       <div>
                         <h3 className="text-md font-semibold">{car.name}</h3>
                         <CarSpecBadges options={car.cars[0].options} />
+                         <p className="text-xs text-[#faffa4]">Available from</p>
                         <div className="img-container">
-                           <div className="flex gap-1">
+                          <div className="flex gap-1">
                             {[...new Map(car.cars.map(car => [car.sourceImg, car])).values()].map((uniqueCar) => (
                               <img
                                 key={uniqueCar.sourceImg} // Add a unique key for React rendering
@@ -813,7 +814,7 @@ const Listing = ({ title }) => {
                           <CarSpecBadges options={car.cars[0].options} />
                         </div>
                         <div>
-
+                          <p className="text-xs text-[#faffa4]">Available from</p>
                           <div className="flex gap-1">
                             {[...new Map(car.cars.map(car => [car.sourceImg, car])).values()].map((uniqueCar) => (
                               <img
@@ -821,7 +822,7 @@ const Listing = ({ title }) => {
                                 loading="lazy"
                                 src={uniqueCar.sourceImg}
                                 alt={uniqueCar.source}
-                                className="h-6 rounded-sm mt-2 bg-white p-1 text-black"
+                                className="h-6 rounded-sm my-1 bg-white p-1 text-black"
                               />
                             ))}
                           </div>
