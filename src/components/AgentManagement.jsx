@@ -396,38 +396,34 @@ const AgentBookingList = ({ title }) => {
            <Link
             to="/add-voucher"
             className={`w-full p-4 rounded-lg flex flex-col items-center justify-center gap-2 transition-all duration-300 hover:bg-gray-700 ${
-              location.pathname === "/agent-info" ? "bg-gray-700" : ""
+              location.pathname === "/master-agent" ? "bg-gray-700" : ""
             }`}
             style={{
               color: colorScheme.appColor,
               boxShadow:
-                location.pathname === "/agent-info"
+                location.pathname === "/master-agent"
                   ? `0 0 10px ${colorScheme.appColor}33`
                   : "none",
             }}
           >
             <FiGift className="text-3xl mb-2" />
-            <span className="text-xs font-bold text-center">
-              Add Voucher
-            </span>
+            <span className="text-xs font-bold text-center">Add Voucher</span>
           </Link>
           <Link
-            to="/add-voucher"
+            to="/download-dump-data"
             className={`w-full p-4 rounded-lg flex flex-col items-center justify-center gap-2 transition-all duration-300 hover:bg-gray-700 ${
-              location.pathname === "/agent-info" ? "bg-gray-700" : ""
+              location.pathname === "/master-agent" ? "bg-gray-700" : ""
             }`}
             style={{
               color: colorScheme.appColor,
               boxShadow:
-                location.pathname === "/agent-info"
+                location.pathname === "/master-agent"
                   ? `0 0 10px ${colorScheme.appColor}33`
                   : "none",
             }}
           >
             <FiDownload className="text-3xl mb-2" />
-            <span className="text-xs font-bold text-center">
-              download dump data
-            </span>
+            <span className="text-xs font-bold text-center">Download dump data</span>
           </Link>
         </nav>
         <style>

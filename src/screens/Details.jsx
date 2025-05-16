@@ -36,6 +36,7 @@ const CarDetails = ({ title }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [availableKMs, setAvailableKMs] = useState(0);
   const [hourlyRate, setHourlyRate] = useState(0);
+  const [packageName, setPackageName] = useState("");
   // console.log("Car Details", car);
   useEffect(() => {
     if (authUser) {
@@ -92,18 +93,31 @@ const CarDetails = ({ title }) => {
   useEffect(() => {
     if (car?.source === "zoomcar") {
       setAvailableKMs("Unlimited KMs");
+      setPackageName("Unlimited KMs");
+      setHourlyRate(car?.hourly_amount.slice(1));
     } else if (car?.source === "mychoize") {
       setHourlyRate(car?.hourly_amount);
       setAvailableKMs("3600 KMs");
+      setPackageName(findPackage(car?.rateBasis));
     } else if (car?.source === "Zymo") {
       setHourlyRate(car?.hourlyRates[car.selectedPackage]);
       setAvailableKMs(car?.total_km[car.selectedPackage] + " KMs");
+      setPackageName(
+        tripDurationHours < 24 ? "Hourly Package" : "Daily Package"
+      );
     } else if (car?.source.toLowerCase() === "karyana") {
       setAvailableKMs(
         tripDurationHours < 24
           ? car.total_km["hourly"] + " KMs"
           : car.total_km[car.rateBasis] + " KMs"
       );
+      setPackageName(
+        tripDurationHours < 24 ? "Hourly Package" : "Daily Package"
+      );
+    } else if (car?.source.toLowerCase() === "zt") {
+      setAvailableKMs(car?.total_km?.FF);
+      setPackageName("Daily Package");
+      setHourlyRate(parseFloat(car?.hourly_amount).toFixed(0));
     } else {
       setAvailableKMs(car?.total_km[car.rateBasis]);
     }
@@ -153,22 +167,14 @@ const CarDetails = ({ title }) => {
         { label: "Car Name", value: car?.name },
         {
           label: "Hourly Amount",
-          value: `₹${hourlyRate}`
+          value: `₹${hourlyRate}`,
         },
         { label: "Seats", value: car.options[2] },
         { label: "Fuel Type", value: car.options[1] },
         { label: "Transmission", value: car.options[0] },
         {
           label: "Package",
-          value:
-            car.source === "zoomcar"
-              ? "Unlimited KMs"
-              : car.source.toLowerCase() === "karyana" ||
-                car?.source.toLowerCase() === "zymo"
-              ? tripDurationHours < 24
-                ? "Hourly Package"
-                : "Daily Package"
-              : findPackage(car?.rateBasis),
+          value: packageName,
         },
         {
           label: "Available KMs",

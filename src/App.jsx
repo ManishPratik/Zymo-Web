@@ -100,7 +100,7 @@ const App = () => {
             }
           />
           <Route
-            path="/buy"
+            path="/buy-car"
             element={<NearestCar title="Find Your Car - Zymo" />}
           />
           <Route
@@ -108,39 +108,39 @@ const App = () => {
             element={<TestDrivePopup title="Test Drive - Zymo" />}
           />
           <Route
-            path="/buy/car-details/:id"
+            path="/buy-car/car-details/:id"
             element={<CarDetails title="Car Details - Zymo" />}
           />
           <Route
-            path="/buy/summary/:id"
+            path="/buy-car/summary/:id"
             element={
               <ExtendedTestDriveSummary title="Test Drive Summary - Zymo" />
             }
           />
           <Route
-            path="/buy/date-picker"
+            path="/buy-car/date-picker"
             element={
               <ExtendedTestDriveDatePicker title="Pick a Date - Test Drive" />
             }
           />
           <Route
-            path="/buy/upload-info"
+            path="/buy-car/upload-info"
             element={
               <ExtendedTestDriveFormPage title="Enter Your Info - Test Drive" />
             }
           />
           <Route
-            path="/buy/upload-doc"
+            path="/buy-car/upload-doc"
             element={
               <ExtendedTestDriveUploadDocuments title="Upload Documents - Test Drive" />
             }
           />
           <Route
-            path="/buy/test-drive-inputform"
+            path="/buy-car/test-drive-inputform"
             element={<TestDriveInputForm title="Schedule Test Drive - Zymo" />}
           />
           <Route
-            path="/buy/test-drive-confirmpage"
+            path="/buy-car/test-drive-confirmpage"
             element={<TestDriveConfirmPage title="Confirm Test Drive - Zymo" />}
           />
           <Route
