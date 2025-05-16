@@ -749,12 +749,17 @@ const Listing = ({ title }) => {
                         <h3 className="text-md font-semibold">{car.name}</h3>
                         <CarSpecBadges options={car.cars[0].options} />
                         <div className="img-container">
-                          <img
-                            loading="lazy"
-                            src={car.cars[0].sourceImg}
-                            alt={car.cars[0].source}
-                            className="h-6 rounded-sm mt-2 bg-white p-1 text-black"
-                          />
+                           <div className="flex gap-1">
+                            {[...new Map(car.cars.map(car => [car.sourceImg, car])).values()].map((uniqueCar) => (
+                              <img
+                                key={uniqueCar.sourceImg} // Add a unique key for React rendering
+                                loading="lazy"
+                                src={uniqueCar.sourceImg}
+                                alt={uniqueCar.source}
+                                className="h-6 rounded-sm mt-2 bg-white p-1 text-black"
+                              />
+                            ))}
+                          </div>
                         </div>
                       </div>
                       <div className="text-right">
