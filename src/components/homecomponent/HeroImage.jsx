@@ -31,7 +31,7 @@ const HeroImage = () => {
             src={carimg}
             alt={`Hero section ${index + 1}`}
             className="w-full h-auto flex-shrink-0 object-cover rounded-lg cursor-pointer"
-            onClick={() => navigate("/buy")}
+            onClick={() => navigate("/buy-car")}
           />
         ))}
       </div>

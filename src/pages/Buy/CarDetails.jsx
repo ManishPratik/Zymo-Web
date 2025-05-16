@@ -194,7 +194,7 @@ const CarDetails = ({ title }) => {
 
               <div className='flex'>
                 <div className='flex flex-col'>
-                  <Link to={"/buy/test-drive-inputform"}
+                  <Link to={"/buy-car/test-drive-inputform"}
                   state={{ car: carDetail }} >
                     <button
                       className="bg-[#e8ff81] text-darkGrey px-6 py-3 rounded-lg font-semibold hover:bg-[#e8ff88] mx-1"
@@ -208,7 +208,7 @@ const CarDetails = ({ title }) => {
 
                 <div className='flex flex-col'>
                 <Link
-                  to={`/buy/summary/${id}`}
+                  to={`/buy-car/summary/${id}`}
                   state={{ car: carDetail }} 
                   className="block">
                     <div className="relative inline-block">
@@ -341,7 +341,7 @@ const CarDetails = ({ title }) => {
               <p className="text-2xl font-bold mb-4">₹{`${carDetail.price.min_price}-${carDetail.price.max_price}`} Lakh</p>
               <div className='flex'>
                 <div className='flex flex-col'>
-                  <Link to={`/buy/test-drive-inputform`}
+                  <Link to={`/buy-car/test-drive-inputform`}
                   state={{ car: carDetail }} >
                     <button
                       className="bg-[#e8ff81] text-darkGrey px-6 py-3 rounded-lg font-semibold text-sm hover:bg-[#e8ff88] mx-1"
@@ -355,7 +355,7 @@ const CarDetails = ({ title }) => {
 
                 <div className='flex flex-col'>
                 <Link 
-                  to={`/buy/summary/${id}`} 
+                  to={`/buy-car/summary/${id}`} 
                   state={{ car: carDetail }} 
                   className="block">
                     <div className="relative inline-block">

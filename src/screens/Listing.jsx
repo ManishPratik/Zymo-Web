@@ -170,7 +170,7 @@ const Listing = ({ title }) => {
       }
 
       const normalizedNameKey = getNormalizedCarName(car.name, clubbingCarNames);
-      
+
       if (!acc[normalizedNameKey]) {
         console.log("New group created:", normalizedNameKey); // For debugging
         acc[normalizedNameKey] = [];
@@ -195,7 +195,7 @@ const Listing = ({ title }) => {
 
       const minFareCar = sortedCarsInGroup[0];
       if (!minFareCar) {
-        return null; 
+        return null;
       }
 
       const minFare = minFareCar.fare;
@@ -328,7 +328,7 @@ const Listing = ({ title }) => {
               ratingData: car.car_data.rating_v3,
               trips: car.car_data.trip_count,
               source: "zoomcar",
-              sourceImg: "/images/ServiceProvider/zoomcarlogo.png",
+              sourceImg: "/images/ServiceProvider/zoomcar-logo-new.png",
               rateBasis: "DR",
             }));
 
@@ -508,11 +508,11 @@ const Listing = ({ title }) => {
     // Extract seat information from options
     const seatInfo = options.find(opt => opt.includes("Seats")) || "N/A";
     // Extract fuel type information (Petrol, Diesel, Electric)
-    const fuelInfo = options.find(opt => 
+    const fuelInfo = options.find(opt =>
       opt.includes("Petrol") || opt.includes("Diesel") || opt.includes("Electric")
     ) || "N/A";
     // Extract transmission information (Manual, Automatic)
-    const transmissionInfo = options.find(opt => 
+    const transmissionInfo = options.find(opt =>
       opt.includes("Manual") || opt.includes("Automatic")
     ) || "N/A";
 
@@ -525,23 +525,23 @@ const Listing = ({ title }) => {
             {seatInfo.split(" ")[0]}
           </span>
         </div>
-        
+
         {/* Fuel Type Badge */}
         <div className="flex items-center bg-gray-200 rounded-md px-3 py-1">
           <BsFuelPump size={14} className="text-black mr-1" />
           <span className="text-black font-medium text-sm">
-            {fuelInfo.includes("Petrol") ? "Petrol" : 
-             fuelInfo.includes("Diesel") ? "Diesel" : 
-             fuelInfo.includes("Electric") ? "Electric" : "N/A"}
+            {fuelInfo.includes("Petrol") ? "Petrol" :
+              fuelInfo.includes("Diesel") ? "Diesel" :
+                fuelInfo.includes("Electric") ? "Electric" : "N/A"}
           </span>
         </div>
-        
+
         {/* Transmission Badge */}
         <div className="flex items-center bg-gray-200 rounded-md px-3 py-1">
           <TbManualGearbox size={14} className="text-black mr-1" />
           <span className="text-black font-medium text-sm">
-            {transmissionInfo.includes("Manual") ? "Manual" : 
-             transmissionInfo.includes("Automatic") ? "Automatic" : "N/A"}
+            {transmissionInfo.includes("Manual") ? "Manual" :
+              transmissionInfo.includes("Automatic") ? "Automatic" : "N/A"}
           </span>
         </div>
       </div>
@@ -679,14 +679,14 @@ const Listing = ({ title }) => {
           <>
             <h3 className="text-[#faffa4] text-lg text-center">We compare multiple sites to get you the best deal</h3>
 
-            <div 
+            <div
               className="sm:max-w-[40rem] max-w-80"
               style={{
                 maskImage:
                   "linear-gradient(to right, transparent 0%, black 10%, black 90%, transparent 100%)",
                 WebkitMaskImage:
                   "linear-gradient(to right, transparent 0%, black 10%, black 90%, transparent 100%)",
-              }}  
+              }}
             >
               <Marquee autoFill>
                 <div className="flex space-x-10 md:space-x-10 my-5 mr-10 md:mr-10">
@@ -695,7 +695,7 @@ const Listing = ({ title }) => {
                       key={index}
                       className="flex items-center justify-center rounded-full bg-white w-16 h-16"
                     >
-                      <img 
+                      <img
                         src={brand.logo}
                         alt={brand.name}
                         className="w-12 h-8"
@@ -704,7 +704,7 @@ const Listing = ({ title }) => {
                   ))}
                 </div>
               </Marquee>
-            </div>   
+            </div>
 
             <div className="grid grid-cols-1 lg:w-[56%] items-start gap-5">
               {[...Array(6)].map((_, index) => (
@@ -749,12 +749,17 @@ const Listing = ({ title }) => {
                         <h3 className="text-md font-semibold">{car.name}</h3>
                         <CarSpecBadges options={car.cars[0].options} />
                         <div className="img-container">
-                          <img
-                            loading="lazy"
-                            src={car.cars[0].sourceImg}
-                            alt={car.cars[0].source}
-                            className="h-6 rounded-sm mt-2 bg-white p-1 text-black"
-                          />
+                           <div className="flex gap-1">
+                            {[...new Map(car.cars.map(car => [car.sourceImg, car])).values()].map((uniqueCar) => (
+                              <img
+                                key={uniqueCar.sourceImg} // Add a unique key for React rendering
+                                loading="lazy"
+                                src={uniqueCar.sourceImg}
+                                alt={uniqueCar.source}
+                                className="h-6 rounded-sm mt-2 bg-white p-1 text-black"
+                              />
+                            ))}
+                          </div>
                         </div>
                       </div>
                       <div className="text-right">
@@ -808,12 +813,19 @@ const Listing = ({ title }) => {
                           <CarSpecBadges options={car.cars[0].options} />
                         </div>
                         <div>
-                          <img
-                            loading="lazy"
-                            src={car.cars[0].sourceImg}
-                            alt={car.cars[0].source}
-                            className="h-5 rounded-sm bg-white p-1 text-black"
-                          />
+
+                          <div className="flex gap-1">
+                            {[...new Map(car.cars.map(car => [car.sourceImg, car])).values()].map((uniqueCar) => (
+                              <img
+                                key={uniqueCar.sourceImg} // Add a unique key for React rendering
+                                loading="lazy"
+                                src={uniqueCar.sourceImg}
+                                alt={uniqueCar.source}
+                                className="h-6 rounded-sm mt-2 bg-white p-1 text-black"
+                              />
+                            ))}
+                          </div>
+
                           <p className="text-xs text-[#faffa4]">
                             {car.cars[0].location_est}
                           </p>
