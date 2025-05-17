@@ -478,6 +478,7 @@ const Listing = ({ title }) => {
           endDate,
           car: carWithDefaults,
           activeTab,
+          tripDuration,
         },
       });
     } else {
@@ -487,6 +488,7 @@ const Listing = ({ title }) => {
           endDate,
           car,
           activeTab,
+          tripDuration,
         },
       });
     }
@@ -500,6 +502,7 @@ const Listing = ({ title }) => {
         startDate,
         endDate,
         car,
+        tripDuration,
       },
     });
   };
