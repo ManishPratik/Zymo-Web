@@ -24,10 +24,13 @@ const colorScheme = {
   white: "#ffffff",
 };
 
+const API_URL = import.meta.env.VITE_FUNCTIONS_API_URL;
+
+
 // Function to send rejection email
 const sendRejectionEmail = async (email, fullName, jobType) => {
   try {
-    const response = await fetch('https://us-central1-zymo-prod.cloudfunctions.net/api/sendRejectionEmail', {
+    const response =  await fetch(`${API_URL}/email/sendRejectionEmail`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

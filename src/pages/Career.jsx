@@ -156,7 +156,7 @@ const CareerForm = ({ title }) => {
       await addDoc(collection(webDB, "careerApplications"), applicationData);
       
         try {
-        const response = await fetch(`${API_URL}/api/email/sendEmailOnFormSubmit`, {
+        const response = await fetch(`${API_URL}/email/sendEmailOnFormSubmit`, {
         method: 'POST',
         headers: {
         'Content-Type': 'application/json',

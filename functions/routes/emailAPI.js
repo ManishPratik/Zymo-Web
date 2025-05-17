@@ -24,7 +24,7 @@ router.post("/sendEmailOnFormSubmit", async (req, res) => {
 
   try {
     const subject = "Application Received - Zymo";
-    const text = `Dear ${fullName},\n\nThank you for submitting your application at Zymo. We have received it and will review it shortly. You’ll hear from us shortly via the contact details you provided.\n\nBest regards,\nThe Zymo Team. \n\nThis is a system generated email do not reply to this`;
+    const text = `Dear ${fullName},\n\nThank you for submitting your application at Zymo. We have received it and will review it shortly. You’ll hear from us shortly via the contact details you provided.\n\nBest regards,\nThe Zymo Team. \n\nThis is a system generated email do not reply to this`;
     await sendAcknowledgmentEmail(email, subject, text);
     console.log("Email sent successfully to:", email);
     res.status(200).send("Email sent successfully");
@@ -52,7 +52,7 @@ router.post("/sendRejectionEmail", async (req, res) => {
 
   try {
     const subject = "Application Status - Zymo";
-    const text = `Dear ${fullName},\n\nThank you for your interest in the ${jobType || "[Job Title]"} position at Zymo. After careful consideration of all applications, we regret to inform you that we will not be moving forward with your candidacy at this time. This decision is not a reflection of your qualifications or potential. We received an exceptionally high number of applications for a limited number of roles, making the selection process very competitive.\nWe sincerely appreciate the time and effort you invested in applying to Zymo. We encourage you to keep an eye on our careers page and apply for any future openings that align with your skills and experience. We wish you the very best in your job search and future career endeavors.\n\nBest regards,\nThe Zymo Team. \n\nThis is a system generated email do not reply to this`;
+    const text = `Dear ${fullName},\n\nThank you for your interest in the ${jobType || "[Job Title]"} position at Zymo. After careful consideration of all applications, we regret to inform you that we will not be moving forward with your candidacy at this time. This decision is not a reflection of your qualifications or potential. We received an exceptionally high number of applications for a limited number of roles, making the selection process very competitive.\nWe sincerely appreciate the time and effort you invested in applying to Zymo. We encourage you to keep an eye on our careers page and apply for any future openings that align with your skills and experience. We wish you the very best in your job search and future career endeavors.\n\nBest regards,\nThe Zymo Team. \n\nThis is a system generated email do not reply to this`;
     await sendRejectionEmail(email, subject, text);
     console.log("Rejection email sent successfully to:", email);
     res.status(200).send("Rejection email sent successfully");
