@@ -24,6 +24,30 @@ const colorScheme = {
   white: "#ffffff",
 };
 
+const API_URL = import.meta.env.VITE_FUNCTIONS_API_URL;
+
+
+// Function to send rejection email
+const sendRejectionEmail = async (email, fullName, jobType) => {
+  try {
+    const response =  await fetch(`${API_URL}/email/sendRejectionEmail`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ email, fullName, jobType }),
+    });
+
+    if (!response.ok) {
+      console.error('Failed to send rejection email:', await response.text());
+    } else {
+      console.log('Rejection email sent successfully');
+    }
+  } catch (error) {
+    console.error('Error sending rejection email:', error);
+  }
+};
+
 const CareerPanel = () => {
   const [applications, setApplications] = useState([]);
   const [lastDoc, setLastDoc] = useState(null);
@@ -130,6 +154,14 @@ const CareerPanel = () => {
       
       if (selectedApplication && selectedApplication.id === id) {
         setSelectedApplication({ ...selectedApplication, status: newStatus });
+      }
+
+      // Send rejection email if status is "rejected"
+      if (newStatus === "rejected") {
+        const app = applications.find(a => a.id === id);
+        if (app) {
+          await sendRejectionEmail(app.email, app.fullName, app.jobType);
+        }
       }
     } catch (error) {
       console.error("Error updating application status:", error);

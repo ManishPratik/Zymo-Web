@@ -2,6 +2,7 @@ import { collection, getDocs } from "firebase/firestore";
 import { appDB } from "../firebase";
 import fetchAllTestCollections from "../testCarFetcher";
 import fetchAllTestKosCollections from "./fetchtestkoscar";
+import fetchAllTestZtCollections from "./testZtCarFetcher";
 import { formatFare, toPascalCase } from "../helperFunctions";
 
 export const fetchFirebaseCars = async (city, tripDurationHours) => {
@@ -145,7 +146,7 @@ export const fetchFirebaseCars = async (city, tripDurationHours) => {
       }
     }
 
-    // Step 4: Fetch cars from all test collections
+    // Step 4: Fetch cars from all test collections Karyana cars
     const testCollections = await fetchAllTestCollections(
       appDB,
       formatFare,
@@ -172,6 +173,22 @@ export const fetchFirebaseCars = async (city, tripDurationHours) => {
       allCars = [...allCars, ...testKosCollections];
     } else {
       console.log(`No testKos collection cars found for ${city}`);
+    }
+    // Step 4.5: Fetch cars from testKos collections
+    const testZtCollections = await fetchAllTestZtCollections(
+      appDB,
+      formatFare,
+      city,
+      tripDurationHours
+    );
+    
+
+    if (testZtCollections && testZtCollections.length > 0) {
+      console.log(`Found ${testZtCollections.length} testZt collection cars for ${city}`);
+      allCars = [...allCars, ...testZtCollections];
+      console.log("All cars from testZt collections:", testZtCollections);
+    } else {
+      console.log(`No testZt collection cars found for ${city}`);
     }
     // Step 5: Map car data to the expected format
     const filterdData = allCars
@@ -229,6 +246,7 @@ export const fetchFirebaseCars = async (city, tripDurationHours) => {
       });
     console.log("Filtered data:", filterdData);
     return filterdData;
+    
     // return [];
   } catch (error) {
     console.error("Error fetching Firebase cars:", error);
