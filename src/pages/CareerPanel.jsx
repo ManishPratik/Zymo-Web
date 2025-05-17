@@ -27,7 +27,7 @@ const colorScheme = {
 // Function to send rejection email
 const sendRejectionEmail = async (email, fullName, jobType) => {
   try {
-    const response = await fetch('https://us-central1-zymo-prod.cloudfunctions.net/sendRejectionEmail', {
+    const response = await fetch('https://us-central1-zymo-prod.cloudfunctions.net/api/sendRejectionEmail', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
