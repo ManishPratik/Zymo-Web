@@ -27,6 +27,8 @@ const CareerForm = ({ title }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
 
+  const API_URL = import.meta.env.VITE_FUNCTIONS_API_URL;
+
   // Set document title
   useEffect(() => {
     document.title = title;
@@ -154,7 +156,7 @@ const CareerForm = ({ title }) => {
       await addDoc(collection(webDB, "careerApplications"), applicationData);
       
         try {
-        const response = await fetch('https://us-central1-zymo-prod.cloudfunctions.net/api/sendEmailOnFormSubmit', {
+        const response = await fetch(`${API_URL}/api/email/sendEmailOnFormSubmit`, {
         method: 'POST',
         headers: {
         'Content-Type': 'application/json',

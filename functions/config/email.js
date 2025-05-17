@@ -9,8 +9,8 @@ const EMAIL_PASS = defineSecret("EMAIL_PASS");
 const emailUser = process.env.EMAIL_USER || EMAIL_USER.value();
 const emailPass = process.env.EMAIL_PASS || EMAIL_PASS.value();
 
-console.log('Email User:', emailUser); // Log the email user for debugging
-console.log('Email Pass:', emailPass); // Log the email pass for debugging
+console.log('Email User:', emailUser); 
+console.log('Email Pass:', emailPass); 
 
 // Validate credentials
 if (!emailUser || !emailPass) {

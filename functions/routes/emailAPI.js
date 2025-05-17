@@ -1,6 +1,11 @@
 const express = require("express");
 const router = express.Router()
 
+
+//import the email functions 
+const { sendAcknowledgmentEmail, sendRejectionEmail } = require('../config/email.js');
+
+
 // Route for sending acknowledgment email 
 router.post("/sendEmailOnFormSubmit", async (req, res) => {
   console.log("Request method:", req.method);
