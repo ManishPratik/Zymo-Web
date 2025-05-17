@@ -858,7 +858,7 @@ function BookingPage() {
 
               <div className="my-2 flex items-center justify-between">
                 <div className="flex items-center gap-2 cursor-pointer">
-                  <img src="/public/images/Booking/plus.png" className="w-3 h-3" />
+                  <img src="/images/Booking/plus.png" className="w-3 h-3" />
                   <span>Base Fare</span>
                 </div>
                 <span>{preBookingData.fareDetails.base}</span>
@@ -869,7 +869,7 @@ function BookingPage() {
                 <>
                   <div className="my-2 flex items-center justify-between">
                     <div className="flex items-center gap-2 cursor-pointer">
-                      <img src="/public/images/Booking/plus.png" className="w-3 h-3" />
+                      <img src="/images/Booking/plus.png" className="w-3 h-3" />
                       <span>GST</span>
                     </div>
                     <span>{preBookingData.fareDetails.gst}</span>
@@ -882,7 +882,7 @@ function BookingPage() {
                 <>
                   <div className="my-2 flex items-center justify-between">
                     <div className="flex items-center gap-2 cursor-pointer">
-                      <img src="/public/images/Booking/plus.png" className="w-3 h-3" />
+                      <img src="/images/Booking/plus.png" className="w-3 h-3" />
                       <span>Security Deposit</span>
                     </div>
                     <span>{preBookingData.fareDetails.deposit}</span>
@@ -895,7 +895,7 @@ function BookingPage() {
                 <>
                   <div className="my-2 flex items-center justify-between">
                     <div className="flex items-center gap-2 cursor-pointer">
-                      <img src="/public/images/Booking/plus.png" className="w-3 h-3" />
+                      <img src="/images/Booking/plus.png" className="w-3 h-3" />
                       <span>Discount</span>
                     </div>
                     <span>- {preBookingData.fareDetails.discount}</span>
@@ -908,7 +908,7 @@ function BookingPage() {
                 <>
                   <div className="my-2 flex items-center justify-between">
                     <div className="flex items-center gap-2 cursor-pointer">
-                      <img src="/public/images/Booking/plus.png" className="w-3 h-3" />
+                      <img src="/images/Booking/plus.png" className="w-3 h-3" />
                       <span>Delivery Charges</span>
                     </div>
                     <span>{deliveryCharges}</span>
@@ -938,7 +938,7 @@ function BookingPage() {
               </div>
               <div className="flex items-center justify-center cursor-pointer">
                 <span className="py-4 text-sm text-appColor">VIEW ALL OFFERS </span>
-                <img src="/public/images/Booking/arrow-down.png" className="w-4 h-[6px] pl-2"/>
+                <img src="/images/Booking/arrow-down.png" className="w-4 h-[6px] pl-2"/>
               </div>
             </div>
 
@@ -1012,15 +1012,15 @@ function BookingPage() {
               <div>
                 <div className="flex items-center sm:gap-5 gap-3">
                   <div className="flex items-center sm:gap-2 gap-1">
-                    <img src="/public/images/Booking/gear wheel.png" className="w-4 h-4"/>
+                    <img src="/images/Booking/gear wheel.png" className="w-4 h-4"/>
                     <span>{preBookingData.carDetails.transmission}</span>
                   </div>
                   <div className="flex items-center sm:gap-2 gap-1">
-                    <img src="/public/images/Booking/gas.png" className="w-4 h-4"/>
+                    <img src="/images/Booking/gas.png" className="w-4 h-4"/>
                     <span>{preBookingData.carDetails.fuel}</span>
                   </div>
                   <div className="flex items-center sm:gap-2 gap-1">
-                    <img src="/public/images/Booking/seat.png" className="w-4 h-4"/>
+                    <img src="/images/Booking/seat.png" className="w-4 h-4"/>
                     <span>{preBookingData.carDetails.seats}</span>
                   </div>
                 </div>
@@ -1046,7 +1046,7 @@ function BookingPage() {
           <div className="xl:w-3/5 lg:w-10/12 sm:w-2/5 flex items-center sm:static absolute top-[50%] left-[-2rem]  gap-2 mb-2 sm:rotate-0 rotate-90 sm:max-w-full w-40">
             <span className="border-2 border-appColor sm:w-4 xl:h-3 w-10 h-2 rounded-full "></span>
             <div>
-              <img src="/public/images/Booking/dotted line.png" className="w-full "/>
+              <img src="/images/Booking/dotted line.png" className="w-full "/>
               <span className="absolute sm:top-[-3rem] top-[-5rem] left-[50%] w-full translate-x-[-50%] text-center text-sm sm:rotate-0 rotate-[-90deg] text-white/50">{preBookingData.pickup.tripDuration}</span>
             </div>
             <span className="border-2 border-appColor sm:w-4 xl:h-3 w-10 h-2 rounded-full "></span>
