@@ -1,11 +1,16 @@
 const functions = require('firebase-functions');
 const nodemailer = require('nodemailer');
-// Load environment variables from .env file for local development
-require('dotenv').config();
+const { defineSecret } = require("firebase-functions/params");
+
+const EMAIL_USER = defineSecret("EMAIL_USER");
+const EMAIL_PASS = defineSecret("EMAIL_PASS");
 
 // Retrieve email credentials from process.env
-const emailUser = process.env.EMAIL_USER;
-const emailPass = process.env.EMAIL_PASS;
+const emailUser = process.env.EMAIL_USER || EMAIL_USER.value();
+const emailPass = process.env.EMAIL_PASS || EMAIL_PASS.value();
+
+console.log('Email User:', emailUser); // Log the email user for debugging
+console.log('Email Pass:', emailPass); // Log the email pass for debugging
 
 // Validate credentials
 if (!emailUser || !emailPass) {
@@ -14,13 +19,25 @@ if (!emailUser || !emailPass) {
 
 // Configure Nodemailer with Gmail SMTP
 const transporter = nodemailer.createTransport({
-  service: 'smtp.gmail.com',
+  service: 'gmail',
   port: 587,
   secure: false, // true for 465, false for 587 with TLS
   auth: {
     user: emailUser,
     pass: emailPass, // Use environment variable if available
   },
+  tls: {
+    rejectUnauthorized: false
+  }
+});
+
+// Verify connection
+transporter.verify((error, success) => {
+  if (error) {
+    console.error('SMTP verification failed:', error);
+  } else {
+    console.log('SMTP server is ready to take our messages');
+  }
 });
 
 // Function to send an acknowledgment email (unchanged)

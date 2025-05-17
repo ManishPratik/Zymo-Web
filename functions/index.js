@@ -2,6 +2,13 @@ const functions = require("firebase-functions/v2");
 const express = require("express");
 const cors = require("cors");
 
+// Import routes
+const zoomcarRoutes = require("./routes/zoomcarAPI");
+const paymentRoutes = require("./routes/paymentAPI");
+const messageRoutes = require("./routes/messageAPI");
+const mychoizeRoutes = require("./routes/mychoizeAPI");
+const otpRoutes = require("./routes/otpAPI");
+
 // Import the pre-initialized admin instance
 const { admin } = require("./config/firebase-admin");
 //import the email functions 
@@ -81,12 +88,6 @@ exports.sendRejectionEmail = functions.https.onRequest(async (req, res) => {
   }
 });
 
-// Import routes
-const zoomcarRoutes = require("./routes/zoomcarAPI");
-const paymentRoutes = require("./routes/paymentAPI");
-const messageRoutes = require("./routes/messageAPI");
-const mychoizeRoutes = require("./routes/mychoizeAPI");
-const otpRoutes = require("./routes/otpAPI");
 
 // Configure routes
 app.use("/zoomcar", zoomcarRoutes);
