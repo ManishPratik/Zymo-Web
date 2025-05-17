@@ -21,7 +21,7 @@ const CarDetails = ({ title }) => {
   const location = useLocation();
   const { city } = useParams();
   const trackEvent = useTrackEvent();
-  const { startDate, endDate, car, activeTab } = location.state || {};
+  const { startDate, endDate, car, activeTab, tripDuration } = location.state || {};
 
   // Calculate trip duration
   const startTime = new Date(startDate);
@@ -83,6 +83,7 @@ const CarDetails = ({ title }) => {
           userData,
           car,
           activeTab,
+          tripDuration,
         },
       }
     );

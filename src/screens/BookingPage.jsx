@@ -1,9 +1,10 @@
-import { ArrowLeft, Calendar, IndianRupee, Car } from "lucide-react";
+import { ArrowLeft, Calendar, IndianRupee, Car, MapPinIcon } from "lucide-react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
 import { toast } from "react-toastify";
 import { useEffect, useState } from "react";
 import ConfirmPage from "../components/ConfirmPage";
+import NavBar from "../components/NavBar";
 import {
   formatDate,
   formatFare,
@@ -25,6 +26,7 @@ import BookingPageUploadPopup from "../components/BookingPageUploadPopup";
 import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
 import useTrackEvent from "../hooks/useTrackEvent";
 import BookingPageLoading from "../components/BookingPageLoading";
+import CarImageSlider from "./ImageSlider";
 
 // Function to dynamically load Razorpay script
 function loadScript(src) {
@@ -42,7 +44,7 @@ function BookingPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const { city } = useParams();
-  const { startDate, endDate, userData, car } = location.state || {};
+  const { startDate, endDate, userData, car, tripDuration } = location.state || {};
 
   const trackEvent = useTrackEvent();
 
@@ -240,12 +242,14 @@ function BookingPage() {
       name: `${car.brand} ${car.name}`,
       type: car.options.slice(0, 3).join(" | "),
       range: car.source === "Zymo" ? `${car.total_km[car.selectedPackage]} KMs` : `${findPackage(car.rateBasis)}`,
-      image: car.images[0],
+      image: car.images,
+      rating: car?.ratingData?.rating,
     },
     pickup: {
       startDate: startDateFormatted,
       endDate: endDateFormatted,
       city: city,
+      tripDuration: tripDuration,
     },
     carDetails: {
       registration: vendorDetails?.plateColor || "N/A",
@@ -801,305 +805,326 @@ function BookingPage() {
     setShowFormPopup(true);
   };
 
+  const parseNumericRupee = (value) => {
+    if (!value || typeof value !== "string") return 0;
+    const cleaned = value.replace(/[^0-9.]/g, "");
+    const num = Number(cleaned);
+    return isNaN(num) ? 0 : num;
+  };
+  
+  
+
   return (
     <div className="min-h-screen bg-[#212121]">
       <BookingPageLoading isOpen={loading} />
 
       {/* Header */}
-      <div className="bg-[#eeff87] p-4 flex items-center gap-2">
-        <button
+      <NavBar />
+
+      <div className="bg-black flex lg:pl-20 pl-5 pt-2 gap-10 items-center">
+        <button 
+          className="cursor-pointer text-white"
           onClick={() => navigate(-1)}
-          className="p-2 hover:bg-black/10 rounded-full"
-        >
-          <ArrowLeft className="w-6 h-6" />
-        </button>
-        <h1 className=" text-lg font-bold  flex-grow text-center">
-          Confirm Booking
-        </h1>
+          >
+          <ArrowLeft />
+        </button> 
+        <div>
+          <span className="text-sm text-white/75 block text-center">Location</span>
+          <div className="bg-[#212121] w-fit px-4 py-2 rounded-xl flex items-center gap-4 text-white">
+            <MapPinIcon  className="w-4"/>
+            <span>{preBookingData.pickup.city}</span>
+          </div>
+        </div>   
       </div>
 
       {/* Main Content */}
-      <div className="mx-auto p-6 sm:p-10 lg:p-20 space-y-5 text-white">
-        {/* Header Details */}
-        <div className="flex flex-col lg:flex-row flex-wrap justify-between items-center gap-5 rounded-lg p-6 shadow-sm w-full">
-          {/* Left Section */}
-          <div className="flex-1 min-w-[200px] text-xl text-center lg:text-left">
-            <h2 className="font-semibold mb-2">
-              {preBookingData.headerDetails.name}
-            </h2>
-          </div>
+      <div className="relative flex flex-col-reverse lg:items-start items-center xl:gap-16 gap-10 lg:flex-row-reverse lg:justify-between mx-auto p-5 lg:px-20 text-white bg-black">
+        
+         <div className="lg:w-1/4 flex flex-col gap-10 h-fit sticky top-10 min-w-[275px] w-full">
+            {/* Fare Details  */}
+            <div className="bg-[#212121] rounded-md p-10">
+              <h2 className="text-2xl font-bold mb-2">Fare Summary</h2>
 
-          {/* Center Image */}
-          <div className="flex-1 flex justify-center  lg:order-none">
-            <img
-              src={preBookingData.headerDetails.image || "/placeholder.svg"}
-              alt={`${preBookingData.headerDetails.name}`}
-              className="w-full max-w-xs sm:max-w-sm md:max-w-md lg:max-w-[20rem] h-[200px] sm:h-[280px] lg:h-[200px] object-cover rounded-lg"
-            />
-          </div>
-
-          {/* Right Section */}
-          <div className="flex-1 flex justify-center lg:justify-end items-center gap-2 text-lg">
-            <p className="text-muted-foreground whitespace-nowrap">
-              Fulfilled by:
-            </p>
-            <img
-              src={car.sourceImg}
-              alt={car.source}
-              className="h-10 bg-white p-2 rounded-md"
-            />
-          </div>
-        </div>
-
-        {/* Pickup Details */}
-        <div className="max-w-3xl mx-auto rounded-lg bg-[#303030] p-5">
-          <h3 className="text-center mb-3 text-white text-3xl font-bold">
-            Pickup Details
-          </h3>
-          <hr className="my-1 mb-5 border-gray-500" />
-          <div className="space-y-2">
-            {/* Start Date */}
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Calendar className="w-5 h-5 text-[#eeff87]" />
-                <p>Start Date</p>
-              </div>
-              <p className="ml-auto text-white">
-                {preBookingData.pickup.startDate}
-              </p>
-            </div>
-
-            {/* End Date */}
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Calendar className="w-5 h-5 text-[#eeff87]" />
-                <p>End Date</p>
-              </div>
-              <p className="ml-auto text-white">
-                {preBookingData.pickup.endDate}
-              </p>
-            </div>
-          </div>
-          {car.source === "mychoize" ? (
-            <>
-              <div className="mt-5 mb-4">
-                <label className="block text-sm font-medium mb-1 text-[#faffa4]">
-                  Pickup Location | Time | Charges
-                </label>
-                <div
-                  className="bg-[#404040] text-white p-3 rounded-md cursor-pointer"
-                  onClick={() => setShowPickupPopup(true)}
-                >
-                  {selectedPickupLocation
-                    ? `${selectedPickupLocation.LocationName} | ${
-                        selectedPickupLocation.IsPickDropChargesApplicable
-                          ? `₹${selectedPickupLocation.DeliveryCharge}`
-                          : "FREE"
-                      }`
-                    : "Select pickup location"}
+              <div className="my-2 flex items-center justify-between">
+                <div className="flex items-center gap-2 cursor-pointer">
+                  <img src="/public/images/Booking/plus.png" className="w-3 h-3" />
+                  <span>Base Fare</span>
                 </div>
-                <textarea
-                  disabled
-                  className="w-full mt-2 p-3 bg-[#404040] rounded-md text-gray-200 focus:outline-none focus:ring-2 focus:ring-[#faffa5]"
-                  placeholder={
-                    selectedPickupLocation
-                      ? selectedPickupLocation.HubAddress
-                      : ""
-                  }
-                  rows="3"
-                ></textarea>
+                <span>{preBookingData.fareDetails.base}</span>
               </div>
+              <hr className="border-white/25" />
 
-              <div className="mb-4">
-                <label className="block text-sm font-medium mb-1 text-[#faffa4]">
-                  Drop Location | Time | Charges
-                </label>
-                <div
-                  className="bg-[#404040] text-white p-3 rounded-md cursor-pointer"
-                  onClick={() => setShowDropupPopup(true)}
-                >
-                  {selectedDropLocation
-                    ? `${selectedDropLocation.LocationName} | ${
-                        selectedDropLocation.IsPickDropChargesApplicable
-                          ? `₹${selectedDropLocation.DeliveryCharge}`
-                          : "FREE"
-                      }`
-                    : "Select drop location"}
-                </div>
-                <textarea
-                  disabled
-                  className="w-full mt-2 p-3 bg-[#404040] rounded-md text-gray-200 focus:outline-none focus:ring-2 focus:ring-[#faffa5]"
-                  placeholder={
-                    selectedDropLocation ? selectedDropLocation.HubAddress : ""
-                  }
-                  rows="3"
-                ></textarea>
-              </div>
-
-              {showPickupPopup && (
-                <PickupPopup
-                  setIsOpen={setShowPickupPopup}
-                  pickupLocations={mychoizePickupLocations}
-                  setSelectedPickupLocation={setSelectedPickupLocation}
-                />
+              {parseNumericRupee(preBookingData.fareDetails.gst) > 0 && (
+                <>
+                  <div className="my-2 flex items-center justify-between">
+                    <div className="flex items-center gap-2 cursor-pointer">
+                      <img src="/public/images/Booking/plus.png" className="w-3 h-3" />
+                      <span>GST</span>
+                    </div>
+                    <span>{preBookingData.fareDetails.gst}</span>
+                  </div>
+                  <hr className="border-white/25" />
+                </>
               )}
-              {showDropupPopup && (
-                <DropupPopup
-                  setIsOpen={setShowDropupPopup}
-                  dropupLocations={mychoizeDropupLocations}
-                  setSelectedDropLocation={setSelectedDropLocation}
-                />
+
+              {parseNumericRupee(preBookingData.fareDetails.deposit) > 0 && (
+                <>
+                  <div className="my-2 flex items-center justify-between">
+                    <div className="flex items-center gap-2 cursor-pointer">
+                      <img src="/public/images/Booking/plus.png" className="w-3 h-3" />
+                      <span>Security Deposit</span>
+                    </div>
+                    <span>{preBookingData.fareDetails.deposit}</span>
+                  </div>
+                  <hr className="border-white/25" />
+                </>
               )}
-            </>
-          ) : (
-            ""
-          )}
-        </div>
 
-        {/* Car Details */}
-        <div className="max-w-3xl mx-auto rounded-lg bg-[#303030] p-5">
-          <h3 className="text-center mb-6 text-white text-3xl font-bold">
-            Car Details
-          </h3>
-          <hr className="my-1 mb-5 border-gray-500" />
-          <div className="space-y-2">
-            {/* Registeration */}
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Car className="w-5 h-5 text-[#eeff87]" />
-                <p>Registeration</p>
-              </div>
-              <p className="ml-auto text-white">
-                {preBookingData.carDetails.registration}
-              </p>
-            </div>
+              {parseNumericRupee(preBookingData.fareDetails.discount) > 0 && (
+                <>
+                  <div className="my-2 flex items-center justify-between">
+                    <div className="flex items-center gap-2 cursor-pointer">
+                      <img src="/public/images/Booking/plus.png" className="w-3 h-3" />
+                      <span>Discount</span>
+                    </div>
+                    <span>- {preBookingData.fareDetails.discount}</span>
+                  </div>
+                  <hr className="border-white/25" />
+                </>
+              )}
 
-            {/* Package */}
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Car className="w-5 h-5 text-[#eeff87]" />
-                <p>Package</p>
-              </div>
-              <p className="ml-auto text-white">
-                {preBookingData.carDetails.package}
-              </p>
-            </div>
+              {parseNumericRupee(deliveryCharges) > 0 && (
+                <>
+                  <div className="my-2 flex items-center justify-between">
+                    <div className="flex items-center gap-2 cursor-pointer">
+                      <img src="/public/images/Booking/plus.png" className="w-3 h-3" />
+                      <span>Delivery Charges</span>
+                    </div>
+                    <span>{deliveryCharges}</span>
+                  </div>
+                  <hr className="border-white/25" />
+                </>
+              )}
 
-            {/* Transmission */}
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Car className="w-5 h-5 text-[#eeff87]" />
-                <p>Transmission</p>
-              </div>
-              <p className="ml-auto text-white">
-                {preBookingData.carDetails.transmission}
-              </p>
-            </div>
-
-            {/* Fuel */}
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Car className="w-5 h-5 text-[#eeff87]" />
-                <p>Fuel Type</p>
-              </div>
-              <p className="ml-auto text-white">
-                {preBookingData.carDetails.fuel}
-              </p>
-            </div>
-
-            {/* Seats */}
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Car className="w-5 h-5 text-[#eeff87]" />
-                <p>Seats</p>
-              </div>
-              <p className="ml-auto text-white">
-                {preBookingData.carDetails.seats}
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {/* Fare Details */}
-        <div className="max-w-3xl mx-auto rounded-lg bg-[#303030] p-5">
-          <h3 className="text-center mb-6 text-white text-3xl font-bold">
-            Fare Details
-          </h3>
-          <hr className="my-1 mb-5 border-gray-500" />
-          <div className="space-y-2">
-            {/* Base Fare */}
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <IndianRupee className="w-5 h-5 text-[#eeff87]" />
-                <span>Base Fare</span>
-              </div>
-              <span className="ml-auto text-white">
-                {preBookingData.fareDetails.base}
-              </span>
-            </div>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <IndianRupee className="w-5 h-5 text-[#eeff87]" />
-                <span>GST</span>
-              </div>
-              <span className="ml-auto text-white">
-                {preBookingData.fareDetails.gst}
-              </span>
-            </div>
-
-            {/* Refundable Deposit */}
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <IndianRupee className="w-5 h-5 text-[#eeff87]" />
-                <span>Security Deposit</span>
-              </div>
-              <span className="ml-auto text-white">
-                {preBookingData.fareDetails.deposit}
-              </span>
-            </div>
-
-            {/* Discount */}
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <IndianRupee className="w-5 h-5 text-[#eeff87]" />
-                <span>
-                  Discount{" "}
-                  {/* {`(${((1 - vendorDetails?.DiscountSd) * 100).toFixed(0)}%)`} */}
-                </span>
-              </div>
-              <span className="ml-auto text-white">
-                {`- ${preBookingData.fareDetails.discount}`}
-              </span>
-            </div>
-
-            {deliveryCharges > 0 ? (
-              <div className="flex items-center justify-between">
+              <div className="my-2 flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <IndianRupee className="w-5 h-5 text-[#eeff87]" />
-                  <span>Delivery Charges</span>
+                  <span className="text-appColor">Total Fare</span>
                 </div>
-                <span className="ml-auto text-white">
-                  {formatFare(deliveryCharges)}
+                <span className="text-appColor">
+                  {preBookingData.fareDetails.payable_amount}
                 </span>
+              </div>
+            </div>
+
+
+            {/* Coupons and Offers */}
+            <div className="bg-[#212121] rounded-md overflow-hidden mx-auto">
+              <div className="px-10 py-4 bg-appColor">
+                <h2 className="text-darkGrey font-bold text-xl">Coupons and Offers</h2>
+              </div>
+              <div className="px-10 py-5">
+                <input className="bg-darkGrey2 w-full p-2 pl-4 rounded-md" placeholder="Enter Coupon code"/>
+              </div>
+              <div className="flex items-center justify-center cursor-pointer">
+                <span className="py-4 text-sm text-appColor">VIEW ALL OFFERS </span>
+                <img src="/public/images/Booking/arrow-down.png" className="w-4 h-[6px] pl-2"/>
+              </div>
+            </div>
+
+            {/* Book Button */}
+            {car.source === "zoomcar" ? (
+              <div className="flex justify-center items-center">
+                <button
+                  className="text-black bg-appColor hover:bg-transparent hover:border-appColor hover:border-2 hover:text-appColor px-6 py-2 rounded-lg font-semibold  transition-colors cursor-pointer"
+                  onClick={handlePayment}
+                >
+                  Book & Pay
+                </button>
               </div>
             ) : (
-              ""
-            )}
-
-            <hr className="my-0 border-gray-600" />
-
-            {/* Payable Amount */}
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <IndianRupee className="w-5 h-5 text-[#eeff87]" />
-                <span>Payable Amount</span>
+              <div className="flex justify-center items-center">
+                <button
+                  className="text-black bg-appColor hover:bg-transparent hover:border-appColor hover:border-2 hover:text-appColor px-6 py-2 rounded-lg font-semibold  transition-colors cursor-pointer"
+                  onClick={handlePayment}
+                  disabled={!customerUploadDetails}
+                >
+                  Book & Pay
+                </button>
               </div>
-              <span className="ml-auto text-[#eeff87]">
-                {preBookingData.fareDetails.payable_amount}
-              </span>
-            </div>
+            )}
+         </div>
+
+        {/* <button 
+          className="absolute top-7 md:left-16 left-6 cursor-pointer"
+          onClick={() => navigate(-1)}
+          >
+          <ArrowLeft />
+        </button>    
+        <div className="absolute top-7 md:left-44 left-[50%] translate-x-[-50%] bg-[#212121] px-4 py-2 rounded-xl flex items-center gap-4">
+          <span className="absolute -top-6 left-[50%] translate-x-[-50%] text-sm text-white/50">Location</span>
+          <MapPinIcon  className="w-4"/>
+          <span>{preBookingData.pickup.city}</span>
+        </div> */}
+
+        <div className="lg:w-3/4 sm:p-10 p-2 bg-[#212121] rounded-md w-full">
+        
+          <div className="flex flex-col sm:flex-row items-center flex-wrap justify-evenly gap-2 mb-10 w-full">
+
+            {/* Car Image */}
+            <CarImageSlider preBookingData={preBookingData} />
+
+
+            <div className="flex flex-col gap-3 xl:items-start items-center mt-5 xl:mt-0">
+
+              <div className="flex-1 min-w-[200px] text-xl text-center lg:text-left">
+                <h2 className="font-bold text-2xl mb-1">
+                  {preBookingData.headerDetails.name}
+                </h2>
+              </div>
+              <div className="flex-1 flex justify-center lg:justify-start items-center sm:gap-10 gap-5 text-base">
+                <p className="text-muted-foreground whitespace-nowrap">
+                  Fulfilled by:
+                </p>
+                <img
+                  src={car.sourceImg}
+                  alt={car.source}
+                  className="h-10 bg-white p-2 rounded-md"
+                />
+              </div>
+
+              {/* Rating */}
+              <div className="flex items-center bg-[#faffa3] w-fit sm:px-3 px-2 sm:py-1 py-[2px] rounded-md">
+                <span className="text-[#212121] font-bold">{preBookingData.headerDetails.rating} ★</span>
+              </div>
+
+              {/* Labels */}
+              <div>
+                <div className="flex items-center sm:gap-5 gap-3">
+                  <div className="flex items-center sm:gap-2 gap-1">
+                    <img src="/public/images/Booking/gear wheel.png" className="w-4 h-4"/>
+                    <span>{preBookingData.carDetails.transmission}</span>
+                  </div>
+                  <div className="flex items-center sm:gap-2 gap-1">
+                    <img src="/public/images/Booking/gas.png" className="w-4 h-4"/>
+                    <span>{preBookingData.carDetails.fuel}</span>
+                  </div>
+                  <div className="flex items-center sm:gap-2 gap-1">
+                    <img src="/public/images/Booking/seat.png" className="w-4 h-4"/>
+                    <span>{preBookingData.carDetails.seats}</span>
+                  </div>
+                </div>
+                <div className="flex items-center xl:justify-start justify-center mt-2"> 
+                  <p>Package: <span>{preBookingData.carDetails.package}</span></p>
+                </div>
+              </div>
+            
           </div>
+
         </div>
+
+        <div className="relative w-full sm:my-20 my-32 flex flex-col sm:flex-row sm:items-end gap-4 justify-between">
+        
+          <div className="xl:w-1/5 lg:w-1/12 w-1/5 min-w-[120px] flex flex-col text-center sm:static absolute top-[-5rem] left-16">
+            <span className="text-white/50 sm:block mb-2 text-sm hidden">Start Date</span>
+            <p className="flex gap-1 sm:flex-row-reverse flex-row">
+              <Calendar className="mt-1" size={20}/>
+              <span className="font-bold xl:text-base text-sm">{preBookingData.pickup.startDate}</span>
+            </p>
+          </div>
+
+          <div className="xl:w-3/5 lg:w-10/12 sm:w-2/5 flex items-center sm:static absolute top-[50%] left-[-2rem]  gap-2 mb-2 sm:rotate-0 rotate-90 sm:max-w-full w-40">
+            <span className="border-2 border-appColor sm:w-4 xl:h-3 w-10 h-2 rounded-full "></span>
+            <div>
+              <img src="/public/images/Booking/dotted line.png" className="w-full "/>
+              <span className="absolute sm:top-[-3rem] top-[-5rem] left-[50%] w-full translate-x-[-50%] text-center text-sm sm:rotate-0 rotate-[-90deg] text-white/50">{preBookingData.pickup.tripDuration}</span>
+            </div>
+            <span className="border-2 border-appColor sm:w-4 xl:h-3 w-10 h-2 rounded-full "></span>
+          </div>
+
+          <div className="xl:w-1/5 lg:w-1/12 w-1/5 min-w-[120px] flex flex-col text-center sm:static absolute bottom-[-6rem] left-16">
+            <span className="text-white/50 sm:block mb-2 text-sm hidden">End Date</span>
+            <p className="flex gap-1">
+              <Calendar className="mt-1" size={20}/>
+              <span className="font-bold xl:text-base text-sm">{preBookingData.pickup.endDate}</span>
+            </p>
+          </div>
+
+        </div>
+
+
+        {/* Pickup Details */}
+
+        {car.source === "mychoize" && (
+          <div className="max-w-3xl mx-auto rounded-lg bg-[#303030] p-5">
+            <div className="mt-5 mb-4">
+              <label className="block text-sm font-medium mb-1 text-[#faffa4]">
+                Pickup Location | Time | Charges
+              </label>
+              <div
+                className="bg-[#404040] text-white p-3 rounded-md cursor-pointer"
+                onClick={() => setShowPickupPopup(true)}
+              >
+                {selectedPickupLocation
+                  ? `${selectedPickupLocation.LocationName} | ${
+                      selectedPickupLocation.IsPickDropChargesApplicable
+                        ? `₹${selectedPickupLocation.DeliveryCharge}`
+                        : "FREE"
+                    }`
+                  : "Select pickup location"}
+              </div>
+              <textarea
+                disabled
+                className="w-full mt-2 p-3 bg-[#404040] rounded-md text-gray-200 focus:outline-none focus:ring-2 focus:ring-[#faffa4]"
+                placeholder={
+                  selectedPickupLocation ? selectedPickupLocation.HubAddress : ""
+                }
+                rows="3"
+              ></textarea>
+            </div>
+
+            <div className="mb-4">
+              <label className="block text-sm font-medium mb-1 text-[#faffa4]">
+                Drop Location | Time | Charges
+              </label>
+              <div
+                className="bg-[#404040] text-white p-3 rounded-md cursor-pointer"
+                onClick={() => setShowDropupPopup(true)}
+              >
+                {selectedDropLocation
+                  ? `${selectedDropLocation.LocationName} | ${
+                      selectedDropLocation.IsPickDropChargesApplicable
+                        ? `₹${selectedDropLocation.DeliveryCharge}`
+                        : "FREE"
+                    }`
+                  : "Select drop location"}
+              </div>
+              <textarea
+                disabled
+                className="w-full mt-2 p-3 bg-[#404040] rounded-md text-gray-200 focus:outline-none focus:ring-2 focus:ring-[#faffa4]"
+                placeholder={
+                  selectedDropLocation ? selectedDropLocation.HubAddress : ""
+                }
+                rows="3"
+              ></textarea>
+            </div>
+
+            {showPickupPopup && (
+              <PickupPopup
+                setIsOpen={setShowPickupPopup}
+                pickupLocations={mychoizePickupLocations}
+                setSelectedPickupLocation={setSelectedPickupLocation}
+              />
+            )}
+            {showDropupPopup && (
+              <DropupPopup
+                setIsOpen={setShowDropupPopup}
+                dropupLocations={mychoizeDropupLocations}
+                setSelectedDropLocation={setSelectedDropLocation}
+              />
+            )}
+          </div>
+        )}
+
 
         {/* zoom car section */}
         {car.source === "zoomcar" && (
@@ -1160,38 +1185,38 @@ function BookingPage() {
             <div className="space-y-4">
               {/* Name Input */}
               <div className="flex flex-col">
-                <label className="text-lg text-[#eeff87]">Name</label>
+                <label className="text-lg text-appColor">Name</label>
                 <input
                   type="text"
                   value={customerName}
                   onChange={(e) => setCustomerName(e.target.value)}
-                  className="p-2 rounded-lg bg-gray-500/30 text-white border border-gray-500 focus:outline-none focus:ring-2 focus:ring-[#eeff87]"
+                  className="p-2 rounded-lg bg-gray-500/30 text-white border border-gray-500 focus:outline-none focus:ring-2 focus:ring-appColor"
                   placeholder="Enter your name"
                 />
               </div>
 
               {/* Phone Input */}
               <div className="flex flex-col">
-                <label className="text-lg text-[#eeff87]">Phone</label>
+                <label className="text-lg text-appColor">Phone</label>
                 <input
                   type="text"
                   pattern="[0-9]{10}"
                   maxLength={10}
                   value={customerPhone}
                   onChange={(e) => setCustomerPhone(e.target.value)}
-                  className="p-2 rounded-lg bg-gray-500/30 text-white border border-gray-500 focus:outline-none focus:ring-2 focus:ring-[#eeff87]"
+                  className="p-2 rounded-lg bg-gray-500/30 text-white border border-gray-500 focus:outline-none focus:ring-2 focus:ring-appColor"
                   placeholder="Enter your phone number"
                 />
               </div>
 
               {/* Email Input */}
               <div className="flex flex-col">
-                <label className="text-lg text-[#eeff87]">Email</label>
+                <label className="text-lg text-appColor">Email</label>
                 <input
                   type="email"
                   value={customerEmail}
                   onChange={(e) => setCustomerEmail(e.target.value)}
-                  className="p-2 rounded-lg bg-gray-500/30 text-white border border-gray-500 focus:outline-none focus:ring-2 focus:ring-[#eeff87]"
+                  className="p-2 rounded-lg bg-gray-500/30 text-white border border-gray-500 focus:outline-none focus:ring-2 focus:ring-appColor"
                   placeholder="Enter your email"
                 />
               </div>
@@ -1202,8 +1227,8 @@ function BookingPage() {
                 className={`px-6 py-2 rounded-lg font-semibold  transition-colors
                                 ${
                                   !customerUploadDetails
-                                    ? "text-black bg-[#eeff87] hover:bg-[#e2ff5d] cursor-pointer"
-                                    : "text-[#eeff87] bg-transparent border-2 border-[#eeff87] cursor-not-allowed"
+                                    ? "text-black bg-appColor hover:bg-[#e2ff5d] cursor-pointer"
+                                    : "text-appColor bg-transparent border-2 border-appColor cursor-not-allowed"
                                 }`}
                 onClick={handleUploadDocuments}
                 disabled={customerUploadDetails}
@@ -1237,27 +1262,7 @@ function BookingPage() {
           )}
         </div>
 
-        {/* Book Button */}
-        {car.source === "zoomcar" ? (
-          <div className="flex justify-center items-center">
-            <button
-              className="text-black bg-[#eeff87] hover:bg-[#e2ff5d] px-6 py-2 rounded-lg font-semibold  transition-colors"
-              onClick={handlePayment}
-            >
-              Book & Pay
-            </button>
-          </div>
-        ) : (
-          <div className="flex justify-center items-center">
-            <button
-              className="text-black bg-[#eeff87] hover:bg-[#e2ff5d] px-6 py-2 rounded-lg font-semibold  transition-colors"
-              onClick={handlePayment}
-              disabled={!customerUploadDetails}
-            >
-              Book & Pay
-            </button>
-          </div>
-        )}
+        </div>
       </div>
 
       <ConfirmPage

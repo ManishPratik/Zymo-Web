@@ -8,7 +8,7 @@ export default {
     extend: {
 
       colors: {
-        appColor: "#edff8d", // Define appColor
+        appColor: "#faffa4", // Define appColor
         darkGrey: "#212121", // Corresponds to Colors.grey[900]
         darkGrey2: "#424242", // Corresponds to Colors.grey[800]
         black: "#000000",    // Black color
