@@ -153,23 +153,23 @@ const CareerForm = ({ title }) => {
       // Submit to Firestore
       await addDoc(collection(webDB, "careerApplications"), applicationData);
       
-      // Call the HTTP-triggered Cloud Function to send the email
-    const response = await fetch('https://us-central1-zymo-prod.cloudfunctions.net/sendEmailOnFormSubmit', {
-      method: 'POST',
-      headers: {
+        try {
+        const response = await fetch('https://us-central1-zymo-prod.cloudfunctions.net/api/sendEmailOnFormSubmit', {
+        method: 'POST',
+        headers: {
         'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        email: formData.email,
-        fullName: formData.fullName,
-      }),
-    });
+        },
+      body: JSON.stringify(formData),
+      });
 
-    if (!response.ok) {
-      console.error('Failed to trigger email sending:', await response.text());
-      alert('Failed to send confirmation email. Please try again later.');
-    } else {
-      console.log('Email trigger successful:', await response.text());
+      if (!response.ok) {
+      throw new Error('Failed to submit application');
+      }
+
+      console.log('Application submitted successfully');
+      } catch (error) {
+      console.error('Error submitting application:', error);
+      throw error;
     }
 
       // Reset form after successful submission
