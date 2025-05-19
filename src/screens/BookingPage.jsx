@@ -108,6 +108,7 @@ function BookingPage() {
       }
       console.log("Fetching vendor details for:", vendor);
       const docRef = doc(appDB, "carvendors", vendor);
+      
       const docSnap = await getDoc(docRef);
       setVendorDetails(docSnap.data());
       console.log(docSnap.data());
@@ -393,15 +394,20 @@ function BookingPage() {
   };
 
   const saveSuccessfulBooking = async (paymentId, booking_id = null) => {
-    const phone = customerPhone || formData.phone;
+    console.log("saveSuccessfulBooking called");
+   const phone = customerPhone || formData.phone;
     const formattedPhoneNumber = phone.startsWith("+91")
       ? phone
       : `+91${phone}`;
 
     const bookingId = booking_id || "Z" + new Date().getTime().toString();
     const documents = await uploadDocs(uploadDocData);
-
-    const bookingDataStructure = {
+    /*const bookingDataStructure = {
+      CarImage: car.images[0],
+      CarName: `${car.brand} ${car.name}`,
+      Email: formData?.email || customerEmail,
+    }*/
+   const bookingDataStructure = {
       Balance: 0,
       CarImage: car.images[0],
       CarName: `${car.brand} ${car.name}`,
@@ -438,7 +444,7 @@ function BookingPage() {
       price: payableAmount,
     };
     setBookingData(bookingDataStructure);
-
+    console.log("Booking data structure:", bookingDataStructure);
     await addDoc(
       collection(appDB, "CarsPaymentSuccessDetails"),
       bookingDataStructure
@@ -768,6 +774,22 @@ function BookingPage() {
               handleMychoizeBooking(data);
             } else if (vendor === "ZoomCar") {
               handleZoomcarBooking(data);
+            } else {
+              // For other vendors (e.g., Zymo), save booking and show confirmation
+              setLoading(true);
+              saveSuccessfulBooking(data.razorpay_payment_id)
+                .then(() => {
+                  setLoading(false);
+                  setIsConfirmPopupOpen(true);
+                })
+                .catch((error) => {
+                  setLoading(false);
+                  console.error(error);
+                  toast.error("Booking creation failed...", {
+                    position: "top-center",
+                    autoClose: 5000,
+                  });
+                });
             }
           } else {
             toast.error("Payment error, Please try again...", {
@@ -831,6 +853,7 @@ function BookingPage() {
 
       {/* Header */}
       <NavBar />
+
 
       <div className="bg-black flex lg:pl-20 pl-5 pt-2 gap-10 items-center">
         <button 
