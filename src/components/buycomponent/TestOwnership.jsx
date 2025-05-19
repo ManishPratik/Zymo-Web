@@ -75,7 +75,7 @@ export default function TestOwnership() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          transition={{ duration: 0.6 }}
+          transition={{ duration: 0.6, ease: "easeInOut" }}
           className={`w-full max-w-[1200px] ${
             isFinalStep
               ? "flex flex-col items-center justify-center text-center gap-6"
@@ -101,12 +101,9 @@ export default function TestOwnership() {
             })()
           ) : (
             <>
-              {/* smaller viewport animation */}
+              {/* Mobile layout */}
               <div className="flex flex-col items-center w-full md:hidden">
-                <motion.div
-                  layout
-                  className="flex flex-col items-center"
-                >
+                <motion.div layout className="flex flex-col items-center">
                   <span className="text-base text-white self-start">0{stepPairIndex + 1}</span>
                   <WordAnimation
                     text={current.title}
@@ -125,7 +122,7 @@ export default function TestOwnership() {
                       initial={{ opacity: 0, y: 30 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: 30 }}
-                      transition={{ duration: 0.5 }}
+                      transition={{ duration: 0.5, ease: "easeInOut" }}
                       className="flex flex-col items-center mt-10"
                     >
                       <span className="text-base text-white self-start">0{stepPairIndex + 2}</span>
@@ -142,9 +139,13 @@ export default function TestOwnership() {
                 </AnimatePresence>
               </div>
 
-              {/* desktop original layout */}
-              <div className="hidden md:block">
-                <div className="flex flex-col md:absolute lg:top-16 lg:left-52 top-24 left-32">
+              {/* Desktop layout using Grid */}
+              <motion.div
+                layout
+                className="hidden md:grid grid-cols-2 gap-x-10 w-full max-w-6xl mx-auto"
+              >
+                {/* Left */}
+                <motion.div layout className="flex flex-col justify-start">
                   <span className="lg:text-lg text-white">0{stepPairIndex + 1}</span>
                   <WordAnimation
                     text={current.title}
@@ -154,21 +155,31 @@ export default function TestOwnership() {
                     text={current.desc}
                     className="lg:text-xl text-base max-w-md"
                   />
-                </div>
-                {showSecondStep && next && (
-                  <div className="flex flex-col sm:mt-10 md:absolute lg:bottom-44 lg:right-60 right-32">
-                    <span className="lg:text-lg text-white">0{stepPairIndex + 2}</span>
-                    <WordAnimation
-                      text={next.title}
-                      className="lg:text-6xl text-[2rem] font-bold lg:mb-10 mb-5 leading-9"
-                    />
-                    <WordAnimation
-                      text={next.desc}
-                      className="lg:text-xl text-base max-w-md"
-                    />
-                  </div>
-                )}
-              </div>
+                </motion.div>
+
+                {/* Right */}
+                <motion.div
+                  layout
+                  animate={{ marginTop: showSecondStep ? 128 : 0 }}
+                  transition={{ duration: 0.5, ease: "easeInOut" }}
+                  className="flex flex-col"
+                >
+
+                  {showSecondStep && next && (
+                    <>
+                      <span className="lg:text-lg text-white">0{stepPairIndex + 2}</span>
+                      <WordAnimation
+                        text={next.title}
+                        className="lg:text-6xl text-[2rem] font-bold lg:mb-10 mb-5 leading-9"
+                      />
+                      <WordAnimation
+                        text={next.desc}
+                        className="lg:text-xl text-base max-w-md"
+                      />
+                    </>
+                  )}
+                </motion.div>
+              </motion.div>
             </>
           )}
         </motion.div>
