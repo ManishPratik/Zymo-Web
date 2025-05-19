@@ -35,30 +35,47 @@ const steps = [
 ];
 
 export default function TestOwnership() {
-  const [index, setIndex] = useState(0);
-  const isFinalStep = index >= steps.length - 1;
+  const [stepPairIndex, setStepPairIndex] = useState(0);
+  const [showSecondStep, setShowSecondStep] = useState(false);
+  const [cycle, setCycle] = useState(0);
+  const isFinalStep = stepPairIndex >= steps.length - 1;
 
   useEffect(() => {
-    const delay = isFinalStep ? 6000 : 4000;
-    const timer = setTimeout(() => {
-      const nextIndex = isFinalStep ? 0 : index + 2;
-      setIndex(nextIndex);
-    }, delay);
-    return () => clearTimeout(timer);
-  }, [index, isFinalStep]);
+    const timer1 = setTimeout(() => {
+      if (!isFinalStep) {
+        setShowSecondStep(true);
+      }
+    }, 2000); 
 
-  const current = steps[index];
-  const next = steps[index + 1];
+    const timer2 = setTimeout(() => {
+      setShowSecondStep(false);
+      if (stepPairIndex + 2 >= steps.length) {
+        setStepPairIndex(0);
+        setCycle(cycle => cycle + 1);
+      } else {
+        setStepPairIndex(stepPairIndex + 2);
+      }
+    }, 4000);
+    
+
+    return () => {
+      clearTimeout(timer1);
+      clearTimeout(timer2);
+    };
+  }, [stepPairIndex]);
+
+  const current = steps[stepPairIndex];
+  const next = steps[stepPairIndex + 1];
 
   return (
     <div className="relative h-screen w-full bg-[#212121] text-white px-10 sm:px-20 flex items-center justify-center">
       <AnimatePresence mode="wait">
         <motion.div
-          key={index}
+          key={`${cycle} - ${stepPairIndex}`}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          transition={{ duration: 0.6 }}
+          transition={{ duration: 0.6, ease: "easeInOut" }}
           className={`w-full max-w-[1200px] ${
             isFinalStep
               ? "flex flex-col items-center justify-center text-center gap-6"
@@ -84,18 +101,85 @@ export default function TestOwnership() {
             })()
           ) : (
             <>
-              <div className="flex flex-col lg:absolute top-16 left-52">
-                <span className="lg:text-lg text-white">0{index + 1}</span>
-                <WordAnimation text={current.title} className="lg:text-6xl text-[2rem] font-bold lg:mb-10 mb-5 leading-9" />
-                <WordAnimation text={current.desc} className="lg:text-xl text-base max-w-md" />
+              {/* Mobile layout */}
+              <div className="flex flex-col items-center w-full md:hidden">
+                <motion.div layout className="flex flex-col items-center">
+                  <span className="text-base text-white self-start">0{stepPairIndex + 1}</span>
+                  <WordAnimation
+                    text={current.title}
+                    className="text-[2rem] font-bold mb-5 leading-9 self-start"
+                  />
+                  <WordAnimation
+                    text={current.desc}
+                    className="text-base max-w-md self-start"
+                  />
+                </motion.div>
+                <AnimatePresence>
+                  {showSecondStep && next && (
+                    <motion.div
+                      layout
+                      key={stepPairIndex + 1}
+                      initial={{ opacity: 0, y: 30 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: 30 }}
+                      transition={{ duration: 0.5, ease: "easeInOut" }}
+                      className="flex flex-col items-center mt-10"
+                    >
+                      <span className="text-base text-white self-start">0{stepPairIndex + 2}</span>
+                      <WordAnimation
+                        text={next.title}
+                        className="text-[2rem] font-bold mb-5 leading-9 self-start"
+                      />
+                      <WordAnimation
+                        text={next.desc}
+                        className="text-base max-w-md self-start"
+                      />
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
-              {next && (
-                <div className="flex flex-col lg:absolute bottom-44 right-60">
-                  <span className="lg:text-lg text-white">0{index + 2}</span>
-                  <WordAnimation text={next.title} className="lg:text-6xl text-[2rem] font-bold lg:mb-10 mb-5 leading-9" />
-                  <WordAnimation text={next.desc} className="lg:text-xl text-base max-w-md" />
-                </div>
-              )}
+
+              {/* Desktop layout using Grid */}
+              <motion.div
+                layout
+                className="hidden md:grid grid-cols-2 gap-x-10 w-full max-w-6xl mx-auto"
+              >
+                {/* Left */}
+                <motion.div layout className="flex flex-col justify-start">
+                  <span className="lg:text-lg text-white">0{stepPairIndex + 1}</span>
+                  <WordAnimation
+                    text={current.title}
+                    className="lg:text-6xl text-[2rem] font-bold lg:mb-10 mb-5 leading-9"
+                  />
+                  <WordAnimation
+                    text={current.desc}
+                    className="lg:text-xl text-base max-w-md"
+                  />
+                </motion.div>
+
+                {/* Right */}
+                <motion.div
+                  layout
+                  animate={{ marginTop: showSecondStep ? 128 : 0 }}
+                  transition={{ duration: 0.5, ease: "easeInOut" }}
+                  className="flex flex-col"
+                >
+
+                  {showSecondStep && next && (
+                    <>
+                      <span className="lg:text-lg text-white">0{stepPairIndex + 2}</span>
+                      <WordAnimation
+                        text={next.title}
+                        className="lg:text-6xl text-[2rem] font-bold lg:mb-10 mb-5 leading-9"
+                      />
+                      <WordAnimation
+                        text={next.desc}
+                        className="lg:text-xl text-base max-w-md"
+                      />
+                    </>
+                  )}
+                </motion.div>
+              </motion.div>
             </>
           )}
         </motion.div>
