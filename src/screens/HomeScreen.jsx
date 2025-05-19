@@ -35,7 +35,7 @@ const HomeScreen = ({ title, canonical }) => {
 
   const pageDescription = city
     ? `Rent affordable self-drive cars in ${capitalizedCity}. Compare prices, book in minutes, and enjoy affordable, hassle-free car rentals.`
-    : "Rent self-drive cars easily with Zymo. Compare prices, book in minutes, and enjoy affordable, hassle-free car rentals.";
+    : "Compare self drive car hire deals across India and get the lowest price with Zymo. No frills, just the best value.";
 
   const canonicalLink = canonical
     ? `https://zymo.app${canonical}`
@@ -55,7 +55,7 @@ const HomeScreen = ({ title, canonical }) => {
   return (
     <>
       <Helmet>
-        <title>{pageTitle}</title>
+        <title>Self Drive Car Hire India – Compare Deals, Lowest Price</title> {/* Statically added title */}
         <meta name="description" content={pageDescription} />
         <meta property="og:title" content={pageTitle} />
         <meta property="og:description" content={pageDescription} />
