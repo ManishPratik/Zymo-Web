@@ -34,10 +34,8 @@ const BookingCard = ({ title }) => {
           (vendor) =>
            ( vendor.id?.toLowerCase() === (isKaryana ? "karyana" : car?.source?.toLowerCase())) || (vendor.id?.toLowerCase() === ("zt"))
         );
-        console.log("Selected Vendor:", selectedVendor);
         if (selectedVendor) {
           setVendorDetails(selectedVendor);
-          console.log("Vendor Details:", selectedVendor);
         }
       } catch (error) {
         console.error("Error fetching vendor details:", error);
@@ -80,7 +78,6 @@ const BookingCard = ({ title }) => {
         packageName: findPackage(variation.rateBasis || "FF"),
       };
     } else if (isMyChoize) {
-      console.log("Selected Car:", selectedCar);
       // For MyChoize cars with rateBasisFare
       const rateBasis = selectedCar;
       const baseFare = car.rateBasisFare[rateBasis];
@@ -132,8 +129,7 @@ const BookingCard = ({ title }) => {
   useEffect(() => {
     document.title = title;
   }, [title]);
-  console.log("Car Details hi :", car);
-  console.log("car options:", car?.options);
+
   return (
     <>
       <Helmet>
@@ -235,12 +231,10 @@ const BookingCard = ({ title }) => {
               ))}
 
             {/* Render Karyana cars */}
-            {console.log(isKaryana, isZT, car?.cars)}
             {(isKaryana || isZT) &&
               car?.cars &&
               Array.isArray(car.cars) &&
               car.cars[0].variations.map((variation, index) => {
-                console.log("Car Details:", index, variation);
                 return (
                   <div
                     key={`karyana-${index}`}
@@ -339,7 +333,6 @@ const BookingCard = ({ title }) => {
                             <span>• {option}</span>
                           </li>
                         ))}
-                      {console.log("Car Details hello:", index, car.total_km)}
                       <li className="flex items-center gap-2 text-md">
                         <span>• {`Total KMs : ${car.total_km[index]}`}</span>
                       </li>

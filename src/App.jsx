@@ -60,7 +60,7 @@ const App = () => {
             path="/"
             element={
               <HomeScreen
-                title="Affordable Self-Drive Car Rentals | Compare, Save, and Book with Zymo"
+                title="Self Drive Car Hire India – Compare Deals, Lowest Price"
                 canonical="/"
               />
             }

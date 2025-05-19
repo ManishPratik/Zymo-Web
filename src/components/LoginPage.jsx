@@ -98,13 +98,13 @@ const LoginPage = ({ onAuth, isOpen, onClose }) => {
           </div>
           
           {/* Google Sign-In Button */}
-          <button
+          {/* <button
             onClick={handleGoogleLogin}
             className="w-full bg-[#ffffff] text-darkGrey py-2 rounded-lg flex items-center justify-center gap-2 hover:bg-gray-200"
           >
             <BsGoogle className="text-lg" />
             <span>Sign in with Google</span>
-          </button>
+          </button> */}
           
           <p className="mt-4 text-sm text-center">
             {isLogin ? "Don't have an account?" : "Already have an account?"}
