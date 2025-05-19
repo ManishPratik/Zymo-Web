@@ -1,4 +1,10 @@
-import { ArrowLeft, Calendar, IndianRupee, Car, MapPinIcon } from "lucide-react";
+import {
+  ArrowLeft,
+  Calendar,
+  IndianRupee,
+  Car,
+  MapPinIcon,
+} from "lucide-react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
 import { toast } from "react-toastify";
@@ -44,7 +50,8 @@ function BookingPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const { city } = useParams();
-  const { startDate, endDate, userData, car, tripDuration } = location.state || {};
+  const { startDate, endDate, userData, car, tripDuration } =
+    location.state || {};
 
   const trackEvent = useTrackEvent();
   const startDateFormatted = formatDate(startDate);
@@ -77,13 +84,13 @@ function BookingPage() {
   const [securityDeposit, setSecurityDeposit] = useState(null);
   const [packageSelected, setPackageSelected] = useState(null);
 
+  const [couponCode, setCouponCode] = useState("ZYMOWEB");
+
   const [loading, setLoading] = useState(false);
 
   const customerUploadDetails = formData && uploadDocData;
 
   const functionsUrl = import.meta.env.VITE_FUNCTIONS_API_URL;
-  // const functionsUrl = "http://127.0.0.1:5001/zymo-prod/us-central1/api";
-  // console.log("car", car)
 
   const vendor =
     car.source === "zoomcar"
@@ -91,7 +98,7 @@ function BookingPage() {
       : car.source === "mychoize"
       ? "Mychoize"
       : car.source;
-  console.log("car data :", car);
+
   useEffect(() => {
     const fetchVendorDetails = async () => {
       if (car.source === "Zymo") {
@@ -106,11 +113,9 @@ function BookingPage() {
         });
         return;
       }
-      console.log("Fetching vendor details for:", vendor);
       const docRef = doc(appDB, "carvendors", vendor);
       const docSnap = await getDoc(docRef);
       setVendorDetails(docSnap.data());
-      console.log(docSnap.data());
     };
     fetchVendorDetails();
   }, [car.source]);
@@ -129,21 +134,20 @@ function BookingPage() {
 
     if (car.source === "Zymo") {
       setPackageSelected(car.total_km[car.selectedPackage]);
-    } if (car.source === "ZT") {
-      setPackageSelected(car?.total_km?.FF)
+    }
+    if (car.source === "ZT") {
+      setPackageSelected(car?.total_km?.FF);
     } else {
       setPackageSelected(findPackage(car.rateBasis));
     }
-
 
     // Get the base fare from car data
     let baseFare = car.actualPrice || currencyToInteger(car.fare);
     if (car.source === "Karyana" || car.source === "ZT") {
       baseFare = currencyToInteger(car.inflated_fare);
+    } else if (car.source === "mychoize") {
+      baseFare = car.rateBasisFare[car.rateBasis];
     }
-    // console.log("base fare", baseFare);
-    const carFareAmount = currencyToInteger(car.fare);
-    const deposit = parseInt(vendorDetails?.Securitydeposit) || 0;
 
     // 1. Calculate base price: baseFare * currentRate
     const currentRate = parseFloat(vendorDetails?.CurrentrateSd || 1);
@@ -158,7 +162,7 @@ function BookingPage() {
     const taxRate = parseFloat(vendorDetails?.TaxSd || 0);
 
     // Special case for Karyana or vendors where TaxSd is 1
-    // When TaxSd is 1, it means GST is already included in the base fare
+    // When TaxSd is 1, GST is already included in the base fare
     // For other values, it represents the GST tax rate to be applied
     let withGST = 0;
     if (vendorDetails?.vendor === "ZoomCar") {
@@ -170,74 +174,64 @@ function BookingPage() {
     }
     setGstAmount(Math.round(withGST));
 
-    // console.log(
-    //   "withGST",
-    //   baseFare,
-    //   basePrice,
-    //   taxRate,
-    //   withGST,
-    //   carFareAmount
-    // );
-
     // 3. Calculate discount and final amount
     const discountRate = parseFloat(vendorDetails?.DiscountSd || 1);
-    let finalAmount;
+    let finalAmount; // This will be the amount *if* vendor discount is applied
+    let calculatedVendorDiscountValue = 0; // Stores the discount calculated from vendor rules
 
     if (car.source === "Karyana" || car.source === "ZT") {
       // For Karyana cars:
-      // - baseFare is the inflated price (3912 in this case)
+      // - baseFare is the inflated price
       // - We need to calculate the discounted fare using the discount rate
-      const discountedFare = Math.round(baseFare * discountRate); // 3912 * 0.85 = 3325
-      const discountAmount = baseFare - discountedFare; // 3912 - 3325 = 587
-      setDiscount(discountAmount);
-      // Final amount should be discounted fare + deposit (3325 + 3000 = 6325)
-      finalAmount = discountedFare + securityDeposit;
+      const discountedFare = Math.round(baseFare * discountRate);
+      calculatedVendorDiscountValue = baseFare - discountedFare;
+      finalAmount = discountedFare;
     } else if (car.source === "zoomcar") {
       // For ZoomCar:
-      // - baseFare is already the discounted price (3000)
-      // - Calculate inflated price using currentRate (3000 * 1.25 = 3750)
-      // - Discount is the difference (3750 - 3000 = 750)
+      // - baseFare is already the discounted price
+      // - Calculate inflated price using currentRate
+      // - Discount is the difference
       const inflatedPrice = Math.round(baseFare * currentRate);
-      const discountAmount = inflatedPrice - baseFare;
-      setDiscount(discountAmount);
-
-      // console.log("ZoomCar price calculation:", {
-      //   baseFare,
-      //   inflatedPrice,
-      //   currentRate,
-      //   discountAmount,
-      //   deposit,
-      // });
+      calculatedVendorDiscountValue = inflatedPrice - baseFare;
 
       // For ZoomCar, use the base fare as the final amount
       finalAmount = Math.round(baseFare);
     } else {
-      // For other vendors, include GST in discount calculation
-      const discountAmount = (basePrice + withGST) * (1 - discountRate);
-      setDiscount(Math.round(discountAmount));
+      const tempDiscountAmount = (basePrice + withGST) * (1 - discountRate);
+      calculatedVendorDiscountValue = Math.round(tempDiscountAmount); // Store calculated discount
 
-      // console.log("Other vendor price calculation:", {
-      //   basePrice,
-      //   withGST,
-      //   discountRate,
-      //   discountAmount,
-      // });
-
-      // Final payable = base price with GST - discount + deposit
-      finalAmount = Math.round(baseFare + withGST - discountAmount + securityDeposit);
+      finalAmount = Math.round(
+        parseInt(baseFare) + withGST - calculatedVendorDiscountValue
+      );
     }
 
-    // console.log("Final amount calculation:", {
-    //   vendor: vendorDetails?.vendor,
-    //   baseFare,
-    //   withGST,
-    //   discount,
-    //   deposit,
-    //   finalAmount,
-    // });
+    if (couponCode === "ZYMOWEB") {
+      setDiscount(calculatedVendorDiscountValue);
+      setPayableAmount(parseInt(finalAmount) + parseInt(securityDeposit));
+    } else {
+      setDiscount(0);
+      let noDiscountAmount = 0;
+      
+      if (car.source === "ZT") {
+        // For ZT cars:
+        // - Use baseFare directly (inflated_fare) without applying currentRate
+        // - Add GST if applicable
+        // - Add security deposit at the end
+        noDiscountAmount = Math.round(parseInt(baseFare) + withGST);
+        setPayableAmount(noDiscountAmount + parseInt(securityDeposit));
+      } else {
+        noDiscountAmount = Math.round(parseInt(basePrice) + withGST + parseInt(securityDeposit));
+        setPayableAmount(noDiscountAmount);
+      }
+      finalAmount = noDiscountAmount;
+    }
 
-    setPayableAmount(finalAmount);
-  }, [car.fare, car.source, car.inflated_fare, car.actualPrice, vendorDetails, discount, car?.securityDeposit, securityDeposit, car]);
+  }, [
+    car, // Include the whole car object
+    vendorDetails,
+    couponCode,
+    securityDeposit // Add securityDeposit as it's used in calculations
+  ]);
 
   useEffect(() => {
     if (selectedPickupLocation && selectedDropLocation) {
@@ -255,7 +249,10 @@ function BookingPage() {
     headerDetails: {
       name: `${car.brand} ${car.name}`,
       type: car.options.slice(0, 3).join(" | "),
-      range: car.source === "Zymo" ? `${car.total_km[car.selectedPackage]} KMs` : `${findPackage(car.rateBasis)}`,
+      range:
+        car.source === "Zymo"
+          ? `${car.total_km[car.selectedPackage]} KMs`
+          : `${findPackage(car.rateBasis)}`,
       image: car.images,
       rating: car?.ratingData?.rating,
     },
@@ -285,9 +282,9 @@ function BookingPage() {
           ? "Incl. in Base Fare"
           : `₹${formatNumberAsPrice(fareAmount * (vendorDetails?.TaxSd || 0))}`,
       // Security deposit unchanged
-      deposit:`₹${formatNumberAsPrice(securityDeposit)}`,
+      deposit: `₹${formatNumberAsPrice(securityDeposit)}`,
       // Discount on base price
-      discount: `₹${formatNumberAsPrice(discount)}`,
+      discount: discount > 0 ? `₹${formatNumberAsPrice(discount)}` : "₹0",
       // Final payable amount
       payable_amount: `₹${formatNumberAsPrice(payableAmount)}`,
     },
@@ -351,7 +348,7 @@ function BookingPage() {
         setMychoizeDropupLocations(dropupLocations);
       });
     fetchLocationList();
-  }, [selectedPickupLocation, selectedDropLocation]);
+  }, [city, startDate, endDate, fetchMyChoizeLocationList]); // Corrected dependencies
 
   const uploadDocs = async (images) => {
     try {
@@ -415,7 +412,10 @@ function BookingPage() {
       EndTime: "",
       FirstName: formData?.userName || customerName,
       MapLocation: car.address,
-      "Package Selected": car.source === "Zymo" ? `${car.total_km[car.selectedPackage]} KMs` :  findPackage(car.rateBasis),
+      "Package Selected":
+        car.source === "Zymo"
+          ? `${car.total_km[car.selectedPackage]} KMs`
+          : findPackage(car.rateBasis),
       PhoneNumber: formData?.phone || formattedPhoneNumber,
       "Pickup Location": selectedPickupLocation?.LocationName || car.address,
       "Promo Code Used": "",
@@ -822,8 +822,6 @@ function BookingPage() {
     const num = Number(cleaned);
     return isNaN(num) ? 0 : num;
   };
-  
-  
 
   return (
     <div className="min-h-screen bg-[#212121]">
@@ -833,137 +831,170 @@ function BookingPage() {
       <NavBar />
 
       <div className="bg-black flex lg:pl-20 pl-5 pt-2 gap-10 items-center">
-        <button 
+        <button
           className="cursor-pointer text-white"
           onClick={() => navigate(-1)}
-          >
+        >
           <ArrowLeft />
-        </button> 
+        </button>
         <div>
-          <span className="text-sm text-white/75 block text-center">Location</span>
+          <span className="text-sm text-white/75 block text-center">
+            Location
+          </span>
           <div className="bg-[#212121] w-fit px-4 py-2 rounded-xl flex items-center gap-4 text-white">
-            <MapPinIcon  className="w-4"/>
+            <MapPinIcon className="w-4" />
             <span>{preBookingData.pickup.city}</span>
           </div>
-        </div>   
+        </div>
       </div>
 
       {/* Main Content */}
       <div className="relative flex flex-col-reverse lg:items-start items-center xl:gap-16 gap-10 lg:flex-row-reverse lg:justify-between mx-auto p-5 lg:px-20 text-white bg-black">
-        
-         <div className="lg:w-1/4 flex flex-col gap-10 h-fit sticky top-10 min-w-[275px] w-full">
-            {/* Fare Details  */}
-            <div className="bg-[#212121] rounded-md p-10">
-              <h2 className="text-2xl font-bold mb-2">Fare Summary</h2>
+        <div className="lg:w-1/4 flex flex-col gap-10 h-fit sticky top-10 min-w-[275px] w-full">
+          {/* Fare Details  */}
+          <div className="bg-[#212121] rounded-md p-10">
+            <h2 className="text-2xl font-bold mb-2">Fare Summary</h2>
 
-              <div className="my-2 flex items-center justify-between">
-                <div className="flex items-center gap-2 cursor-pointer">
-                  <img src="/images/Booking/plus.png" alt='plus-icon' className="w-3 h-3" />
-                  <span>Base Fare</span>
-                </div>
-                <span>{preBookingData.fareDetails.base}</span>
+            <div className="my-2 flex items-center justify-between">
+              <div className="flex items-center gap-2 cursor-pointer">
+                <img
+                  src="/images/Booking/plus.png"
+                  alt="plus-icon"
+                  className="w-3 h-3"
+                />
+                <span>Base Fare</span>
               </div>
-              <hr className="border-white/25" />
-
-              {parseNumericRupee(preBookingData.fareDetails.gst) > 0 && (
-                <>
-                  <div className="my-2 flex items-center justify-between">
-                    <div className="flex items-center gap-2 cursor-pointer">
-                      <img src="/images/Booking/plus.png" alt='plus-icon' className="w-3 h-3" />
-                      <span>GST</span>
-                    </div>
-                    <span>{preBookingData.fareDetails.gst}</span>
-                  </div>
-                  <hr className="border-white/25" />
-                </>
-              )}
-
-              {parseNumericRupee(preBookingData.fareDetails.deposit) > 0 && (
-                <>
-                  <div className="my-2 flex items-center justify-between">
-                    <div className="flex items-center gap-2 cursor-pointer">
-                      <img src="/images/Booking/plus.png" alt='plus-icon' className="w-3 h-3" />
-                      <span>Security Deposit</span>
-                    </div>
-                    <span>{preBookingData.fareDetails.deposit}</span>
-                  </div>
-                  <hr className="border-white/25" />
-                </>
-              )}
-
-              {parseNumericRupee(preBookingData.fareDetails.discount) > 0 && (
-                <>
-                  <div className="my-2 flex items-center justify-between">
-                    <div className="flex items-center gap-2 cursor-pointer">
-                      <img src="/images/Booking/plus.png" alt='plus-icon' className="w-3 h-3" />
-                      <span>Discount</span>
-                    </div>
-                    <span>- {preBookingData.fareDetails.discount}</span>
-                  </div>
-                  <hr className="border-white/25" />
-                </>
-              )}
-
-              {parseNumericRupee(deliveryCharges) > 0 && (
-                <>
-                  <div className="my-2 flex items-center justify-between">
-                    <div className="flex items-center gap-2 cursor-pointer">
-                      <img src="/images/Booking/plus.png" alt='plus-icon' className="w-3 h-3" />
-                      <span>Delivery Charges</span>
-                    </div>
-                    <span>{deliveryCharges}</span>
-                  </div>
-                  <hr className="border-white/25" />
-                </>
-              )}
-
-              <div className="my-2 flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <span className="text-appColor">Total Fare</span>
-                </div>
-                <span className="text-appColor">
-                  {preBookingData.fareDetails.payable_amount}
-                </span>
-              </div>
+              <span>{preBookingData.fareDetails.base}</span>
             </div>
+            <hr className="border-white/25" />
 
-
-            {/* Coupons and Offers */}
-            <div className="bg-[#212121] rounded-md overflow-hidden mx-auto">
-              <div className="px-10 py-4 bg-appColor">
-                <h2 className="text-darkGrey font-bold text-xl">Coupons and Offers</h2>
-              </div>
-              <div className="px-10 py-5">
-                <input className="bg-darkGrey2 w-full p-2 pl-4 rounded-md" placeholder="Enter Coupon code"/>
-              </div>
-              <div className="flex items-center justify-center cursor-pointer">
-                <span className="py-4 text-sm text-appColor">VIEW ALL OFFERS </span>
-                <img src="/images/Booking/arrow-down.png" alt="arrow-down" className="w-4 h-[6px] pl-2"/>
-              </div>
-            </div>
-
-            {/* Book Button */}
-            {car.source === "zoomcar" ? (
-              <div className="flex justify-center items-center">
-                <button
-                  className="text-black bg-appColor hover:bg-transparent hover:border-appColor hover:border-2 hover:text-appColor px-6 py-2 rounded-lg font-semibold  transition-colors cursor-pointer"
-                  onClick={handlePayment}
-                >
-                  Book & Pay
-                </button>
-              </div>
-            ) : (
-              <div className="flex justify-center items-center">
-                <button
-                  className="text-black bg-appColor hover:bg-transparent hover:border-appColor hover:border-2 hover:text-appColor px-6 py-2 rounded-lg font-semibold  transition-colors cursor-pointer"
-                  onClick={handlePayment}
-                  disabled={!customerUploadDetails}
-                >
-                  Book & Pay
-                </button>
-              </div>
+            {parseNumericRupee(preBookingData.fareDetails.gst) > 0 && (
+              <>
+                <div className="my-2 flex items-center justify-between">
+                  <div className="flex items-center gap-2 cursor-pointer">
+                    <img
+                      src="/images/Booking/plus.png"
+                      alt="plus-icon"
+                      className="w-3 h-3"
+                    />
+                    <span>GST</span>
+                  </div>
+                  <span>{preBookingData.fareDetails.gst}</span>
+                </div>
+                <hr className="border-white/25" />
+              </>
             )}
-         </div>
+
+            {parseNumericRupee(preBookingData.fareDetails.deposit) > 0 && (
+              <>
+                <div className="my-2 flex items-center justify-between">
+                  <div className="flex items-center gap-2 cursor-pointer">
+                    <img
+                      src="/images/Booking/plus.png"
+                      alt="plus-icon"
+                      className="w-3 h-3"
+                    />
+                    <span>Security Deposit</span>
+                  </div>
+                  <span>{preBookingData.fareDetails.deposit}</span>
+                </div>
+                <hr className="border-white/25" />
+              </>
+            )}
+
+            {parseNumericRupee(preBookingData.fareDetails.discount) > 0 && (
+              <>
+                <div className="my-2 flex items-center justify-between">
+                  <div className="flex items-center gap-2 cursor-pointer">
+                    <img
+                      src="/images/Booking/plus.png"
+                      alt="plus-icon"
+                      className="w-3 h-3"
+                    />
+                    <span>Discount</span>
+                  </div>
+                  <span>- {preBookingData.fareDetails.discount}</span>
+                </div>
+                <hr className="border-white/25" />
+              </>
+            )}
+
+            {parseNumericRupee(deliveryCharges) > 0 && (
+              <>
+                <div className="my-2 flex items-center justify-between">
+                  <div className="flex items-center gap-2 cursor-pointer">
+                    <img
+                      src="/images/Booking/plus.png"
+                      alt="plus-icon"
+                      className="w-3 h-3"
+                    />
+                    <span>Delivery Charges</span>
+                  </div>
+                  <span>{deliveryCharges}</span>
+                </div>
+                <hr className="border-white/25" />
+              </>
+            )}
+
+            <div className="my-2 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="text-appColor">Total Fare</span>
+              </div>
+              <span className="text-appColor">
+                {preBookingData.fareDetails.payable_amount}
+              </span>
+            </div>
+          </div>
+
+          {/* Coupons and Offers */}
+          <div className="bg-[#212121] rounded-md overflow-hidden mx-auto">
+            <div className="px-10 py-4 bg-appColor">
+              <h2 className="text-darkGrey font-bold text-xl">
+                Coupons and Offers
+              </h2>
+            </div>
+            <div className="px-10 py-5">
+              <input
+                className="bg-darkGrey2 w-full p-2 pl-4 rounded-md"
+                placeholder="Enter Coupon code"
+                value={couponCode}
+                onChange={(e) => setCouponCode(e.target.value)}
+              />
+            </div>
+            <div className="flex items-center justify-center cursor-pointer">
+              <span className="py-4 text-sm text-appColor">
+                VIEW ALL OFFERS{" "}
+              </span>
+              <img
+                src="/images/Booking/arrow-down.png"
+                alt="arrow-down"
+                className="w-4 h-[6px] pl-2"
+              />
+            </div>
+          </div>
+
+          {/* Book Button */}
+          {car.source === "zoomcar" ? (
+            <div className="flex justify-center items-center">
+              <button
+                className="text-black bg-appColor hover:bg-transparent hover:border-appColor hover:border-2 hover:text-appColor px-6 py-2 rounded-lg font-semibold  transition-colors cursor-pointer"
+                onClick={handlePayment}
+              >
+                Book & Pay
+              </button>
+            </div>
+          ) : (
+            <div className="flex justify-center items-center">
+              <button
+                className="text-black bg-appColor hover:bg-transparent hover:border-appColor hover:border-2 hover:text-appColor px-6 py-2 rounded-lg font-semibold  transition-colors cursor-pointer"
+                onClick={handlePayment}
+                disabled={!customerUploadDetails}
+              >
+                Book & Pay
+              </button>
+            </div>
+          )}
+        </div>
 
         {/* <button 
           className="absolute top-7 md:left-16 left-6 cursor-pointer"
@@ -978,15 +1009,11 @@ function BookingPage() {
         </div> */}
 
         <div className="lg:w-3/4 sm:p-10 p-2 bg-[#212121] rounded-md w-full">
-        
           <div className="flex flex-col sm:flex-row items-center flex-wrap justify-evenly gap-2 mb-10 w-full">
-
             {/* Car Image */}
             <CarImageSlider preBookingData={preBookingData} />
 
-
             <div className="flex flex-col gap-3 xl:items-start items-center mt-5 xl:mt-0">
-
               <div className="flex-1 min-w-[200px] text-xl text-center lg:text-left">
                 <h2 className="font-bold text-2xl mb-1">
                   {preBookingData.headerDetails.name}
@@ -1005,274 +1032,299 @@ function BookingPage() {
 
               {/* Rating */}
               <div className="flex items-center bg-[#faffa3] w-fit sm:px-3 px-2 sm:py-1 py-[2px] rounded-md">
-                <span className="text-[#212121] font-bold">{preBookingData.headerDetails.rating} ★</span>
+                <span className="text-[#212121] font-bold">
+                  {preBookingData.headerDetails.rating} ★
+                </span>
               </div>
 
               {/* Labels */}
               <div>
                 <div className="flex items-center sm:gap-5 gap-3">
                   <div className="flex items-center sm:gap-2 gap-1">
-                    <img src="/images/Booking/gear wheel.png" alt="gear-wheel" className="w-4 h-4"/>
+                    <img
+                      src="/images/Booking/gear wheel.png"
+                      alt="gear-wheel"
+                      className="w-4 h-4"
+                    />
                     <span>{preBookingData.carDetails.transmission}</span>
                   </div>
                   <div className="flex items-center sm:gap-2 gap-1">
-                    <img src="/images/Booking/gas.png" alt="gas-pipe" className="w-4 h-4"/>
+                    <img
+                      src="/images/Booking/gas.png"
+                      alt="gas-pipe"
+                      className="w-4 h-4"
+                    />
                     <span>{preBookingData.carDetails.fuel}</span>
                   </div>
                   <div className="flex items-center sm:gap-2 gap-1">
-                    <img src="/images/Booking/seat.png" alt="seat-icon" className="w-4 h-4"/>
+                    <img
+                      src="/images/Booking/seat.png"
+                      alt="seat-icon"
+                      className="w-4 h-4"
+                    />
                     <span>{preBookingData.carDetails.seats}</span>
                   </div>
                 </div>
-                <div className="flex items-center xl:justify-start justify-center mt-2"> 
-                  <p>Package: <span>{preBookingData.carDetails.package}</span></p>
+                <div className="flex items-center xl:justify-start justify-center mt-2">
+                  <p>
+                    Package: <span>{preBookingData.carDetails.package}</span>
+                  </p>
                 </div>
               </div>
-            
-          </div>
-
-        </div>
-
-        <div className="relative w-full sm:my-20 my-32 flex flex-col sm:flex-row sm:items-end gap-4 justify-between">
-        
-          <div className="xl:w-1/5 lg:w-1/12 w-1/5 min-w-[120px] flex flex-col text-center sm:static absolute top-[-5rem] left-16">
-            <span className="text-white/50 sm:block mb-2 text-sm hidden">Start Date</span>
-            <p className="flex gap-1 sm:flex-row-reverse flex-row">
-              <Calendar className="mt-1" size={20}/>
-              <span className="font-bold xl:text-base text-sm">{preBookingData.pickup.startDate}</span>
-            </p>
-          </div>
-
-          <div className="xl:w-3/5 lg:w-10/12 sm:w-2/5 flex items-center sm:static absolute top-[50%] left-[-2rem]  gap-2 mb-2 sm:rotate-0 rotate-90 sm:max-w-full w-40">
-            <span className="border-2 border-appColor sm:w-4 xl:h-3 w-10 h-2 rounded-full "></span>
-            <div>
-              <img src="/images/Booking/dotted line.png" alt="dotted-lines" className="w-full "/>
-              <span className="absolute sm:top-[-3rem] top-[-5rem] left-[50%] w-full translate-x-[-50%] text-center text-sm sm:rotate-0 rotate-[-90deg] text-white/50">{preBookingData.pickup.tripDuration}</span>
             </div>
-            <span className="border-2 border-appColor sm:w-4 xl:h-3 w-10 h-2 rounded-full "></span>
           </div>
 
-          <div className="xl:w-1/5 lg:w-1/12 w-1/5 min-w-[120px] flex flex-col text-center sm:static absolute bottom-[-6rem] left-16">
-            <span className="text-white/50 sm:block mb-2 text-sm hidden">End Date</span>
-            <p className="flex gap-1">
-              <Calendar className="mt-1" size={20}/>
-              <span className="font-bold xl:text-base text-sm">{preBookingData.pickup.endDate}</span>
-            </p>
-          </div>
-
-        </div>
-
-
-        {/* Pickup Details */}
-
-        {car.source === "mychoize" && (
-          <div className="max-w-3xl mx-auto rounded-lg bg-[#303030] p-5">
-            <div className="mt-5 mb-4">
-              <label className="block text-sm font-medium mb-1 text-[#faffa4]">
-                Pickup Location | Time | Charges
-              </label>
-              <div
-                className="bg-[#404040] text-white p-3 rounded-md cursor-pointer"
-                onClick={() => setShowPickupPopup(true)}
-              >
-                {selectedPickupLocation
-                  ? `${selectedPickupLocation.LocationName} | ${
-                      selectedPickupLocation.IsPickDropChargesApplicable
-                        ? `₹${selectedPickupLocation.DeliveryCharge}`
-                        : "FREE"
-                    }`
-                  : "Select pickup location"}
-              </div>
-              <textarea
-                disabled
-                className="w-full mt-2 p-3 bg-[#404040] rounded-md text-gray-200 focus:outline-none focus:ring-2 focus:ring-[#faffa4]"
-                placeholder={
-                  selectedPickupLocation ? selectedPickupLocation.HubAddress : ""
-                }
-                rows="3"
-              ></textarea>
+          <div className="relative w-full sm:my-20 my-32 flex flex-col sm:flex-row sm:items-end gap-4 justify-between">
+            <div className="xl:w-1/5 lg:w-1/12 w-1/5 min-w-[120px] flex flex-col text-center sm:static absolute top-[-5rem] left-16">
+              <span className="text-white/50 sm:block mb-2 text-sm hidden">
+                Start Date
+              </span>
+              <p className="flex gap-1 sm:flex-row-reverse flex-row">
+                <Calendar className="mt-1" size={20} />
+                <span className="font-bold xl:text-base text-sm">
+                  {preBookingData.pickup.startDate}
+                </span>
+              </p>
             </div>
 
-            <div className="mb-4">
-              <label className="block text-sm font-medium mb-1 text-[#faffa4]">
-                Drop Location | Time | Charges
-              </label>
-              <div
-                className="bg-[#404040] text-white p-3 rounded-md cursor-pointer"
-                onClick={() => setShowDropupPopup(true)}
-              >
-                {selectedDropLocation
-                  ? `${selectedDropLocation.LocationName} | ${
-                      selectedDropLocation.IsPickDropChargesApplicable
-                        ? `₹${selectedDropLocation.DeliveryCharge}`
-                        : "FREE"
-                    }`
-                  : "Select drop location"}
-              </div>
-              <textarea
-                disabled
-                className="w-full mt-2 p-3 bg-[#404040] rounded-md text-gray-200 focus:outline-none focus:ring-2 focus:ring-[#faffa4]"
-                placeholder={
-                  selectedDropLocation ? selectedDropLocation.HubAddress : ""
-                }
-                rows="3"
-              ></textarea>
-            </div>
-
-            {showPickupPopup && (
-              <PickupPopup
-                setIsOpen={setShowPickupPopup}
-                pickupLocations={mychoizePickupLocations}
-                setSelectedPickupLocation={setSelectedPickupLocation}
-              />
-            )}
-            {showDropupPopup && (
-              <DropupPopup
-                setIsOpen={setShowDropupPopup}
-                dropupLocations={mychoizeDropupLocations}
-                setSelectedDropLocation={setSelectedDropLocation}
-              />
-            )}
-          </div>
-        )}
-
-
-        {/* zoom car section */}
-        {car.source === "zoomcar" && (
-          <div className="max-w-3xl mx-auto rounded-lg bg-[#303030] p-1 ">
-            {/* <div className="min-h-screen  flex flex-col items-center justify-center p-4 space-y-4"> */}
-            {/* White card with logo and booking text */}
-            <div className=" rounded-xl shadow-md p-6  text-center ">
-              <div className="img-container flex justify-center p-2  ">
+            <div className="xl:w-3/5 lg:w-10/12 sm:w-2/5 flex items-center sm:static absolute top-[50%] left-[-2rem]  gap-2 mb-2 sm:rotate-0 rotate-90 sm:max-w-full w-40">
+              <span className="border-2 border-appColor sm:w-4 xl:h-3 w-10 h-2 rounded-full "></span>
+              <div>
                 <img
-                  src={car.sourceImg}
-                  alt={car.source}
-                  className="h-14 bg-white p-3 rounded-md"
+                  src="/images/Booking/dotted line.png"
+                  alt="dotted-lines"
+                  className="w-full "
                 />
+                <span className="absolute sm:top-[-3rem] top-[-5rem] left-[50%] w-full translate-x-[-50%] text-center text-sm sm:rotate-0 rotate-[-90deg] text-white/50">
+                  {preBookingData.pickup.tripDuration}
+                </span>
               </div>
-
-              <p className="text-[#fff] p-4">
-                Sign into ZoomCar using your number <br />
-                <span className="font-bold text-[#fff]">
-                  {" "}
-                  {preBookingData.customer.mobile}
-                </span>{" "}
-                to view your booking.
-              </p>
+              <span className="border-2 border-appColor sm:w-4 xl:h-3 w-10 h-2 rounded-full "></span>
             </div>
 
-            {/* yellow notice box */}
-            <div className="bg-[#faffa4] text-[#212121] rounded-xl shadow-md py-6 px-3 text-center">
-              <h2 className="text-lg font-semibold mb-3">Please Note</h2>
-              <p className="mb-3">
-                As per ZoomCar policy you will have to upload your driving
-                license and Aadhaar card on the ZoomCar app.
-              </p>
-              <p className="mb-2">
-                If you already have a ZoomCar profile use the same mobile number
-                registered with Zoomcar.
-              </p>
-              <p className="text-sm italic">
-                (Creation of second profile is not allowed by Zoomcar).
+            <div className="xl:w-1/5 lg:w-1/12 w-1/5 min-w-[120px] flex flex-col text-center sm:static absolute bottom-[-6rem] left-16">
+              <span className="text-white/50 sm:block mb-2 text-sm hidden">
+                End Date
+              </span>
+              <p className="flex gap-1">
+                <Calendar className="mt-1" size={20} />
+                <span className="font-bold xl:text-base text-sm">
+                  {preBookingData.pickup.endDate}
+                </span>
               </p>
             </div>
           </div>
-        )}
 
-        {/* Customer Input Fields */}
-        <div className="max-w-3xl mx-auto rounded-lg bg-[#303030] p-5">
-          <h3 className="text-center mb-1 text-white text-3xl font-bold">
-            Customer Details
-          </h3>
-          {car.source !== "zoomcar" ? (
-            <p className="text-center text-gray-400 text-sm mb-4">
-              (You must add your details and documents to continue)
-            </p>
-          ) : (
-            ""
+          {/* Pickup Details */}
+
+          {car.source === "mychoize" && (
+            <div className="max-w-3xl mx-auto rounded-lg bg-[#303030] p-5">
+              <div className="mt-5 mb-4">
+                <label className="block text-sm font-medium mb-1 text-[#faffa4]">
+                  Pickup Location | Time | Charges
+                </label>
+                <div
+                  className="bg-[#404040] text-white p-3 rounded-md cursor-pointer"
+                  onClick={() => setShowPickupPopup(true)}
+                >
+                  {selectedPickupLocation
+                    ? `${selectedPickupLocation.LocationName} | ${
+                        selectedPickupLocation.IsPickDropChargesApplicable
+                          ? `₹${selectedPickupLocation.DeliveryCharge}`
+                          : "FREE"
+                      }`
+                    : "Select pickup location"}
+                </div>
+                <textarea
+                  disabled
+                  className="w-full mt-2 p-3 bg-[#404040] rounded-md text-gray-200 focus:outline-none focus:ring-2 focus:ring-[#faffa4]"
+                  placeholder={
+                    selectedPickupLocation
+                      ? selectedPickupLocation.HubAddress
+                      : ""
+                  }
+                  rows="3"
+                ></textarea>
+              </div>
+
+              <div className="mb-4">
+                <label className="block text-sm font-medium mb-1 text-[#faffa4]">
+                  Drop Location | Time | Charges
+                </label>
+                <div
+                  className="bg-[#404040] text-white p-3 rounded-md cursor-pointer"
+                  onClick={() => setShowDropupPopup(true)}
+                >
+                  {selectedDropLocation
+                    ? `${selectedDropLocation.LocationName} | ${
+                        selectedDropLocation.IsPickDropChargesApplicable
+                          ? `₹${selectedDropLocation.DeliveryCharge}`
+                          : "FREE"
+                      }`
+                    : "Select drop location"}
+                </div>
+                <textarea
+                  disabled
+                  className="w-full mt-2 p-3 bg-[#404040] rounded-md text-gray-200 focus:outline-none focus:ring-2 focus:ring-[#faffa4]"
+                  placeholder={
+                    selectedDropLocation ? selectedDropLocation.HubAddress : ""
+                  }
+                  rows="3"
+                ></textarea>
+              </div>
+
+              {showPickupPopup && (
+                <PickupPopup
+                  setIsOpen={setShowPickupPopup}
+                  pickupLocations={mychoizePickupLocations}
+                  setSelectedPickupLocation={setSelectedPickupLocation}
+                />
+              )}
+              {showDropupPopup && (
+                <DropupPopup
+                  setIsOpen={setShowDropupPopup}
+                  dropupLocations={mychoizeDropupLocations}
+                  setSelectedDropLocation={setSelectedDropLocation}
+                />
+              )}
+            </div>
           )}
-          <hr className="my-1 mb-5 border-gray-500" />
-          {car.source === "zoomcar" ? (
-            <div className="space-y-4">
-              {/* Name Input */}
-              <div className="flex flex-col">
-                <label className="text-lg text-appColor">Name</label>
-                <input
-                  type="text"
-                  value={customerName}
-                  onChange={(e) => setCustomerName(e.target.value)}
-                  className="p-2 rounded-lg bg-gray-500/30 text-white border border-gray-500 focus:outline-none focus:ring-2 focus:ring-appColor"
-                  placeholder="Enter your name"
-                />
+
+          {/* zoom car section */}
+          {car.source === "zoomcar" && (
+            <div className="max-w-3xl mx-auto rounded-lg bg-[#303030] p-1 ">
+              {/* <div className="min-h-screen  flex flex-col items-center justify-center p-4 space-y-4"> */}
+              {/* White card with logo and booking text */}
+              <div className=" rounded-xl shadow-md p-6  text-center ">
+                <div className="img-container flex justify-center p-2  ">
+                  <img
+                    src={car.sourceImg}
+                    alt={car.source}
+                    className="h-14 bg-white p-3 rounded-md"
+                  />
+                </div>
+
+                <p className="text-[#fff] p-4">
+                  Sign into ZoomCar using your number <br />
+                  <span className="font-bold text-[#fff]">
+                    {" "}
+                    {preBookingData.customer.mobile}
+                  </span>{" "}
+                  to view your booking.
+                </p>
               </div>
 
-              {/* Phone Input */}
-              <div className="flex flex-col">
-                <label className="text-lg text-appColor">Phone</label>
-                <input
-                  type="text"
-                  pattern="[0-9]{10}"
-                  maxLength={10}
-                  value={customerPhone}
-                  onChange={(e) => setCustomerPhone(e.target.value)}
-                  className="p-2 rounded-lg bg-gray-500/30 text-white border border-gray-500 focus:outline-none focus:ring-2 focus:ring-appColor"
-                  placeholder="Enter your phone number"
-                />
-              </div>
-
-              {/* Email Input */}
-              <div className="flex flex-col">
-                <label className="text-lg text-appColor">Email</label>
-                <input
-                  type="email"
-                  value={customerEmail}
-                  onChange={(e) => setCustomerEmail(e.target.value)}
-                  className="p-2 rounded-lg bg-gray-500/30 text-white border border-gray-500 focus:outline-none focus:ring-2 focus:ring-appColor"
-                  placeholder="Enter your email"
-                />
+              {/* yellow notice box */}
+              <div className="bg-[#faffa4] text-[#212121] rounded-xl shadow-md py-6 px-3 text-center">
+                <h2 className="text-lg font-semibold mb-3">Please Note</h2>
+                <p className="mb-3">
+                  As per ZoomCar policy you will have to upload your driving
+                  license and Aadhaar card on the ZoomCar app.
+                </p>
+                <p className="mb-2">
+                  If you already have a ZoomCar profile use the same mobile
+                  number registered with Zoomcar.
+                </p>
+                <p className="text-sm italic">
+                  (Creation of second profile is not allowed by Zoomcar).
+                </p>
               </div>
             </div>
-          ) : (
-            <div className="flex flex-col justify-center items-center">
-              <button
-                className={`px-6 py-2 rounded-lg font-semibold  transition-colors
+          )}
+
+          {/* Customer Input Fields */}
+          <div className="max-w-3xl mx-auto rounded-lg bg-[#303030] p-5">
+            <h3 className="text-center mb-1 text-white text-3xl font-bold">
+              Customer Details
+            </h3>
+            {car.source !== "zoomcar" ? (
+              <p className="text-center text-gray-400 text-sm mb-4">
+                (You must add your details and documents to continue)
+              </p>
+            ) : (
+              ""
+            )}
+            <hr className="my-1 mb-5 border-gray-500" />
+            {car.source === "zoomcar" ? (
+              <div className="space-y-4">
+                {/* Name Input */}
+                <div className="flex flex-col">
+                  <label className="text-lg text-appColor">Name</label>
+                  <input
+                    type="text"
+                    value={customerName}
+                    onChange={(e) => setCustomerName(e.target.value)}
+                    className="p-2 rounded-lg bg-gray-500/30 text-white border border-gray-500 focus:outline-none focus:ring-2 focus:ring-appColor"
+                    placeholder="Enter your name"
+                  />
+                </div>
+
+                {/* Phone Input */}
+                <div className="flex flex-col">
+                  <label className="text-lg text-appColor">Phone</label>
+                  <input
+                    type="text"
+                    pattern="[0-9]{10}"
+                    maxLength={10}
+                    value={customerPhone}
+                    onChange={(e) => setCustomerPhone(e.target.value)}
+                    className="p-2 rounded-lg bg-gray-500/30 text-white border border-gray-500 focus:outline-none focus:ring-2 focus:ring-appColor"
+                    placeholder="Enter your phone number"
+                  />
+                </div>
+
+                {/* Email Input */}
+                <div className="flex flex-col">
+                  <label className="text-lg text-appColor">Email</label>
+                  <input
+                    type="email"
+                    value={customerEmail}
+                    onChange={(e) => setCustomerEmail(e.target.value)}
+                    className="p-2 rounded-lg bg-gray-500/30 text-white border border-gray-500 focus:outline-none focus:ring-2 focus:ring-appColor"
+                    placeholder="Enter your email"
+                  />
+                </div>
+              </div>
+            ) : (
+              <div className="flex flex-col justify-center items-center">
+                <button
+                  className={`px-6 py-2 rounded-lg font-semibold  transition-colors
                                 ${
                                   !customerUploadDetails
                                     ? "text-black bg-appColor hover:bg-[#e2ff5d] cursor-pointer"
                                     : "text-appColor bg-transparent border-2 border-appColor cursor-not-allowed"
                                 }`}
-                onClick={handleUploadDocuments}
-                disabled={customerUploadDetails}
-              >
-                Upload Documents
-              </button>
-              {customerUploadDetails ? (
-                <p className="mt-4 text-green-400 text-sm">
-                  Details and Documents uploaded successfully
-                </p>
-              ) : (
-                ""
-              )}
+                  onClick={handleUploadDocuments}
+                  disabled={customerUploadDetails}
+                >
+                  Upload Documents
+                </button>
+                {customerUploadDetails ? (
+                  <p className="mt-4 text-green-400 text-sm">
+                    Details and Documents uploaded successfully
+                  </p>
+                ) : (
+                  ""
+                )}
 
-              {showFormPopup && (
-                <BookingPageFormPopup
-                  isOpen={showFormPopup}
-                  setIsOpen={setShowFormPopup}
-                  setUserFormData={setFormData}
-                  showUploadPopup={setShowUploadPopup}
-                />
-              )}
-              {showUploadPopup && (
-                <BookingPageUploadPopup
-                  isOpen={showUploadPopup}
-                  setIsOpen={setShowUploadPopup}
-                  setUserUploadData={setUploadDocData}
-                />
-              )}
-            </div>
-          )}
-        </div>
-
+                {showFormPopup && (
+                  <BookingPageFormPopup
+                    isOpen={showFormPopup}
+                    setIsOpen={setShowFormPopup}
+                    setUserFormData={setFormData}
+                    showUploadPopup={setShowUploadPopup}
+                  />
+                )}
+                {showUploadPopup && (
+                  <BookingPageUploadPopup
+                    isOpen={showUploadPopup}
+                    setIsOpen={setShowUploadPopup}
+                    setUserUploadData={setUploadDocData}
+                  />
+                )}
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
