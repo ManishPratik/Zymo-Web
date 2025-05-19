@@ -27,6 +27,8 @@ const CareerForm = ({ title }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
 
+  const API_URL = import.meta.env.VITE_FUNCTIONS_API_URL;
+
   // Set document title
   useEffect(() => {
     document.title = title;
@@ -152,6 +154,25 @@ const CareerForm = ({ title }) => {
 
       // Submit to Firestore
       await addDoc(collection(webDB, "careerApplications"), applicationData);
+      
+        try {
+        const response = await fetch(`${API_URL}/email/sendEmailOnFormSubmit`, {
+        method: 'POST',
+        headers: {
+        'Content-Type': 'application/json',
+        },
+      body: JSON.stringify(formData),
+      });
+
+      if (!response.ok) {
+      throw new Error('Failed to submit application');
+      }
+
+      console.log('Application submitted successfully');
+      } catch (error) {
+      console.error('Error submitting application:', error);
+      throw error;
+    }
 
       // Reset form after successful submission
       setFormData({

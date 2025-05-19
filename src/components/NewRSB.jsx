@@ -411,7 +411,7 @@ const NewRSB = ({ urlcity }) => {
     handleRSBClicks(tab);
     setActiveTab(tab);
     if (tab === "buy") {
-      navigate("/buy");
+      navigate("/buy-car");
     }
 
     if (tab === "subscribe") {

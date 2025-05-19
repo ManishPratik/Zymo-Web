@@ -11,7 +11,7 @@ import { appDB } from "../utils/firebase";
 
 const BookingCard = ({ title }) => {
   const location = useLocation();
-  const { startDate, endDate, car } = location.state || {};
+  const { startDate, endDate, car, tripDuration } = location.state || {};
   const { city } = useParams();
   const navigate = useNavigate();
   const [vendorDetails, setVendorDetails] = useState(null);
@@ -124,6 +124,7 @@ const BookingCard = ({ title }) => {
         startDate,
         endDate,
         car: updatedCar,
+        tripDuration,
       },
     });
   };
