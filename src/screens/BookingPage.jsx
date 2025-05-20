@@ -935,6 +935,7 @@ function BookingPage() {
                 <hr className="border-white/25" />
               </>
             )}
+            <hr className="border-white/75" />
 
             <div className="my-2 flex items-center justify-between">
               <div className="flex items-center gap-2">
@@ -977,7 +978,7 @@ function BookingPage() {
           {car.source === "zoomcar" ? (
             <div className="flex justify-center items-center">
               <button
-                className="text-black bg-appColor hover:bg-transparent hover:border-appColor hover:border-2 hover:text-appColor px-6 py-2 rounded-lg font-semibold  transition-colors cursor-pointer"
+                className="text-black border-2 border-appColor bg-appColor hover:bg-transparent hover:border-appColor hover:border-2 hover:text-appColor px-6 py-2 rounded-lg font-semibold transition-colors duration-300 cursor-pointer"
                 onClick={handlePayment}
               >
                 Book & Pay
@@ -986,7 +987,7 @@ function BookingPage() {
           ) : (
             <div className="flex justify-center items-center">
               <button
-                className="text-black bg-appColor hover:bg-transparent hover:border-appColor hover:border-2 hover:text-appColor px-6 py-2 rounded-lg font-semibold  transition-colors cursor-pointer"
+                className="text-black border-2 border-appColor bg-appColor hover:bg-transparent hover:border-appColor hover:border-2 hover:text-appColor px-6 py-2 rounded-lg font-semibold transition-colors duration-300 cursor-pointer"
                 onClick={handlePayment}
                 disabled={!customerUploadDetails}
               >
@@ -1008,7 +1009,7 @@ function BookingPage() {
           <span>{preBookingData.pickup.city}</span>
         </div> */}
 
-        <div className="lg:w-3/4 sm:p-10 p-2 bg-[#212121] rounded-md w-full">
+        <div className="lg:w-3/4 sm:py-10 sm:px-5 p-2 bg-[#212121] rounded-md w-full">
           <div className="flex flex-col sm:flex-row items-center flex-wrap justify-evenly gap-2 mb-10 w-full">
             {/* Car Image */}
             <CarImageSlider preBookingData={preBookingData} />
@@ -1075,39 +1076,39 @@ function BookingPage() {
           </div>
 
           <div className="relative w-full sm:my-20 my-32 flex flex-col sm:flex-row sm:items-end gap-4 justify-between">
-            <div className="xl:w-1/5 lg:w-1/12 w-1/5 min-w-[120px] flex flex-col text-center sm:static absolute top-[-5rem] left-16">
+            <div className="max-w-[150px] flex flex-col text-center sm:static absolute top-[-5rem] left-16">
               <span className="text-white/50 sm:block mb-2 text-sm hidden">
                 Start Date
               </span>
-              <p className="flex gap-1 sm:flex-row-reverse flex-row">
-                <Calendar className="mt-1" size={20} />
+              <p className="flex gap-2 sm:flex-row-reverse flex-row items-center">
+                <Calendar className="text-appColor sm:self-end xl:w-8 xl:h-8 sm:w-6 sm:h-6 w-4 h-4" />
                 <span className="font-bold xl:text-base text-sm">
                   {preBookingData.pickup.startDate}
                 </span>
               </p>
             </div>
 
-            <div className="xl:w-3/5 lg:w-10/12 sm:w-2/5 flex items-center sm:static absolute top-[50%] left-[-2rem]  gap-2 mb-2 sm:rotate-0 rotate-90 sm:max-w-full w-40">
-              <span className="border-2 border-appColor sm:w-4 xl:h-3 w-10 h-2 rounded-full "></span>
-              <div>
+            <div className="flex items-center justify-center sm:static absolute top-2 left-[0.4rem] gap-2 sm:mb-3 sm:rotate-0 rotate-90 sm:w-full w-32">
+              {/* <span className="border-2 border-appColor sm:w-4 xl:h-3 w-10 h-2 rounded-full "></span> */}
+              <div className="w-full">
                 <img
                   src="/images/Booking/dotted line.png"
                   alt="dotted-lines"
-                  className="w-full "
+                  className="w-full"
                 />
-                <span className="absolute sm:top-[-3rem] top-[-5rem] left-[50%] w-full translate-x-[-50%] text-center text-sm sm:rotate-0 rotate-[-90deg] text-white/50">
+                <span className="absolute sm:top-[-3rem] top-[-5.5rem] left-[50%] sm:w-full w-36 translate-x-[-50%] text-center text-sm sm:rotate-0 rotate-[-90deg] text-white/50">
                   {preBookingData.pickup.tripDuration}
                 </span>
               </div>
-              <span className="border-2 border-appColor sm:w-4 xl:h-3 w-10 h-2 rounded-full "></span>
+              {/* <span className="border-2 border-appColor sm:w-4 xl:h-3 w-10 h-2 rounded-full "></span> */}
             </div>
 
-            <div className="xl:w-1/5 lg:w-1/12 w-1/5 min-w-[120px] flex flex-col text-center sm:static absolute bottom-[-6rem] left-16">
+            <div className="max-w-[150px] flex flex-col text-center sm:static absolute bottom-[-6rem] left-16">
               <span className="text-white/50 sm:block mb-2 text-sm hidden">
                 End Date
               </span>
-              <p className="flex gap-1">
-                <Calendar className="mt-1" size={20} />
+              <p className="flex gap-2 items-center">
+                <Calendar className="text-appColor sm:self-end xl:w-8 xl:h-8 sm:w-6 sm:h-6 w-4 h-4" />
                 <span className="font-bold xl:text-base text-sm">
                   {preBookingData.pickup.endDate}
                 </span>
