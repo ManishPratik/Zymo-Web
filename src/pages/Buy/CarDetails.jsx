@@ -1,5 +1,5 @@
-import  { useState,useEffect } from 'react';
-import { useParams , Link, useLocation } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useParams, Link, useLocation } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import ExtendedTestDriveBenefits from '../../components/buycomponent/ExtendedTestDriveBenefits';
@@ -18,7 +18,7 @@ const CarDetails = ({ title }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  
+
   const { car } = location.state || {};
   useEffect(() => {
     document.title = title;
@@ -31,7 +31,7 @@ const CarDetails = ({ title }) => {
         // const q = query(carsCollectionRef, where('carId', '==', parseInt(id)));
 
         // const querySnapshot = await getDocs(q);
-        
+
         // if (!querySnapshot.empty) {
         //   querySnapshot.forEach(doc => {
         //     // console.log('Fetched document:', doc.data());
@@ -43,7 +43,7 @@ const CarDetails = ({ title }) => {
         setCarDetail(car)
         console.log(car)
       } catch (err) {
-        console.error('Error fetching car details:', err); 
+        console.error('Error fetching car details:', err);
         setError('Error fetching car details');
       } finally {
         setLoading(false);
@@ -51,7 +51,7 @@ const CarDetails = ({ title }) => {
     };
 
     fetchCarData();
-  }, [id]); 
+  }, [id]);
 
   if (loading) {
     return <div>Loading...</div>;
@@ -64,20 +64,20 @@ const CarDetails = ({ title }) => {
   if (!carDetail) {
     return <div>No car found</div>;
   }
-  const handleClicks=(carDetail,label)=>{
+  const handleClicks = (carDetail, label) => {
     trackEvent("Test & Extended Test Drive Section", "Buy Section Button Clicked", label);
-    trackEvent("Buy Section Car",`Buy Section Car`,`${carDetail.name} ${carDetail.model}- ${carDetail.vendor}-${label}`)
+    trackEvent("Buy Section Car", `Buy Section Car`, `${carDetail.name} ${carDetail.model}- ${carDetail.vendor}-${label}`)
   }
 
   return (
     <>
-     <Helmet>
-                <title>{title}</title>
-                <meta name="description" content={`Discover detailed specifications and features of your selected car. Book a test drive now!`} />
-                <meta property="og:title" content={title} />
+      <Helmet>
+        <title>{title}</title>
+        <meta name="description" content={`Discover detailed specifications and features of your selected car. Book a test drive now!`} />
+        <meta property="og:title" content={title} />
         <meta property="og:description" content="Check out in-depth details about the car you're interested in before making a decision." />
-                <link rel="canonical" href={`https://zymo.app/buy/car-details/${id}`} />
-            </Helmet>
+        <link rel="canonical" href={`https://zymo.app/buy/car-details/${id}`} />
+      </Helmet>
       <div className="min-h-screen flex items-center justify-center p-3 bg-darkGrey text-white">
         {/* Back Button */}
         <button
@@ -195,10 +195,10 @@ const CarDetails = ({ title }) => {
               <div className='flex'>
                 <div className='flex flex-col'>
                   <Link to={"/buy-car/test-drive-inputform"}
-                  state={{ car: carDetail }} >
+                    state={{ car: carDetail }} >
                     <button
                       className="bg-[#e8ff81] text-darkGrey px-6 py-3 rounded-lg font-semibold hover:bg-[#e8ff88] mx-1"
-                    onClick={() => handleClicks(carDetail,"Test Drive")}
+                      onClick={() => handleClicks(carDetail, "Test Drive")}
                     >
                       Test Drive
                     </button>
@@ -207,10 +207,10 @@ const CarDetails = ({ title }) => {
                 </div>
 
                 <div className='flex flex-col'>
-                <Link
-                  to={`/buy-car/summary/${id}`}
-                  state={{ car: carDetail }} 
-                  className="block">
+                  <Link
+                    to={`/buy-car/summary/${id}`}
+                    state={{ car: carDetail }}
+                    className="block">
                     <div className="relative inline-block">
                       {/* Show Popup on Hover */}
                       {showPopup && (
@@ -221,13 +221,16 @@ const CarDetails = ({ title }) => {
 
                       {/* Button to hover */}
                       <button
-                        className="bg-[#e8ff81] text-darkGrey px-6 py-3 rounded-lg font-semibold hover:bg-[#e8ff88] mx-1"
-                        onMouseEnter={() => setShowPopup(true)}
+                        className={`px-6 py-3 rounded-lg font-semibold mx-1 ${carDetail.status === "disable"
+                            ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                            : "bg-[#e8ff81] text-darkGrey hover:bg-[#e8ff88]"
+                          }`}
+                        disabled={carDetail.status === "disable"} onMouseEnter={() => setShowPopup(true)}
                         onMouseLeave={() => setShowPopup(false)}
-                        onClick={() => handleClicks(carDetail,"Extended Test Drive")}
+                        onClick={() => handleClicks(carDetail, "Extended Test Drive")}
 
                       >
-                        Extended Test Drive
+                        {carDetail.status === "disable" ? "Sold Out" : "Extended Test Drive"}
                       </button>
                     </div>
                   </Link>
@@ -342,10 +345,10 @@ const CarDetails = ({ title }) => {
               <div className='flex'>
                 <div className='flex flex-col'>
                   <Link to={`/buy-car/test-drive-inputform`}
-                  state={{ car: carDetail }} >
+                    state={{ car: carDetail }} >
                     <button
                       className="bg-[#e8ff81] text-darkGrey px-6 py-3 rounded-lg font-semibold text-sm hover:bg-[#e8ff88] mx-1"
-                      onClick={() => handleClicks(carDetail,"Test Drive")}
+                      onClick={() => handleClicks(carDetail, "Test Drive")}
                     >
                       Test Drive
                     </button>
@@ -354,10 +357,10 @@ const CarDetails = ({ title }) => {
                 </div>
 
                 <div className='flex flex-col'>
-                <Link 
-                  to={`/buy-car/summary/${id}`} 
-                  state={{ car: carDetail }} 
-                  className="block">
+                  <Link
+                    to={`/buy-car/summary/${id}`}
+                    state={{ car: carDetail }}
+                    className="block">
                     <div className="relative inline-block">
                       {/* Show Popup on Hover */}
                       {showPopup && (
@@ -371,7 +374,7 @@ const CarDetails = ({ title }) => {
                         className="bg-[#e8ff81] text-darkGrey px-6 py-3 rounded-lg  font-semibold hover:bg-[#e8ff88] mx-1 "
                         onMouseEnter={() => setShowPopup(true)}
                         onMouseLeave={() => setShowPopup(false)}
-                        onClick={() => handleClicks(carDetail,"Extended Test Drive")}
+                        onClick={() => handleClicks(carDetail, "Extended Test Drive")}
 
                       >
                         Extended Test Drive
