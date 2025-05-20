@@ -1075,7 +1075,7 @@ function BookingPage() {
             </div>
           </div>
 
-          <div className="relative w-full sm:my-20 my-32 flex flex-col sm:flex-row sm:items-end gap-4 justify-between">
+          <div className="relative w-full sm:my-20 my-32 flex flex-col sm:flex-row sm:items-end gap-4 justify-between xl:px-16">
             <div className="max-w-[150px] flex flex-col text-center sm:static absolute top-[-5rem] left-16">
               <span className="text-white/50 sm:block mb-2 text-sm hidden">
                 Start Date
