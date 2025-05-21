@@ -1,8 +1,6 @@
 import {
   ArrowLeft,
   Calendar,
-  IndianRupee,
-  Car,
   MapPinIcon,
 } from "lucide-react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
