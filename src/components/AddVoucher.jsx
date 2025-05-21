@@ -1,6 +1,15 @@
 import { useState } from "react";
 import { appDB } from "../utils/firebase";
-import { collection, query, where, getDocs } from "firebase/firestore";
+import {
+  collection,
+  query,
+  where,
+  getDocs,
+  addDoc,
+  doc,
+  setDoc,
+  getDoc, // Add this
+} from "firebase/firestore";
 import {
   Eye,
   EyeOff,
@@ -127,34 +136,56 @@ const AddVoucher = () => {
     return `${day}/${month}/${year}`;
   };
 
-  // Update handleVoucherGenerate function - remove automatic redirect
-  const handleVoucherGenerate = (e) => {
+  // Update handleVoucherGenerate function
+  const handleVoucherGenerate = async (e) => {
     e.preventDefault();
 
     try {
-      // Use the custom dates directly since they're already in state
+      // 1. First verify the user document exists using the correct field name
+      const bookingsRef = collection(appDB, "CarsPaymentSuccessDetails");
+      const userQuery = query(
+        bookingsRef,
+        where("UserId", "==", userId.trim())
+      );
+      const userSnapshot = await getDocs(userQuery);
+
+      if (userSnapshot.empty) {
+        throw new Error("User document not found in CarsPaymentSuccessDetails");
+      }
+
+      // Get the actual document reference
+      const userDoc = userSnapshot.docs[0];
+      const userDocRef = doc(appDB, "CarsPaymentSuccessDetails", userDoc.id);
+
       const validFrom = new Date(customStartDate);
       const validTill = new Date(customEndDate);
 
-      if (validTill < validFrom) {
-        throw new Error("End date cannot be before start date");
-      }
-
       const voucherDetails = {
-        amount: voucherAmount,
+        amount: Number(voucherAmount),
         validFrom: validFrom,
         validTill: validTill,
         userId: userId,
         userName: userData.name,
-        status: "Active"
+        status: "Active",
+        createdAt: new Date(),
+        email: userData.email,
+        phone: userData.phone,
       };
 
-      setVoucherData(voucherDetails);
+      // 2. Create voucher document in vouchers subcollection
+      const voucherDocRef = doc(collection(userDocRef, "vouchers"));
+      await setDoc(voucherDocRef, voucherDetails);
+      
+      console.log("Created voucher with ID:", voucherDocRef.id);
+      console.log("Path:", `CarsPaymentSuccessDetails/${userDoc.id}/vouchers/${voucherDocRef.id}`);
+
+      setVoucherData({ ...voucherDetails, id: voucherDocRef.id });
       setShowSuccess(true);
       setTimeout(() => setShowSuccess(false), 3000);
+
     } catch (error) {
-      console.error("Error generating voucher:", error);
-      setError("Error generating voucher: " + error.message);
+      console.error("Full error:", error);
+      setError(error.message);
     }
   };
 
