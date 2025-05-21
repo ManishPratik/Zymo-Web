@@ -17,6 +17,7 @@ import {
   User,
   Package,
   Phone,
+  Mail,
   Car,
   Calendar,
   CreditCard,
@@ -77,39 +78,57 @@ const AddVoucher = () => {
     }
   };
 
-  // Update handleUserSearch to properly handle Firestore timestamp
+  // Update handleUserSearch function
   const handleUserSearch = async (e) => {
     e.preventDefault();
     setLoading(true);
     setError("");
 
     try {
-      const bookingsRef = collection(appDB, "CarsPaymentSuccessDetails");
-      const userIdQuery = query(
-        bookingsRef,
-        where("UserId", "==", userId.trim())
-      );
-      const userIdSnapshot = await getDocs(userIdQuery);
+      const searchId = userId.trim();
+      console.log("Searching for userId:", searchId);
 
-      if (userIdSnapshot.empty) {
-        setError("No bookings found with this User ID");
-        setUserData(null);
-      } else {
-        const bookingData = userIdSnapshot.docs[0].data();
+      // 1. Try direct document lookup first
+      const userDocRef = doc(appDB, "users", searchId);
+      const userDoc = await getDoc(userDocRef);
 
-        // Properly convert Firestore timestamp to Date
-        const startDate = bookingData.StartDate?.toDate?.() || new Date();
+      if (userDoc.exists()) {
+        const userData = userDoc.data();
+        console.log("Found user data:", userData);
 
         setUserData({
-          name: bookingData.FirstName || "N/A",
-          phone: bookingData.PhoneNumber || "N/A",
-          email: bookingData.Email || "N/A",
-          bookingStartDate: startDate,
+          name: userData.name || userData.displayName || "N/A",
+          phone: userData.phoneNumber || userData.phone || "N/A",
+          email: userData.email || "N/A",
+          uid: searchId, // Use the document ID as uid
         });
+      } else {
+        console.log("No direct document match, trying query...");
+
+        // 2. Fallback to query if direct lookup fails
+        const usersRef = collection(appDB, "users");
+        const userIdQuery = query(usersRef, where("UserId", "==", searchId));
+        const querySnapshot = await getDocs(userIdQuery);
+
+        if (querySnapshot.empty) {
+          setError("No user found with this User ID");
+          setUserData(null);
+          console.log("No matching documents");
+        } else {
+          const userData = querySnapshot.docs[0].data();
+          console.log("Found user data:", userData);
+
+          setUserData({
+            name: userData.name || userData.displayName || "N/A",
+            phone: userData.phoneNumber || userData.phone || "N/A",
+            email: userData.email || "N/A",
+            uid: querySnapshot.docs[0].id, // Use the document ID
+          });
+        }
       }
     } catch (error) {
       console.error("Search error:", error);
-      setError("Error searching for bookings: " + error.message);
+      setError("Error searching for user: " + error.message);
     } finally {
       setLoading(false);
     }
@@ -141,21 +160,10 @@ const AddVoucher = () => {
     e.preventDefault();
 
     try {
-      // 1. First verify the user document exists using the correct field name
-      const bookingsRef = collection(appDB, "CarsPaymentSuccessDetails");
-      const userQuery = query(
-        bookingsRef,
-        where("UserId", "==", userId.trim())
-      );
-      const userSnapshot = await getDocs(userQuery);
-
-      if (userSnapshot.empty) {
-        throw new Error("User document not found in CarsPaymentSuccessDetails");
+      // Use the userData from state
+      if (!userData || !userData.uid) {
+        throw new Error("User data not found");
       }
-
-      // Get the actual document reference
-      const userDoc = userSnapshot.docs[0];
-      const userDocRef = doc(appDB, "CarsPaymentSuccessDetails", userDoc.id);
 
       const validFrom = new Date(customStartDate);
       const validTill = new Date(customEndDate);
@@ -164,7 +172,7 @@ const AddVoucher = () => {
         amount: Number(voucherAmount),
         validFrom: validFrom,
         validTill: validTill,
-        userId: userId,
+        userId: userData.uid, // Use the uid from userData
         userName: userData.name,
         status: "Active",
         createdAt: new Date(),
@@ -172,17 +180,21 @@ const AddVoucher = () => {
         phone: userData.phone,
       };
 
-      // 2. Create voucher document in vouchers subcollection
+      // Create reference to user document and vouchers subcollection
+      const userDocRef = doc(appDB, "users", userData.uid);
       const voucherDocRef = doc(collection(userDocRef, "vouchers"));
+
       await setDoc(voucherDocRef, voucherDetails);
-      
+
       console.log("Created voucher with ID:", voucherDocRef.id);
-      console.log("Path:", `CarsPaymentSuccessDetails/${userDoc.id}/vouchers/${voucherDocRef.id}`);
+      console.log(
+        "Full path:",
+        `users/${userData.uid}/vouchers/${voucherDocRef.id}`
+      );
 
       setVoucherData({ ...voucherDetails, id: voucherDocRef.id });
       setShowSuccess(true);
       setTimeout(() => setShowSuccess(false), 3000);
-
     } catch (error) {
       console.error("Full error:", error);
       setError(error.message);
@@ -331,7 +343,7 @@ const AddVoucher = () => {
                   <p className="text-white">{userData.phone || "N/A"}</p>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Phone
+                  <Mail
                     className="text-lg"
                     style={{ color: colorScheme.appColor }}
                   />
