@@ -23,8 +23,9 @@ import {
   formatNumberAsPrice,
 } from "../utils/mychoize";
 import { currencyToInteger } from "../utils/currencyHelper";
+import { onAuthStateChanged } from "firebase/auth";
 import { addDoc, collection, doc, getDoc } from "firebase/firestore";
-import { appDB, appStorage } from "../utils/firebase";
+import { appAuth,appDB, appStorage } from "../utils/firebase";
 import PickupPopup from "../components/PickupPopup";
 import DropupPopup from "../components/DropupPopup";
 import BookingPageFormPopup from "../components/BookingPageFormPopup";
@@ -50,6 +51,7 @@ function BookingPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const { city } = useParams();
+
   const { startDate, endDate, userData, car, tripDuration } =
     location.state || {};
 
@@ -57,9 +59,10 @@ function BookingPage() {
   const startDateFormatted = formatDate(startDate);
   const endDateFormatted = formatDate(endDate);
 
-  const [customerName, setCustomerName] = useState(userData.name);
-  const [customerPhone, setCustomerPhone] = useState(userData.phone);
-  const [customerEmail, setCustomerEmail] = useState(userData.email);
+   const [customerName, setCustomerName] = useState("");
+  const [customerPhone, setCustomerPhone] = useState("");
+  const [customerEmail, setCustomerEmail] = useState("");
+  const [loadingUser, setLoadingUser] = useState(true);
   const [isConfirmPopupOpen, setIsConfirmPopupOpen] = useState(false);
   const [vendorDetails, setVendorDetails] = useState(null);
 
@@ -91,7 +94,41 @@ function BookingPage() {
   const customerUploadDetails = formData && uploadDocData;
 
   const functionsUrl = import.meta.env.VITE_FUNCTIONS_API_URL;
+  // const functionsUrl = "http://127.0.0.1:5001/zymo-prod/us-central1/api";
+  // console.log("car", car)
+  useEffect(() => {
+    // Use the imported appAuth instance
+    const unsubscribe = onAuthStateChanged(appAuth, async (user) => {
+      try {
+        setLoadingUser(true);
+        if (user) {
+          console.log("User UID:", user.uid);
+          
+          // Use the imported appDB instance
+          const userRef = doc(appDB, "users", user.uid);
+          const userSnap = await getDoc(userRef);
+          
+          if (userSnap.exists()) {
+            const userData = userSnap.data();
+            console.log("User data:", userData);
+            setCustomerName(userData.name || "");
+            setCustomerPhone(userData.mobileNumber || "");
+            setCustomerEmail(userData.email || "");
+          } else {
+            console.warn("No user document found");
+          }
+        } else {
+          console.log("No user signed in");
+        }
+      } catch (error) {
+        console.error("Firebase error:", error);
+      } finally {
+        setLoadingUser(false);
+      }
+    });
 
+    return () => unsubscribe();
+  }, []);
   const vendor =
     car.source === "zoomcar"
       ? "ZoomCar"
@@ -822,6 +859,10 @@ function BookingPage() {
     const num = Number(cleaned);
     return isNaN(num) ? 0 : num;
   };
+
+  if (loadingUser) {
+    return <BookingPageLoading />;
+  }
 
   return (
     <div className="min-h-screen bg-[#212121]">
