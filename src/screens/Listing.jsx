@@ -74,7 +74,7 @@ const Listing = ({ title }) => {
   const hasRun = useRef(false);
 
   const [loading, setLoading] = useState(true);
-  const [carList, setCarList] = useState([]);
+  const [, setCarList] = useState([]);
   const [clubbedCarList, setClubbedCarList] = useState([]);
   const [priceRange, setPriceRange] = useState("lowToHigh");
   const [seats, setSeats] = useState("");
@@ -213,20 +213,7 @@ const Listing = ({ title }) => {
   };
 
   useEffect(() => {
-     const cachedCarList = localStorage.getItem("carList");
-    const cachedClubbedCarList = localStorage.getItem("clubbedCarList");
-    
-    if (cachedCarList && cachedClubbedCarList) {
-      setCarList(JSON.parse(cachedCarList));
-      const parsedClubbedCarList = JSON.parse(cachedClubbedCarList);
-      setClubbedCarList(parsedClubbedCarList);
-      setFilteredList(parsedClubbedCarList);
-      setCarCount(
-        parsedClubbedCarList.reduce((count, group) => count + group.cars.length, 0)
-      );
-      setLoading(false);
-      return; // Skip fetch if data is already cached
-    }
+  
 
     if (hasRun.current) return;
     hasRun.current = true;
@@ -380,11 +367,7 @@ const Listing = ({ title }) => {
         setCarCount(
           groupCarList.reduce((count, group) => count + group.cars.length, 0)
         );
-        setLoading(false);
-
-         localStorage.setItem("carList", JSON.stringify(allCarData));
-        localStorage.setItem("clubbedCarList", JSON.stringify(groupCarList));
-      
+        setLoading(false);      
 
         localStorage.setItem("carList", JSON.stringify(allCarData));
       } catch (error) {
@@ -400,12 +383,6 @@ const Listing = ({ title }) => {
 //   localStorage.setItem("carList", JSON.stringify(carList));
 // }, [carList]);
 
-  useEffect(() => {
-    localStorage.setItem("priceRange", priceRange);
-    localStorage.setItem("seats", seats);
-    localStorage.setItem("fuel", fuel);
-    localStorage.setItem("transmission", transmission);
-  }, [priceRange, seats, fuel, transmission]);
 
 
   useEffect(() => {
@@ -489,10 +466,7 @@ const Listing = ({ title }) => {
     setCarCount(
       clubbedCarList.reduce((count, group) => count + group.cars.length, 0)
     );
-    localStorage.removeItem("priceRange");
-    localStorage.removeItem("seats");
-    localStorage.removeItem("fuel");
-    localStorage.removeItem("transmission");
+ 
   };
 
   const handleSelectedCar = (label) => {
