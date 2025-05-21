@@ -153,29 +153,24 @@ const Listing = ({ title }) => {
 
   // It groups the cars by name and brand and finds the minimum fare for each group
   const clubCarsByName = async (carsArray) => {
-    console.log("Cars Array:", carsArray); // For debugging
     const clubbingCarNames = (await getCarKeywords()) || [];
-    // console.log("Car Grouping Keywords:", clubbingCarNames); // For debugging
-
+   
     if (!Array.isArray(carsArray) || carsArray.length === 0) {
       return [];
     }
 
     // Step 1: Group cars by normalized name
     const carsGroupedByNormalizedName = carsArray.reduce((acc, car) => {
-      if (car.brand === "Karyana") console.log(car);
+      // if (car.brand === "Karyana") console.log(car);
       if (!car || !car.name || typeof car.fare !== 'string') {
-        console.log("Invalid car data:", car); // For debugging
         return acc;
       }
 
       const normalizedNameKey = getNormalizedCarName(car.name, clubbingCarNames);
 
       if (!acc[normalizedNameKey]) {
-        console.log("New group created:", normalizedNameKey); // For debugging
         acc[normalizedNameKey] = [];
       }
-      // console.log("Adding car to group:", normalizedNameKey, car); // For debugging
       acc[normalizedNameKey].push(car);
       return acc;
     }, {});
@@ -960,7 +955,6 @@ const Listing = ({ title }) => {
                                   } else if (activeTab === "subscribe") {
                                     goToDetails(individualCar);
                                   } else if (individualCar.source === "Karyana" || individualCar.source === "ZT") {
-                                    console.log("Karyana car selected:", individualCar);
                                     goToPackages(car); // Show packages for Karyana cars with multiple packages
                                   } else {
                                     goToPackages(individualCar);
