@@ -97,6 +97,7 @@ const CarDetails = ({ title }) => {
       setAvailableKMs("Unlimited KMs");
       setPackageName("Unlimited KMs");
       setHourlyRate(car?.hourly_amount.slice(1));
+      setPrice(car?.actualPrice);
     } else if (car?.source === "mychoize") {
       setHourlyRate(car?.hourly_amount);
       setAvailableKMs("3600 KMs");
@@ -109,6 +110,7 @@ const CarDetails = ({ title }) => {
       setPackageName(
         tripDurationHours < 24 ? "Hourly Package" : "Daily Package"
       );
+        setPrice(parseInt(car?.all_fares[car.selectedPackage].replace(/[^0-9]/g, '')));
     } else if (car?.source.toLowerCase() === "karyana") {
       setAvailableKMs(
         tripDurationHours < 24
@@ -118,12 +120,15 @@ const CarDetails = ({ title }) => {
       setPackageName(
         tripDurationHours < 24 ? "Hourly Package" : "Daily Package"
       );
+      setPrice(parseFloat(car?.actualPrice).toFixed(0));
     } else if (car?.source.toLowerCase() === "zt") {
       setAvailableKMs(car?.total_km?.FF);
       setPackageName("Daily Package");
       setHourlyRate(parseFloat(car?.hourly_amount).toFixed(0));
+setPrice(parseInt(car?.fare.replace(/[^0-9]/g, '')));
     } else {
       setAvailableKMs(car?.total_km[car.rateBasis]);
+      setPrice(parseFloat(car?.actualPrice).toFixed(0));
     }
   }, []);
 
@@ -401,7 +406,7 @@ const CarDetails = ({ title }) => {
           <div className="mt-10 flex items-center flex-col space-y-4 justify-center">
             <p className="text-3xl font-semibold text-appColor">
               {console.log(price)}
-              {price}
+              ₹{price}
             </p>
             <span className="text-xs text-gray-400">
               {car.source === "zoomcar" ||

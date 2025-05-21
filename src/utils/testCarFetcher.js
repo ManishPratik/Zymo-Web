@@ -403,7 +403,7 @@ const groupTheCarsByName = (formattedTestCars) => {
       ...rest,
       variations: variations.map((variation) => ({
         ...variation,
-        name: variation.packageName,
+        name: variation.name,
         packageName: variation.packageName,
         rateBasis: variation.rateBasis,
         total_km: variation.total_km,
