@@ -213,12 +213,15 @@ const Listing = ({ title }) => {
   };
 
   useEffect(() => {
+  
+
     if (hasRun.current) return;
     hasRun.current = true;
 
     const startDateEpoc = Date.parse(startDate);
     const endDateEpoc = Date.parse(endDate);
     if (!city || !lat || !lng || !startDateEpoc || !endDateEpoc) {
+     setLoading(false);
       return;
     }
 
@@ -228,6 +231,7 @@ const Listing = ({ title }) => {
 
     if (!formattedPickDate || !formattedDropDate) {
       toast.error("Invalid date format!", { position: "top-center" });
+      setLoading(false);
       return;
     }
 
@@ -363,16 +367,23 @@ const Listing = ({ title }) => {
         setCarCount(
           groupCarList.reduce((count, group) => count + group.cars.length, 0)
         );
-        setLoading(false);
+        setLoading(false);      
 
         localStorage.setItem("carList", JSON.stringify(allCarData));
       } catch (error) {
         console.error("Unexpected error:", error);
+        setLoading(false);
       }
     };
 
     search();
   }, [city, startDate, endDate, activeTab, lat, lng, tripDurationHours]);
+
+// useEffect(() => {
+//   localStorage.setItem("carList", JSON.stringify(carList));
+// }, [carList]);
+
+
 
   useEffect(() => {
     document.title = title;
@@ -455,6 +466,7 @@ const Listing = ({ title }) => {
     setCarCount(
       clubbedCarList.reduce((count, group) => count + group.cars.length, 0)
     );
+ 
   };
 
   const handleSelectedCar = (label) => {
