@@ -21,7 +21,8 @@ const CarDetails = ({ title }) => {
   const location = useLocation();
   const { city } = useParams();
   const trackEvent = useTrackEvent();
-  const { startDate, endDate, car, activeTab, tripDuration } = location.state || {};
+  const { startDate, endDate, car, activeTab, tripDuration } =
+    location.state || {};
 
   // Calculate trip duration
   const startTime = new Date(startDate);
@@ -98,11 +99,18 @@ const CarDetails = ({ title }) => {
       setPackageName("Unlimited KMs");
       setHourlyRate(car?.hourly_amount.slice(1));
     } else if (car?.source === "mychoize") {
+      console.log("car details my coice ", car);
       setHourlyRate(car?.hourly_amount);
       setAvailableKMs("3600 KMs");
       setPackageName(findPackage(car?.rateBasis));
-      console.log(car?.all_fares[car?.rateBasis])
-      setPrice(car?.rateBasisFare[car?.rateBasis]);
+      //console.log(car?.all_fares[car?.rateBasis])
+      if (car?.rateBasis) {
+        
+        setPrice(car?.rateBasisFare[car?.rateBasis]);
+
+      } else {
+        setPrice(car.fare);
+      }
     } else if (car?.source === "Zymo") {
       setHourlyRate(car?.hourlyRates[car.selectedPackage]);
       setAvailableKMs(car?.total_km[car.selectedPackage] + " KMs");
