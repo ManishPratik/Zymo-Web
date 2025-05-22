@@ -59,6 +59,7 @@ const BlogDetailPage = () => {
           .replace(/[^a-z0-9\s-]/g, "")
           .trim()
           .split(/\s+/)
+          .slice(0,7)
           .join("-");
         setCanonicalTitle(fullCanonicalTitle);
 
@@ -101,7 +102,7 @@ const BlogDetailPage = () => {
 
       </Helmet>
       <NavBar />
-
+{console.log("canonicalTitle",canonicalTitle)}
       <button
         onClick={() => navigate("/blogs")}
         className="mt-4 px-4 py-2 bg-[#faffa4] text-[#212121] rounded"
