@@ -25,7 +25,7 @@ const Card = ({ car }) => {
             </div>
             <div className='md:py-6 py-4'>
               <p className='md:text-lg text-base'>Avg. Ex-Showroom Price</p>
-              <p className='font-bold md:text-2xl text-2xl'>₹{car.price.min_price}-{car.price.max_price} Lakh</p>
+              <p className='font-bold md:text-[26px] text-2xl'>₹{car.price.min_price}–{car.price.max_price} Lakh</p>
             </div>
             <Link to={`/buy-car/car-details/${car.carId}`} state={{ car }} className="mt-6">
                <button className="w-full rounded-lg p-[6px] border-2 border-appColor bg-appColor text-darkGrey font-bold text-lg flex items-center justify-center overflow-hidden group hover:bg-[#303030] hover:border-appColor hover:border-2 hover:text-appColor transition-colors">
