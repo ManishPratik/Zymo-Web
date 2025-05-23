@@ -153,29 +153,24 @@ const Listing = ({ title }) => {
 
   // It groups the cars by name and brand and finds the minimum fare for each group
   const clubCarsByName = async (carsArray) => {
-    console.log("Cars Array:", carsArray); // For debugging
     const clubbingCarNames = (await getCarKeywords()) || [];
-    // console.log("Car Grouping Keywords:", clubbingCarNames); // For debugging
-
+   
     if (!Array.isArray(carsArray) || carsArray.length === 0) {
       return [];
     }
 
     // Step 1: Group cars by normalized name
     const carsGroupedByNormalizedName = carsArray.reduce((acc, car) => {
-      if (car.brand === "Karyana") console.log(car);
+      // if (car.brand === "Karyana") console.log(car);
       if (!car || !car.name || typeof car.fare !== 'string') {
-        console.log("Invalid car data:", car); // For debugging
         return acc;
       }
 
       const normalizedNameKey = getNormalizedCarName(car.name, clubbingCarNames);
 
       if (!acc[normalizedNameKey]) {
-        console.log("New group created:", normalizedNameKey); // For debugging
         acc[normalizedNameKey] = [];
       }
-      // console.log("Adding car to group:", normalizedNameKey, car); // For debugging
       acc[normalizedNameKey].push(car);
       return acc;
     }, {});
@@ -213,12 +208,15 @@ const Listing = ({ title }) => {
   };
 
   useEffect(() => {
+  
+
     if (hasRun.current) return;
     hasRun.current = true;
 
     const startDateEpoc = Date.parse(startDate);
     const endDateEpoc = Date.parse(endDate);
     if (!city || !lat || !lng || !startDateEpoc || !endDateEpoc) {
+     setLoading(false);
       return;
     }
 
@@ -228,6 +226,7 @@ const Listing = ({ title }) => {
 
     if (!formattedPickDate || !formattedDropDate) {
       toast.error("Invalid date format!", { position: "top-center" });
+      setLoading(false);
       return;
     }
 
@@ -363,16 +362,23 @@ const Listing = ({ title }) => {
         setCarCount(
           groupCarList.reduce((count, group) => count + group.cars.length, 0)
         );
-        setLoading(false);
+        setLoading(false);      
 
         localStorage.setItem("carList", JSON.stringify(allCarData));
       } catch (error) {
         console.error("Unexpected error:", error);
+        setLoading(false);
       }
     };
 
     search();
   }, [city, startDate, endDate, activeTab, lat, lng, tripDurationHours]);
+
+// useEffect(() => {
+//   localStorage.setItem("carList", JSON.stringify(carList));
+// }, [carList]);
+
+
 
   useEffect(() => {
     document.title = title;
@@ -455,6 +461,7 @@ const Listing = ({ title }) => {
     setCarCount(
       clubbedCarList.reduce((count, group) => count + group.cars.length, 0)
     );
+ 
   };
 
   const handleSelectedCar = (label) => {
@@ -948,7 +955,6 @@ const Listing = ({ title }) => {
                                   } else if (activeTab === "subscribe") {
                                     goToDetails(individualCar);
                                   } else if (individualCar.source === "Karyana" || individualCar.source === "ZT") {
-                                    console.log("Karyana car selected:", individualCar);
                                     goToPackages(car); // Show packages for Karyana cars with multiple packages
                                   } else {
                                     goToPackages(individualCar);

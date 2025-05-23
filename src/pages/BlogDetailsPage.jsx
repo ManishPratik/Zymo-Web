@@ -10,6 +10,8 @@ import { collection, getDocs } from "firebase/firestore";
 
 const BlogDetailPage = () => {
   const [blog, setBlog] = useState(null);
+  const [canonicalTitle, setCanonicalTitle] = useState(null);
+
   const [blogsList, setBlogsList] = useState(() => {
     return JSON.parse(sessionStorage.getItem("blogs")) || [];
   });
@@ -50,10 +52,21 @@ const BlogDetailPage = () => {
         navigate("/blogs", { replace: true });
       } else {
         setBlog(foundBlog);
-        document.title = `${foundBlog.title.length > 60 
-          ? foundBlog.title.slice(0, 57) + "..." 
+
+        // Full title for canonical URL
+        const fullCanonicalTitle = foundBlog.title
+          .toLowerCase()
+          .replace(/[^a-z0-9\s-]/g, "")
+          .trim()
+          .split(/\s+/)
+          .slice(0,7)
+          .join("-");
+        setCanonicalTitle(fullCanonicalTitle);
+
+        document.title = `${foundBlog.title.length > 60
+          ? foundBlog.title.slice(0, 57) + "..."
           : foundBlog.title} - Zymo Blog`;
-        
+
       }
     };
 
@@ -67,14 +80,7 @@ const BlogDetailPage = () => {
     const doc = parser.parseFromString(htmlContent, "text/html");
     return doc.body.innerHTML;
   };
-  let urlTitle = blog.title
-    .toLowerCase()
-    .replace(/[^a-z0-9\s-]/g, "")
-    .trim()
-    .split(/\s+/)
-    .slice(0, 7)
-    .join("-");
- 
+
 
   return (
     <>
@@ -89,14 +95,14 @@ const BlogDetailPage = () => {
         <meta property="og:title" content={`${blog.title} - Zymo Blog`} />
         <meta property="og:description" content={blog.description} />
         <link
-  rel="canonical"
-  href={`https://zymo.app/blogs/${urlTitle}/${blog.id}`}
-/>
+          rel="canonical"
+          href={`https://zymo.app/blogs/${canonicalTitle}/${blog.id}`}
+        />
 
 
       </Helmet>
       <NavBar />
-
+{console.log("canonicalTitle",canonicalTitle)}
       <button
         onClick={() => navigate("/blogs")}
         className="mt-4 px-4 py-2 bg-[#faffa4] text-[#212121] rounded"
