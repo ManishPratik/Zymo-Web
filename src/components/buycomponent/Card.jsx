@@ -24,7 +24,7 @@ const Card = ({ car }) => {
               </div>
             </div>
             <div className='md:py-6 py-4'>
-              <p className='md:text-lg text-base'>Avg. Ex-Showroom Price</p>
+              <p className='md:text-lg text-base mb-1 text-gray-400'>Avg. Ex-Showroom Price</p>
               <p className='font-bold md:text-[26px] text-2xl'>₹{car.price.min_price}–{car.price.max_price} Lakh</p>
             </div>
             <Link to={`/buy-car/car-details/${car.carId}`} state={{ car }} className="mt-6">
@@ -58,22 +58,20 @@ const Card = ({ car }) => {
              </div>
            </div>
 
-
         </div>
-        <div className="flex md:flex-row flex-col items-center text-darkGrey justify-center font-bold md:text-xl text-lg text-center py-2 md:py-3 bg-appColor">
-          <p className='mr-1'>
-            Extended Test Drive from ₹129/hr.  
+
+        <div className="flex flex-wrap justify-center items-center text-darkGrey font-bold md:text-xl text-[15px] text-center py-4 md:py-3 bg-appColor">
+          <p className="flex-shrink-0 md:mr-1 mr-0">
+            Extended Test Drive from ₹129/hr.
           </p>
-          <p className="cursor-pointer relative px-1 after:content-[''] after:absolute after:left-0 after:bottom-0 after:h-[2px] after:w-full  after:bg-darkGrey hover:after:h-full after:transition-all after:duration-300">
+          <p className="flex-shrink-0 px-1 relative cursor-pointer after:content-[''] after:absolute after:left-0 after:bottom-0 after:h-[2px] after:w-full after:bg-darkGrey hover:after:h-full after:transition-all after:duration-300">
             <Link to={`/buy-car/car-details/${car.carId}`} state={{ car }}>
-              <span className='relative hover:text-appColor z-20'>Try Now</span>
+              <span className="relative hover:text-appColor z-20 whitespace-nowrap">Try Now</span>
             </Link>
           </p>
-
         </div>
-        
-      </div>
 
+      </div>
 
   );
 };
