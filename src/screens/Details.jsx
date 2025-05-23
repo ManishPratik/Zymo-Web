@@ -21,7 +21,8 @@ const CarDetails = ({ title }) => {
   const location = useLocation();
   const { city } = useParams();
   const trackEvent = useTrackEvent();
-  const { startDate, endDate, car, activeTab, tripDuration } = location.state || {};
+  const { startDate, endDate, car, activeTab, tripDuration } =
+    location.state || {};
 
   // Calculate trip duration
   const startTime = new Date(startDate);
@@ -37,6 +38,7 @@ const CarDetails = ({ title }) => {
   const [availableKMs, setAvailableKMs] = useState(0);
   const [hourlyRate, setHourlyRate] = useState(0);
   const [packageName, setPackageName] = useState("");
+  const [price, setPrice] = useState(0);
   // console.log("Car Details", car);
   useEffect(() => {
     if (authUser) {
@@ -97,9 +99,18 @@ const CarDetails = ({ title }) => {
       setPackageName("Unlimited KMs");
       setHourlyRate(car?.hourly_amount.slice(1));
     } else if (car?.source === "mychoize") {
+      console.log("car details my coice ", car);
       setHourlyRate(car?.hourly_amount);
       setAvailableKMs("3600 KMs");
       setPackageName(findPackage(car?.rateBasis));
+      //console.log(car?.all_fares[car?.rateBasis])
+      if (car?.rateBasis) {
+        
+        setPrice(car?.rateBasisFare[car?.rateBasis]);
+
+      } else {
+        setPrice(car.fare);
+      }
     } else if (car?.source === "Zymo") {
       setHourlyRate(car?.hourlyRates[car.selectedPackage]);
       setAvailableKMs(car?.total_km[car.selectedPackage] + " KMs");
@@ -187,6 +198,8 @@ const CarDetails = ({ title }) => {
           value:
             car.source === "zoomcar" || car.rateBasis === "DR"
               ? "No Charge"
+              : car.source === "mychoize"
+              ? `${car.extrakm_charge}`
               : `₹${car.extrakm_charge}/km`,
         },
       ],
@@ -395,7 +408,8 @@ const CarDetails = ({ title }) => {
           {/* Price and Booking */}
           <div className="mt-10 flex items-center flex-col space-y-4 justify-center">
             <p className="text-3xl font-semibold text-appColor">
-              {carDetails[0].price}
+              {console.log(price)}
+              {price}
             </p>
             <span className="text-xs text-gray-400">
               {car.source === "zoomcar" ||
