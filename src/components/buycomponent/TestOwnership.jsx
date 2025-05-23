@@ -75,7 +75,7 @@ export default function TestOwnership() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          transition={{ duration: 0.6, ease: "easeInOut" }}
+          transition={{ duration: 0.6 }}
           className={`w-full max-w-[1200px] ${
             isFinalStep
               ? "flex flex-col items-center justify-center text-center gap-6"
@@ -102,7 +102,7 @@ export default function TestOwnership() {
           ) : (
             <>
               {/* Mobile layout */}
-              <div className="flex flex-col items-center w-full md:hidden">
+              <div className="flex flex-col items-center w-full md:hidden md:mt-0 mt-[-4rem]">
                 <motion.div layout className="flex flex-col items-center">
                   <span className="text-base text-white self-start">0{stepPairIndex + 1}</span>
                   <WordAnimation
@@ -122,7 +122,7 @@ export default function TestOwnership() {
                       initial={{ opacity: 0, y: 30 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: 30 }}
-                      transition={{ duration: 0.5, ease: "easeInOut" }}
+                      transition={{ duration: 0.5 }}
                       className="flex flex-col items-center mt-10"
                     >
                       <span className="text-base text-white self-start">0{stepPairIndex + 2}</span>
@@ -161,8 +161,8 @@ export default function TestOwnership() {
                 <motion.div
                   layout
                   animate={{ marginTop: showSecondStep ? 128 : 0 }}
-                  transition={{ duration: 0.5, ease: "easeInOut" }}
-                  className="flex flex-col"
+                  transition={{ duration: 0.5 }}
+                  className="flex flex-col md:pl-6 xl:pl-16"
                 >
 
                   {showSecondStep && next && (
