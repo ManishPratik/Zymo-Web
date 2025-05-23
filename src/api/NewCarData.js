@@ -41,6 +41,7 @@ const carData = [
     totalAmount: 92500,
     freeKilometers: 1500,
     vendor: "MyChoize",
+    status:"available",
   },
   {
     id: 2,
@@ -82,6 +83,7 @@ const carData = [
     totalAmount: 60000,
     freeKilometers: 2000,
     vendor: "Volvo India",
+    status:"disable",
   },
   {
     id: 3,
@@ -123,6 +125,7 @@ const carData = [
     totalAmount: 26000,
     freeKilometers: 1500,
     vendor: "TATA",
+    status:"disable",
   },
   {
     id: 4,
@@ -164,12 +167,13 @@ const carData = [
     totalAmount: 32000,
     freeKilometers: 1600,
     vendor: "Hyundai",
+    status:"disable",
   },
   {
     id: 5,
     carId: 5,
     name: "Tata",
-    model: "Tata Tiago EV",
+    model: "Tiago EV",
     type: "Electric",
     year: 2025,
     rating: 4.7,
@@ -205,12 +209,13 @@ const carData = [
     totalAmount: 32000,
     freeKilometers: 1600,
     vendor: "Tata",
+    status:"disable",
   },
   {
     id: 6,
     carId: 6,
     name: "Tata",
-    model: "Tata Punch EV",
+    model: "Punch EV",
     type: "Electric",
     year: 2025,
     rating: 4.7,
@@ -246,6 +251,7 @@ const carData = [
     totalAmount: 32000,
     freeKilometers: 1600,
     vendor: "Tata",
+    status:"disable",
   },
 ];
 

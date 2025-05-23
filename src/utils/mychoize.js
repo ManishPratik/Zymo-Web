@@ -50,14 +50,17 @@ const apiUrl = import.meta.env.VITE_FUNCTIONS_API_URL;
 
 const validateBookingTime = (pickupDate, minHrsTillBooking) => {
   if (!pickupDate || !minHrsTillBooking) {
-    console.log('Missing pickup date or minHrsTillBooking:', { pickupDate, minHrsTillBooking });
+    console.log("Missing pickup date or minHrsTillBooking:", {
+      pickupDate,
+      minHrsTillBooking,
+    });
     return false;
   }
 
   const now = new Date();
   // Handle MyChoize date format "/Date(1234567890+0530)/"
   let pickupTime;
-  if (typeof pickupDate === 'string' && pickupDate.includes('/Date(')) {
+  if (typeof pickupDate === "string" && pickupDate.includes("/Date(")) {
     const timestamp = parseInt(pickupDate.match(/\d+/)[0]);
     pickupTime = new Date(timestamp);
   } else {
@@ -65,20 +68,18 @@ const validateBookingTime = (pickupDate, minHrsTillBooking) => {
   }
 
   if (isNaN(pickupTime.getTime())) {
-    console.log('Invalid pickup date:', pickupDate);
+    console.log("Invalid pickup date:", pickupDate);
     return false;
   }
 
   const diffInHours = (pickupTime - now) / (1000 * 60 * 60);
-  console.log(
-    'Time validation:', {
-      now: now.toISOString(),
-      pickupTime: pickupTime.toISOString(),
-      diffInHours,
-      minHrsTillBooking,
-      isValid: diffInHours >= minHrsTillBooking
-    }
-  );
+  console.log("Time validation:", {
+    now: now.toISOString(),
+    pickupTime: pickupTime.toISOString(),
+    diffInHours,
+    minHrsTillBooking,
+    isValid: diffInHours >= minHrsTillBooking,
+  });
   return diffInHours >= minHrsTillBooking;
 };
 
@@ -200,10 +201,10 @@ const calculateDiscountPrice = (baseFare, vendor) => {
     return Math.round(finalPrice);
   }
   const finalPrice =
-  baseFare *
-  (1 + parseFloat(vendor.TaxSd)) *
-  parseFloat(vendor.CurrentrateSd);
- 
+    baseFare *
+    (1 + parseFloat(vendor.TaxSd)) *
+    parseFloat(vendor.CurrentrateSd);
+
   return Math.round(finalPrice);
 };
 
@@ -219,14 +220,19 @@ const fetchMyChoizeCars = async (
     console.log("Vendor Data:", vendorData);
     // Check if API is enabled
     if (!vendorData?.Api?.PU) {
-      console.log('Mychoize API is currently disabled');
+      console.log("Mychoize API is currently disabled");
       return [];
     }
 
     // Check if booking time meets minimum hours requirement
-    console.log(vendorData?.minHrsTillBooking?.sd)
-    if (!validateBookingTime(formattedPickDate, vendorData?.minHrsTillBooking?.sd || 0)) {
-      console.log('Pickup time does not meet minimum hours requirement');
+    console.log(vendorData?.minHrsTillBooking?.sd);
+    if (
+      !validateBookingTime(
+        formattedPickDate,
+        vendorData?.minHrsTillBooking?.sd || 0
+      )
+    ) {
+      console.log("Pickup time does not meet minimum hours requirement");
       return [];
     }
 
@@ -255,6 +261,11 @@ const fetchMyChoizeCars = async (
       (car) => car.RateBasis !== "MLK" && car.BrandName
     ).forEach((car) => {
       const key = car.GroupKey;
+
+      if (car?.RateBasisDesc.split(" ")[0] === "MONTHLY") {
+        // Skip monthly plans
+        return;
+      }
 
       if (!groupedCars[key]) {
         groupedCars[key] = {
