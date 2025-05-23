@@ -102,13 +102,19 @@ const CarDetails = ({ title }) => {
     } else if (car?.source === "mychoize") {
       console.log("car details my coice ", car);
       setHourlyRate(car?.hourly_amount);
-      setAvailableKMs("3600 KMs");
-      setPackageName(findPackage(car?.rateBasis));
+      if (car?.rateBasis === "DR") {
+        setAvailableKMs("Unlimited KMs");
+        setPackageName("Unlimited KMs");
+      } else {
+        setAvailableKMs(findPackage(car?.rateBasis));
+        setPackageName(
+          tripDurationHours < 30 * 24 ? "Daily Package" : "Monthly Package"
+        );
+      }
+
       //console.log(car?.all_fares[car?.rateBasis])
       if (car?.rateBasis) {
-        
         setPrice(car?.rateBasisFare[car?.rateBasis]);
-
       } else {
         setPrice(car.fare);
       }
@@ -118,22 +124,25 @@ const CarDetails = ({ title }) => {
       setPackageName(
         tripDurationHours < 24 ? "Hourly Package" : "Daily Package"
       );
-        setPrice(parseInt(car?.all_fares[car.selectedPackage].replace(/[^0-9]/g, '')));
+      setPrice(
+        parseInt(car?.all_fares[car.selectedPackage].replace(/[^0-9]/g, ""))
+      );
     } else if (car?.source.toLowerCase() === "karyana") {
       setAvailableKMs(
         tripDurationHours < 24
           ? car.total_km["hourly"] + " KMs"
-          : car.total_km[car.rateBasis] + " KMs"
+          : car.total_km[car.rateBasis]
       );
       setPackageName(
         tripDurationHours < 24 ? "Hourly Package" : "Daily Package"
       );
       setPrice(parseFloat(car?.actualPrice).toFixed(0));
+      setHourlyRate(car?.hourly_amount);
     } else if (car?.source.toLowerCase() === "zt") {
       setAvailableKMs(car?.total_km?.FF);
       setPackageName("Daily Package");
       setHourlyRate(parseFloat(car?.hourly_amount).toFixed(0));
-setPrice(parseInt(car?.fare.replace(/[^0-9]/g, '')));
+      setPrice(parseInt(car?.fare.replace(/[^0-9]/g, "")));
     } else {
       setAvailableKMs(car?.total_km[car.rateBasis]);
       setPrice(parseFloat(car?.actualPrice).toFixed(0));
@@ -413,8 +422,7 @@ setPrice(parseInt(car?.fare.replace(/[^0-9]/g, '')));
           {/* Price and Booking */}
           <div className="mt-10 flex items-center flex-col space-y-4 justify-center">
             <p className="text-3xl font-semibold text-appColor">
-              {console.log(price)}
-              ₹{price}
+              {console.log(price)}₹{price}
             </p>
             <span className="text-xs text-gray-400">
               {car.source === "zoomcar" ||

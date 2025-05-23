@@ -175,7 +175,7 @@ export const fetchAllTestCollections = async function (
                       carData["Car Name"] || carData.carName || "Unknown Car",
                     carBrand: carBrand,
                     actualPrice: basePrice,
-                    perHourRate: perHourRate,
+                    perHourRate: perHourRate.toFixed(0),
                     baseHourlyPrice: baseHourlyPrice, // Store the base calculation before vendor rates
                     pickupLocation:
                       carData["Pick-up location"] ||
