@@ -34,7 +34,7 @@ const NewHeaderCity = () => {
             src={imageSrc}
             alt={`${city} Car Options`}
             className="max-w-sm w-full rounded-lg shadow-lg"
-          />
+            loading="lazy" />
         </div>
 
       </div>

@@ -148,7 +148,7 @@ const Reviews = () => {
              bg-gradient-to-br from-[#424242]/50 via-white/10 to-[#faffa4]/30"
                         >
                             <span className="absolute top-6 left-6 w-7 h-7 md:w-8 md:h-8">
-                                <img src="/images/quotes.png"/>
+                                <img src="/images/quotes.png" alt="quotes"/>
                             </span>
                             <p className="text-xs font-merriweather italic text-left md:text-sm mb-4 mt-8">{testimonial.quote}</p>
                             <div className="flex items-center gap-3 mt-auto">
