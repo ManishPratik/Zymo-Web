@@ -1,22 +1,21 @@
 import { useState, useEffect } from "react";
 import { toast } from "react-toastify";
 import PropTypes from "prop-types";
-import {
-  signInWithCustomToken,
-} from "firebase/auth";
+import { signInWithCustomToken } from "firebase/auth";
 import { appAuth } from "../../utils/firebase";
 import OtpInput from "./OtpInput";
 import PhoneInputForm, { PhoneHeaderIcon } from "./PhoneInputForm";
-import LoadingSpinner from '../LoadingSpinner';
+import LoadingSpinner from "../LoadingSpinner";
 
 const LoginPage = ({ onAuth, isOpen, onClose, authType }) => {
   const [phone, setPhone] = useState("");
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
   const [OTPData, setOTPData] = useState("");
-  const [step, setStep] = useState("phone");  const [loading, setLoading] = useState(false);
+  const [step, setStep] = useState("phone");
+  const [loading, setLoading] = useState(false);
   const [timer, setTimer] = useState(0);
 
-  const VITE_FUNCTIONS_API_URL = import.meta.env.VITE_FUNCTIONS_API_URL 
+  const VITE_FUNCTIONS_API_URL = import.meta.env.VITE_FUNCTIONS_API_URL;
 
   useEffect(() => {
     if (timer > 0) {
@@ -36,7 +35,7 @@ const LoginPage = ({ onAuth, isOpen, onClose, authType }) => {
     setLoading(true);
     try {
       await sendOtp(phone);
-      await new Promise(resolve => setTimeout(resolve, 1000)); // slight delay for UX
+      await new Promise((resolve) => setTimeout(resolve, 1000)); // slight delay for UX
       setStep("otp");
       setTimer(30);
       toast.success("OTP sent successfully!");
@@ -78,7 +77,6 @@ const LoginPage = ({ onAuth, isOpen, onClose, authType }) => {
       setLoading(false);
     }
   };
-  
 
   const sendOtp = async (phoneNumber) => {
     try {
@@ -91,10 +89,10 @@ const LoginPage = ({ onAuth, isOpen, onClose, authType }) => {
           ? "+" + formattedPhone
           : "+91" + formattedPhone;
       }
-      
+
       // In development, use local API, in production use deployed URL
       const apiUrl = `${VITE_FUNCTIONS_API_URL}/otp/send`;
-      
+
       const response = await fetch(apiUrl, {
         method: "POST",
         headers: {
@@ -108,9 +106,13 @@ const LoginPage = ({ onAuth, isOpen, onClose, authType }) => {
         try {
           // Try to parse as JSON for structured error
           const errorData = JSON.parse(errorText);
-          throw new Error(errorData.error || `Server error: ${response.status}`);
+          throw new Error(
+            errorData.error || `Server error: ${response.status}`
+          );
         } catch {
-          throw new Error(`Failed to send OTP: ${response.statusText || 'Unknown error'}`);
+          throw new Error(
+            `Failed to send OTP: ${response.statusText || "Unknown error"}`
+          );
         }
       }
 
@@ -144,21 +146,21 @@ const LoginPage = ({ onAuth, isOpen, onClose, authType }) => {
           ? "+" + formattedPhone
           : "+91" + formattedPhone;
       }
-      
+
       const apiUrl = `${VITE_FUNCTIONS_API_URL}/otp/verify`;
-      
+
       const requestBody = {
         sessionId: OTPData,
         otp: otp.join(""),
         phone: formattedPhone,
         isLinking: isLinking,
       };
-      
+
       // Add UID for account linking
       if (isLinking && appAuth.currentUser?.uid) {
         requestBody.uid = appAuth.currentUser.uid;
       }
-      
+
       const response = await fetch(apiUrl, {
         method: "POST",
         headers: {
@@ -170,10 +172,14 @@ const LoginPage = ({ onAuth, isOpen, onClose, authType }) => {
       // Handle non-200 responses
       if (!response.ok) {
         const errorText = await response.text();
-        let errorMessage;        try {
+        let errorMessage;
+        try {
           const errorJson = JSON.parse(errorText);
-          errorMessage = errorJson.error || errorJson.message || `Server error: ${response.status}`;
-          
+          errorMessage =
+            errorJson.error ||
+            errorJson.message ||
+            `Server error: ${response.status}`;
+
           // Handle expired OTP case specifically
           if (errorJson.expired) {
             setStep("phone");
@@ -181,9 +187,11 @@ const LoginPage = ({ onAuth, isOpen, onClose, authType }) => {
           }
         } catch {
           // Parsing error, use generic message
-          errorMessage = `Error: ${response.status} ${response.statusText || 'Unknown error'}`;
+          errorMessage = `Error: ${response.status} ${
+            response.statusText || "Unknown error"
+          }`;
         }
-        
+
         throw new Error(errorMessage);
       }
 
@@ -199,7 +207,7 @@ const LoginPage = ({ onAuth, isOpen, onClose, authType }) => {
           // Sign in with the custom token
           await signInWithCustomToken(appAuth, data.customToken);
           console.log("User authenticated successfully with custom token");
-          
+
           // Get current user for callback
           const user = appAuth.currentUser;
           const userData = {
@@ -208,8 +216,10 @@ const LoginPage = ({ onAuth, isOpen, onClose, authType }) => {
             displayName: user?.displayName,
             email: user?.email,
           };
-          
-          toast.success(isLinking ? "Account linked successfully!" : "Login successful!");
+
+          toast.success(
+            isLinking ? "Account linked successfully!" : "Login successful!"
+          );
           onAuth(userData);
           onClose();
         } catch (tokenError) {
@@ -221,21 +231,25 @@ const LoginPage = ({ onAuth, isOpen, onClose, authType }) => {
       }
     } catch (error) {
       console.error("Authentication error:", error);
-      
+
       // Handle specific error messages
-      if (error.message.includes("invalid") || error.message.includes("incorrect")) {
+      if (
+        error.message.includes("invalid") ||
+        error.message.includes("incorrect")
+      ) {
         toast.error("Invalid OTP. Please try again.");
         // Clear OTP for retrying
         setOtp(["", "", "", "", "", ""]);
       } else {
         toast.error(error.message);
       }
-      
+
       throw error;
     }
   };
 
-  if (!isOpen) return null;  return (
+  if (!isOpen) return null;
+  return (
     <div>
       <div className="text-center mb-6">
         <PhoneHeaderIcon />
@@ -250,12 +264,12 @@ const LoginPage = ({ onAuth, isOpen, onClose, authType }) => {
         </h2>
         {step === "phone" && (
           <p className="text-sm text-gray-400 mt-2">
-            {authType === "login" 
-              ? "Enter your registered phone number" 
+            {authType === "login"
+              ? "Enter your registered phone number"
               : "Create a new account with your phone number"}
           </p>
         )}
-      </div>      
+      </div>
       {step === "phone" && (
         <div className="space-y-6">
           {/* Phone verification form */}
@@ -264,38 +278,35 @@ const LoginPage = ({ onAuth, isOpen, onClose, authType }) => {
             setPhone={setPhone}
             loading={loading}
             onSubmit={handlePhoneSubmit}
-            buttonText={authType === "login" ? "Login with OTP" : "Sign Up with OTP"}
+            buttonText={
+              authType === "login" ? "Login with OTP" : "Sign Up with OTP"
+            }
           />
-
         </div>
       )}
 
       {/* Add loading state between steps */}
-    {loading && step === "phone" && (
-      <div className="text-center py-8">
-        <LoadingSpinner />
-        <p className="text-[#faffa4] mt-4">Sending OTP...</p>
-      </div>
-    )}
+      {loading && step === "phone" && (
+        <div className="text-center py-8">
+          <LoadingSpinner />
+          <p className="text-[#faffa4] mt-4">Sending OTP...</p>
+        </div>
+      )}
 
       {step === "otp" && (
         <form onSubmit={handleOtpSubmit} className="space-y-6">
-           {/* Show loading spinner during verification */}
-        {loading && (
-          <div className="text-center py-4">
-            <LoadingSpinner />
-            <p className="text-[#faffa4] mt-4">Verifying OTP...</p>
-          </div>
-        )}
+          {/* Show loading spinner during verification */}
+          {loading && (
+            <div className="text-center py-4">
+              <LoadingSpinner />
+              <p className="text-[#faffa4] mt-4">Verifying OTP...</p>
+            </div>
+          )}
           <div className="space-y-2">
             <label className="text-sm text-gray-300">
               Enter the 6-digit code sent to {phone}
             </label>
-            <OtpInput 
-              otp={otp} 
-              setOtp={setOtp}
-              loading={loading}
-            />
+            <OtpInput otp={otp} setOtp={setOtp} loading={loading} />
           </div>
           <div className="text-center">
             <button
@@ -309,7 +320,7 @@ const LoginPage = ({ onAuth, isOpen, onClose, authType }) => {
           </div>
           <button
             type="submit"
-            disabled={loading || otp.some(digit => !digit)}
+            disabled={loading || otp.some((digit) => !digit)}
             className="w-full bg-[#faffa4] text-darkGrey py-3 rounded-lg hover:bg-[#faffa9] font-semibold disabled:opacity-50"
           >
             {loading ? "Verifying..." : "Verify OTP"}

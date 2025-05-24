@@ -624,7 +624,7 @@ const AgentBookingList = ({ title }) => {
 
                 <div className="flex justify-between gap-4 mb-8 w-full">
                   <button
-                    onClick={() => setShowCancelConfirm(true)}
+                    onClick={() => setShowCancelConfirm(true)} //! HAVE TO CANCEL THE BOOKING
                     className="px-4 py-2 rounded text-white font-bold flex-1"
                     style={{ backgroundColor: "#FF0000" }}
                   >

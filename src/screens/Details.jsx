@@ -112,9 +112,9 @@ const CarDetails = ({ title }) => {
         );
       }
 
-      //console.log(car?.all_fares[car?.rateBasis])
       if (car?.rateBasis) {
-        setPrice(car?.rateBasisFare[car?.rateBasis]);
+        // actual price * tax * current rate sd * discount sd
+        setPrice(car?.rateBasisFare[car?.rateBasis]); 
       } else {
         setPrice(car.fare);
       }
@@ -147,7 +147,7 @@ const CarDetails = ({ title }) => {
       setAvailableKMs(car?.total_km[car.rateBasis]);
       setPrice(parseFloat(car?.actualPrice).toFixed(0));
     }
-  }, []);
+  }, [car, tripDurationHours]);
 
   //ga for car booking
   const handleCarBooking = (label) => {
