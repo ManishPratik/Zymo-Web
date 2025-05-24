@@ -113,8 +113,8 @@ const CarDetails = ({ title }) => {
       }
 
       //console.log(car?.all_fares[car?.rateBasis])
-      if (car?.rateBasis) {
-        setPrice(car?.rateBasisFare[car?.rateBasis]);
+     if (car?.rateBasis) {
+        setPrice(Math.round(car?.rateBasisFare[car?.rateBasis]*car?.currentRate*car?.discountRate*(car?.taxRate)+car?.rateBasisFare[car?.rateBasis]*car?.currentRate*car?.discountRate));
       } else {
         setPrice(car.fare);
       }
