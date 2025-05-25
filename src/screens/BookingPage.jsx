@@ -2,6 +2,9 @@ import {
   ArrowLeft,
   Calendar,
   MapPinIcon,
+  ChevronDown,
+  ChevronUp,
+
 } from "lucide-react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
@@ -23,7 +26,7 @@ import {
 import { currencyToInteger } from "../utils/currencyHelper";
 import { onAuthStateChanged } from "firebase/auth";
 import { addDoc, collection, doc, getDoc } from "firebase/firestore";
-import { appAuth,appDB, appStorage } from "../utils/firebase";
+import { appAuth, appDB, appStorage } from "../utils/firebase";
 import PickupPopup from "../components/PickupPopup";
 import DropupPopup from "../components/DropupPopup";
 import BookingPageFormPopup from "../components/BookingPageFormPopup";
@@ -57,7 +60,7 @@ function BookingPage() {
   const startDateFormatted = formatDate(startDate);
   const endDateFormatted = formatDate(endDate);
 
-   const [customerName, setCustomerName] = useState("");
+  const [customerName, setCustomerName] = useState("");
   const [customerPhone, setCustomerPhone] = useState("");
   const [customerEmail, setCustomerEmail] = useState("");
   const [loadingUser, setLoadingUser] = useState(true);
@@ -86,7 +89,12 @@ function BookingPage() {
   const [packageSelected, setPackageSelected] = useState(null);
 
   const [couponCode, setCouponCode] = useState("ZYMOWEB");
+  const [showCoupons, setShowCoupons] = useState(false); //list of coupon codes
 
+  //array of coupon c
+  const couponCodes = [
+    "ZYMOWEB",
+  ];
   const [loading, setLoading] = useState(false);
 
   const customerUploadDetails = formData && uploadDocData;
@@ -101,11 +109,11 @@ function BookingPage() {
         setLoadingUser(true);
         if (user) {
           console.log("User UID:", user.uid);
-          
+
           // Use the imported appDB instance
           const userRef = doc(appDB, "users", user.uid);
           const userSnap = await getDoc(userRef);
-          
+
           if (userSnap.exists()) {
             const userData = userSnap.data();
             console.log("User data:", userData);
@@ -131,8 +139,8 @@ function BookingPage() {
     car.source === "zoomcar"
       ? "ZoomCar"
       : car.source === "mychoize"
-      ? "Mychoize"
-      : car.source;
+        ? "Mychoize"
+        : car.source;
 
   useEffect(() => {
     const fetchVendorDetails = async () => {
@@ -246,7 +254,7 @@ function BookingPage() {
     } else {
       setDiscount(0);
       let noDiscountAmount = 0;
-      
+
       if (car.source === "ZT") {
         // For ZT cars:
         // - Use baseFare directly (inflated_fare) without applying currentRate
@@ -1002,16 +1010,38 @@ function BookingPage() {
                 onChange={(e) => setCouponCode(e.target.value)}
               />
             </div>
-            <div className="flex items-center justify-center cursor-pointer">
-              <span className="py-4 text-sm text-appColor">
-                VIEW ALL OFFERS{" "}
-              </span>
-              <img
-                src="/images/Booking/arrow-down.png"
-                alt="arrow-down"
-                className="w-4 h-[6px] pl-2"
-              />
+
+            <div className="bg-[#1a1a1a] p-4 rounded-lg text-center">
+              {/* Toggle Button */}
+              <div
+                className="flex items-center justify-center cursor-pointer"
+                onClick={() => setShowCoupons(!showCoupons)}
+              >
+                <span className="text-sm text-[#faffa4] font-medium mr-1">
+                  VIEW ALL OFFERS
+                </span>
+                {showCoupons ? (
+                  <ChevronUp size={16} className="text-[#faffa4]" />
+                ) : (
+                  <ChevronDown size={16} className="text-[#faffa4]" />
+                )}
+              </div>
+
+              {/* Coupon List */}
+              {showCoupons && (
+                <div className="mt-3 space-y-2">
+                  {couponCodes.map((code, index) => (
+                    <div
+                      key={index}
+                      className="bg-darkGrey2  px-4 py-2 rounded-md text-sm font-semibold"
+                    >
+                      {code}
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
+
           </div>
 
           {/* Book Button */}
@@ -1169,11 +1199,10 @@ function BookingPage() {
                   onClick={() => setShowPickupPopup(true)}
                 >
                   {selectedPickupLocation
-                    ? `${selectedPickupLocation.LocationName} | ${
-                        selectedPickupLocation.IsPickDropChargesApplicable
-                          ? `₹${selectedPickupLocation.DeliveryCharge}`
-                          : "FREE"
-                      }`
+                    ? `${selectedPickupLocation.LocationName} | ${selectedPickupLocation.IsPickDropChargesApplicable
+                      ? `₹${selectedPickupLocation.DeliveryCharge}`
+                      : "FREE"
+                    }`
                     : "Select pickup location"}
                 </div>
                 <textarea
@@ -1197,11 +1226,10 @@ function BookingPage() {
                   onClick={() => setShowDropupPopup(true)}
                 >
                   {selectedDropLocation
-                    ? `${selectedDropLocation.LocationName} | ${
-                        selectedDropLocation.IsPickDropChargesApplicable
-                          ? `₹${selectedDropLocation.DeliveryCharge}`
-                          : "FREE"
-                      }`
+                    ? `${selectedDropLocation.LocationName} | ${selectedDropLocation.IsPickDropChargesApplicable
+                      ? `₹${selectedDropLocation.DeliveryCharge}`
+                      : "FREE"
+                    }`
                     : "Select drop location"}
                 </div>
                 <textarea
@@ -1330,11 +1358,10 @@ function BookingPage() {
               <div className="flex flex-col justify-center items-center">
                 <button
                   className={`px-6 py-2 rounded-lg font-semibold  transition-colors
-                                ${
-                                  !customerUploadDetails
-                                    ? "text-black bg-appColor hover:bg-[#e2ff5d] cursor-pointer"
-                                    : "text-appColor bg-transparent border-2 border-appColor cursor-not-allowed"
-                                }`}
+                                ${!customerUploadDetails
+                      ? "text-black bg-appColor hover:bg-[#e2ff5d] cursor-pointer"
+                      : "text-appColor bg-transparent border-2 border-appColor cursor-not-allowed"
+                    }`}
                   onClick={handleUploadDocuments}
                   disabled={customerUploadDetails}
                 >

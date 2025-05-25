@@ -39,6 +39,7 @@ const CarDetails = ({ title }) => {
   const [hourlyRate, setHourlyRate] = useState(0);
   const [packageName, setPackageName] = useState("");
   const [price, setPrice] = useState(0);
+  const [extraKmRate, setExtraKmRate] = useState(0);
   // console.log("Car Details", car);
   useEffect(() => {
     if (authUser) {
@@ -99,22 +100,35 @@ const CarDetails = ({ title }) => {
       setPackageName("Unlimited KMs");
       setHourlyRate(car?.hourly_amount.slice(1));
       setPrice(car?.actualPrice);
+      setExtraKmRate("No Charge");
     } else if (car?.source === "mychoize") {
       console.log("car details my coice ", car);
-      setHourlyRate(car?.hourly_amount);
+      setHourlyRate(car?.hourly_amount[car?.rateBasis]);
       if (car?.rateBasis === "DR") {
         setAvailableKMs("Unlimited KMs");
         setPackageName("Unlimited KMs");
+        setExtraKmRate("No Charge");
       } else {
         setAvailableKMs(findPackage(car?.rateBasis));
         setPackageName(
           tripDurationHours < 30 * 24 ? "Daily Package" : "Monthly Package"
         );
+        setExtraKmRate(car?.extrakm_charge);
       }
 
+      //console.log(car?.all_fares[car?.rateBasis])
       if (car?.rateBasis) {
-        // actual price * tax * current rate sd * discount sd
-        setPrice(car?.rateBasisFare[car?.rateBasis]); 
+        setPrice(
+          Math.round(
+            car?.rateBasisFare[car?.rateBasis] *
+              car?.currentRate *
+              car?.discountRate *
+              car?.taxRate +
+              car?.rateBasisFare[car?.rateBasis] *
+                car?.currentRate *
+                car?.discountRate
+          )
+        );
       } else {
         setPrice(car.fare);
       }
@@ -127,6 +141,7 @@ const CarDetails = ({ title }) => {
       setPrice(
         parseInt(car?.all_fares[car.selectedPackage].replace(/[^0-9]/g, ""))
       );
+      setExtraKmRate(`₹${car?.extraKMCharge[car.selectedPackage]}`);
     } else if (car?.source.toLowerCase() === "karyana") {
       setAvailableKMs(
         tripDurationHours < 24
@@ -138,11 +153,13 @@ const CarDetails = ({ title }) => {
       );
       setPrice(parseFloat(car?.actualPrice).toFixed(0));
       setHourlyRate(car?.hourly_amount);
+      setExtraKmRate(`₹${car?.extrakm_charge}`);
     } else if (car?.source.toLowerCase() === "zt") {
       setAvailableKMs(car?.total_km?.FF);
       setPackageName("Daily Package");
       setHourlyRate(parseFloat(car?.hourly_amount).toFixed(0));
       setPrice(parseInt(car?.fare.replace(/[^0-9]/g, "")));
+      setExtraKmRate(`₹${car?.extrakm_charge}`)
     } else {
       setAvailableKMs(car?.total_km[car.rateBasis]);
       setPrice(parseFloat(car?.actualPrice).toFixed(0));
@@ -209,12 +226,7 @@ const CarDetails = ({ title }) => {
 
         {
           label: "Extra KM Charge",
-          value:
-            car.source === "zoomcar" || car.rateBasis === "DR"
-              ? "No Charge"
-              : car.source === "mychoize"
-              ? `${car.extrakm_charge}`
-              : `₹${car.extrakm_charge}/km`,
+          value: extraKmRate,
         },
       ],
       price:

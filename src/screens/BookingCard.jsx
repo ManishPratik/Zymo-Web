@@ -16,10 +16,11 @@ const BookingCard = ({ title }) => {
   const navigate = useNavigate();
   const [vendorDetails, setVendorDetails] = useState(null);
   const [loading, setLoading] = useState(true);
-
+  console.log("Car data: ", car);
   const isKaryana =
-    car?.brand === "Karyana" || car?.source?.toLowerCase() === "karyana";
-  const isZT = car?.brand?.toLowerCase() === "zt";
+    car?.cars?.[0]?.brand === "Karyana" ||
+    car?.cars?.[0]?.source?.toLowerCase() === "karyana";
+  const isZT = car?.cars?.[0]?.source?.toLowerCase() === "zt";
   const isMyChoize = car?.source === "mychoize";
   const isZymoPartner = car?.source === "Zymo";
   useEffect(() => {
@@ -32,7 +33,9 @@ const BookingCard = ({ title }) => {
         }));
         const selectedVendor = vendorData.find(
           (vendor) =>
-           ( vendor.id?.toLowerCase() === (isKaryana ? "karyana" : car?.source?.toLowerCase())) || (vendor.id?.toLowerCase() === ("zt"))
+            vendor.id?.toLowerCase() ===
+              (isKaryana ? "karyana" : car?.source?.toLowerCase()) ||
+            vendor.id?.toLowerCase() === "zt"
         );
         if (selectedVendor) {
           setVendorDetails(selectedVendor);
@@ -270,7 +273,7 @@ const BookingCard = ({ title }) => {
                           <li className="flex items-center gap-2 text-md">
                             <span>
                               • Extra KMs charged at{" "}
-                              {variation.extrakm_charge || "10"}/km
+                              ₹{variation.extrakm_charge || "10"}/km
                             </span>
                           </li>
                         </ul>
@@ -322,7 +325,6 @@ const BookingCard = ({ title }) => {
                       </span>
                     </h1>
                     <ul className="text-gray-200 space-y-1 mt-4">
-                      
                       {car.options &&
                         Array.isArray(car.options) &&
                         car.options.map((option, idx) => (
@@ -338,8 +340,7 @@ const BookingCard = ({ title }) => {
                       </li>
                       <li className="flex items-center gap-2 text-md">
                         <span>
-                          • Extra KMs charged at {car?.extrahour_charge || "10"}
-                          /km
+                          • Extra KMs charged at ₹{car?.extraKMCharge[index]}
                         </span>
                       </li>
                     </ul>

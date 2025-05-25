@@ -279,7 +279,7 @@ const fetchMyChoizeCars = async (
           ],
           address: car.LocationName,
           location_id: car.LocationKey,
-          hourly_amount: car.PerUnitCharges,
+          hourly_amount: [],
           images: [car.VehicleBrandImageName],
           ratingData: { text: "No ratings available" },
           total_km: getTotalKms(tripDurationHours),
@@ -289,7 +289,6 @@ const fetchMyChoizeCars = async (
           sourceImg: "/images/ServiceProvider/mychoize.png",
           rateBasisFare: {},
           all_fares: [],
-
           brandGroundLength: car.BrandGroundLength,
           brandKey: car.BrandKey,
           brandLength: car.BrandLength,
@@ -312,6 +311,10 @@ const fetchMyChoizeCars = async (
           groupedCars[key].all_fares.push(fare);
         }
       });
+
+      groupedCars[key].hourly_amount[car.RateBasis] = parseInt(
+        car.PerUnitCharges / tripDurationHours
+      );
     });
 
     // const vendorData = await getVendorDetails("mychoize");

@@ -65,8 +65,10 @@ const NearestCar = ({ title }) => {
         <link rel="canonical" href="https://zymo.app/buy" />
       </Helmet>
 
+      {/* <div className="fixed top-0 w-full left-0 z-10">
+        <NavBar />
+      </div> */}
       <NavBar />
-      
       {/* <div className="head-container flex flex-col sm:flex-row justify-between items-center bg-darkGrey text-white p-4"> */}
         {/* <button
           onClick={() => navigate("/")}
@@ -113,7 +115,7 @@ const NearestCar = ({ title }) => {
         <SearchBar setSearchResults={setSearchResults} />
       </div> */}
       {loading ? (
-        <div className="bg-darkGrey grid grid-cols-1 sm:grid-cols-2 gap-6 p-4 py-6 my-3 rounded-lg mx-auto max-w-[1240px]">
+        <div className="bg-darkGrey grid grid-cols-1 sm:grid-cols-1 gap-6 p-4 py-6 my-3 rounded-lg mx-auto max-w-[1240px]">
           {Array(6)
             .fill()
             .map((_, index) => (

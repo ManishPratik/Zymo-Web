@@ -35,7 +35,7 @@ export const fetchAllTestZtCollections = async function (
       inflated_fare: formatFare(Math.round(inflatedFare)),
       actualPrice: inflatedFare,
       hourly_amount: perHourRate,
-      extrakm_charge: car.extraHourRate,
+      extrakm_charge: car.extraKmRate,
       extrahour_charge: car.extraHourRate,
       securityDeposit: car.securityDeposit,
       pickups: car.deliveryCharges,

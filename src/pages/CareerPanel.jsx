@@ -12,7 +12,9 @@ import {
   Briefcase, 
   FileText,
   Eye,
-  User
+  User,
+  Search,
+  Star
 } from "lucide-react";
 
 // Custom color scheme
@@ -56,6 +58,9 @@ const CareerPanel = () => {
   const [activeTab, setActiveTab] = useState("all"); // "all", "accepted", "rejected"
   const [selectedApplication, setSelectedApplication] = useState(null);
   const [showDetails, setShowDetails] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filteredApplications, setFilteredApplications] = useState([]);
+  const [isSearching, setIsSearching] = useState(false);
 
   useEffect(() => {
     fetchInitialApplications();
@@ -63,11 +68,19 @@ const CareerPanel = () => {
 
   const fetchInitialApplications = async () => {
     setLoading(true);
-    setApplications([]); // Reset applications when switching tabs
+    setApplications([]);
     let q;
+    
     if (activeTab === "all") {
       q = query(
         collection(webDB, "careerApplications"),
+        orderBy("timestamp", "desc"),
+        limit(10)
+      );
+    } else if (activeTab === "shortlisted") {
+      q = query(
+        collection(webDB, "careerApplications"),
+        where("status", "==", "shortlisted"),
         orderBy("timestamp", "desc"),
         limit(10)
       );
@@ -79,14 +92,15 @@ const CareerPanel = () => {
         limit(10)
       );
     }
-    
+
     try {
       const snapshot = await getDocs(q);
       const apps = snapshot.docs.map((doc) => ({ 
         id: doc.id, 
         ...doc.data(), 
         status: doc.data().status || "pending" 
-      }));
+      })).filter(app => activeTab === "all" ? app.status !== "rejected" : true);
+      
       setApplications(apps);
       if (snapshot.docs.length > 0) {
         setLastDoc(snapshot.docs[snapshot.docs.length - 1]);
@@ -119,14 +133,15 @@ const CareerPanel = () => {
         limit(10)
       );
     }
-    
+
     try {
       const snapshot = await getDocs(q);
       const newApps = snapshot.docs.map((doc) => ({ 
         id: doc.id, 
         ...doc.data(), 
         status: doc.data().status || "pending" 
-      }));
+      })).filter(app => activeTab === "all" ? app.status !== "rejected" : true);
+    
       setApplications((prev) => [...prev, ...newApps]);
       if (snapshot.docs.length > 0) {
         setLastDoc(snapshot.docs[snapshot.docs.length - 1]);
@@ -141,19 +156,30 @@ const CareerPanel = () => {
   const updateApplicationStatus = async (id, newStatus) => {
     try {
       const appRef = doc(webDB, "careerApplications", id);
-      await updateDoc(appRef, { status: newStatus });
+      await updateDoc(appRef, { 
+        status: newStatus,
+        statusUpdatedAt: new Date()
+      });
       
-      // Update local state and filter based on active tab
-      setApplications(prev => 
-        prev.map(app => 
-          app.id === id ? { ...app, status: newStatus } : app
-        ).filter(app => 
-          activeTab === "all" || app.status === activeTab
-        )
-      );
-      
-      if (selectedApplication && selectedApplication.id === id) {
-        setSelectedApplication({ ...selectedApplication, status: newStatus });
+      // Update local state based on current tab and new status
+      if ((activeTab === "all" && (newStatus === "rejected" || newStatus === "shortlisted")) || 
+          (activeTab === "rejected" && newStatus !== "rejected") ||
+          (activeTab === "shortlisted" && newStatus !== "shortlisted")) {
+        setApplications(prev => prev.filter(app => app.id !== id));
+        setShowDetails(false);
+      } else {
+        setApplications(prev => 
+          prev.map(app => 
+            app.id === id ? { ...app, status: newStatus } : app
+          )
+        );
+        
+        if (selectedApplication && selectedApplication.id === id) {
+          setSelectedApplication(prev => ({
+            ...prev,
+            status: newStatus
+          }));
+        }
       }
 
       // Send rejection email if status is "rejected"
@@ -163,6 +189,7 @@ const CareerPanel = () => {
           await sendRejectionEmail(app.email, app.fullName, app.jobType);
         }
       }
+
     } catch (error) {
       console.error("Error updating application status:", error);
     }
@@ -192,6 +219,74 @@ const CareerPanel = () => {
       opacity: 1,
       transition: { type: "spring", stiffness: 100 }
     }
+  };
+
+  // Filter applications based on search query
+  useEffect(() => {
+    if (searchQuery.trim() === "") {
+      setIsSearching(false);
+      setFilteredApplications([]);
+      return;
+    }
+    
+    setIsSearching(true);
+    const searchTerm = searchQuery.toLowerCase().trim();
+    
+    const filtered = applications.filter(app => {
+      // Safely access properties with optional chaining
+      const fullName = app?.fullName?.toLowerCase() || '';
+      const email = app?.email?.toLowerCase() || '';
+      const phone = app?.phoneNumber?.toString() || '';
+      
+      // Log the values for debugging
+      console.log('Searching:', {
+        searchTerm,
+        fullName,
+        email,
+        phone,
+        match: {
+          name: fullName.includes(searchTerm),
+          email: email.includes(searchTerm),
+          phone: phone.includes(searchTerm)
+        }
+      });
+
+      return (
+        fullName.includes(searchTerm) ||
+        email.includes(searchTerm) ||
+        phone.includes(searchTerm)
+      );
+    });
+    
+    setFilteredApplications(filtered);
+    setHasMore(filtered.length === 10);
+    setLoading(false);
+  }, [searchQuery, applications]);
+
+  // Update handleSearch function
+  const handleSearch = (query) => {
+    setSearchQuery(query);
+    setIsSearching(!!query);
+    
+    if (!query.trim()) {
+      setFilteredApplications([]);
+      return;
+    }
+
+    const searchTerm = query.toLowerCase().trim();
+    const filtered = applications.filter(app => {
+      const fullName = app?.fullName?.toLowerCase() || '';
+      const email = app?.email?.toLowerCase() || '';
+      const phone = app?.phoneNumber?.toString() || '';
+
+      return (
+        fullName.includes(searchTerm) ||
+        email.includes(searchTerm) ||
+        phone.includes(searchTerm)
+      );
+    });
+
+    setFilteredApplications(filtered);
   };
 
   return (
@@ -241,6 +336,19 @@ const CareerPanel = () => {
               </li>
               <li>
                 <button 
+                  onClick={() => {setActiveTab("shortlisted"); setShowDetails(false)}}
+                  className="w-full text-left py-4 px-4 rounded-lg flex items-center text-lg font-medium"
+                  style={{ 
+                    backgroundColor: activeTab === "shortlisted" ? colorScheme.darkGrey2 : 'transparent',
+                    color: activeTab === "shortlisted" ? colorScheme.appColor : colorScheme.white
+                  }}
+                >
+                  <Star className="mr-3" size={22} />
+                  <span>Shortlisted</span>
+                </button>
+              </li>
+              <li>
+                <button 
                   onClick={() => setActiveTab("rejected")}
                   className="w-full text-left py-4 px-4 rounded-lg flex items-center text-lg font-medium"
                   style={{ 
@@ -283,6 +391,32 @@ const CareerPanel = () => {
             <p className="text-xl opacity-80">Manage and review job applications</p>
           </motion.div>
           
+            {/* Search bar - Centered */}
+            <div className="mb-8 flex justify-center">
+              <div className="relative w-full max-w-2xl">
+                <input
+                  type="text"
+                  placeholder="Search by name, email or phone..."
+                  value={searchQuery}
+                  onChange={(e) => {
+                    setSearchQuery(e.target.value);
+                    handleSearch(e.target.value);
+                  }}
+                  className="w-full px-4 py-3 rounded-lg pr-12 "
+                  style={{ 
+                    backgroundColor: colorScheme.darkGrey2,
+                    color: colorScheme.white,
+                    border: `1px solid ${colorScheme.darkGrey}`
+                  }}
+                />
+                <Search 
+                  size={20} 
+                  className="absolute right-4 top-1/2 transform -translate-y-1/2"
+                  style={{ color: colorScheme.appColor }}
+                />
+              </div>
+            </div>
+            
           <div className="mb-8 flex items-center">
             <h2 className="text-3xl font-semibold" style={{ 
               color: activeTab === "accepted" ?colorScheme.appColor : 
@@ -292,10 +426,15 @@ const CareerPanel = () => {
                activeTab === "rejected" ? "Rejected Applications" : 
                "All Applications"}
             </h2>
-            <div className="ml-4 px-4 py-1 rounded-full text-base" style={{ backgroundColor:colorScheme.darkGrey2 }}>
-              {applications.length} {applications.length === 1 ? "application" : "applications"}
+            <div className="ml-4 px-4 py-1 rounded-full text-base" 
+              style={{ backgroundColor: colorScheme.darkGrey2 }}>
+              {isSearching ? filteredApplications.length : applications.length} 
+              {(isSearching ? filteredApplications.length : applications.length) === 1 
+                ? "application" 
+                : "applications"}
             </div>
           </div>
+          
           
           {loading && applications.length === 0 ? (
             <div className="flex justify-center items-center h-64">
@@ -311,16 +450,18 @@ const CareerPanel = () => {
                   initial="hidden"
                   animate="visible"
                 >
-                  {applications.map((app) => (
+                  {(isSearching ? filteredApplications : applications).map((app) => (
                     <motion.div 
                       key={app.id}
                       variants={itemVariants}
                       className="rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-all"
                       style={{ 
-                        backgroundColor:colorScheme.darkGrey2,
-                        border: `2px solid ${app.status === "accepted" ?colorScheme.appColor : 
-                                            app.status === "rejected" ? "#ff6b6b" : 
-                                           colorScheme.darkGrey2}`
+                        backgroundColor: colorScheme.darkGrey2,
+                        border: `2px solid ${
+                          app.status === "accepted" ? colorScheme.appColor : 
+                          app.status === "rejected" ? "#ff6b6b" : 
+                          colorScheme.darkGrey2
+                        }`
                       }}
                     >
                       <div className="p-6">
@@ -329,13 +470,17 @@ const CareerPanel = () => {
                           <span className="px-4 py-1 rounded-full text-sm font-medium" style={{ 
                             backgroundColor: app.status === "accepted" ? "rgba(237, 255, 141, 0.2)" : 
                                            app.status === "rejected" ? "rgba(255, 107, 107, 0.2)" : 
+                                           app.status === "shortlisted" ? "rgba(255, 215, 0, 0.2)" :
                                            "rgba(255, 193, 7, 0.2)",
-                            color: app.status === "accepted" ?colorScheme.appColor : 
+                            color: app.status === "accepted" ? colorScheme.appColor : 
                                   app.status === "rejected" ? "#ff6b6b" : 
+                                  app.status === "shortlisted" ? "#ffd700" :
                                   "#ffc107"
                           }}>
                             {app.status === "accepted" ? "Accepted" :
-                             app.status === "rejected" ? "Rejected" : "Pending"}
+                             app.status === "rejected" ? "Rejected" :
+                             app.status === "shortlisted" ? "Shortlisted" :
+                             "Pending"}
                           </span>
                         </div>
                         
@@ -394,8 +539,8 @@ const CareerPanel = () => {
                         onClick={() => updateApplicationStatus(selectedApplication.id, "accepted")}
                         className="px-5 py-3 rounded-lg flex items-center text-lg"
                         style={{ 
-                          backgroundColor: selectedApplication.status === "accepted" ?colorScheme.appColor :colorScheme.darkGrey,
-                          color: selectedApplication.status === "accepted" ?colorScheme.black :colorScheme.white,
+                          backgroundColor: selectedApplication.status === "accepted" ? colorScheme.appColor : colorScheme.darkGrey,
+                          color: selectedApplication.status === "accepted" ? colorScheme.black : colorScheme.white,
                           minWidth: "150px"
                         }}
                       >
@@ -403,11 +548,23 @@ const CareerPanel = () => {
                         Accept
                       </button>
                       <button
+                        onClick={() => updateApplicationStatus(selectedApplication.id, "shortlisted")}
+                        className="px-5 py-3 rounded-lg flex items-center text-lg"
+                        style={{ 
+                          backgroundColor: selectedApplication.status === "shortlisted" ? "#ffd700" : colorScheme.darkGrey,
+                          color: selectedApplication.status === "shortlisted" ? colorScheme.black : colorScheme.white,
+                          minWidth: "150px"
+                        }}
+                      >
+                        <Star size={20} className="mr-2" />
+                        Shortlist
+                      </button>
+                      <button
                         onClick={() => updateApplicationStatus(selectedApplication.id, "rejected")}
                         className="px-5 py-3 rounded-lg flex items-center text-lg"
                         style={{ 
-                          backgroundColor: selectedApplication.status === "rejected" ? "#ff6b6b" :colorScheme.darkGrey,
-                          color:colorScheme.white,
+                          backgroundColor: selectedApplication.status === "rejected" ? "#ff6b6b" : colorScheme.darkGrey,
+                          color: colorScheme.white,
                           minWidth: "150px"
                         }}
                       >
@@ -418,8 +575,8 @@ const CareerPanel = () => {
                         onClick={() => setShowDetails(false)}
                         className="px-5 py-3 rounded-lg text-lg"
                         style={{ 
-                          backgroundColor:colorScheme.darkGrey, 
-                          color:colorScheme.white,
+                          backgroundColor: colorScheme.darkGrey, 
+                          color: colorScheme.white,
                           minWidth: "150px"
                         }}
                       >
@@ -529,6 +686,16 @@ const CareerPanel = () => {
                     {activeTab === "accepted" ? "No accepted applications yet." : 
                      activeTab === "rejected" ? "No rejected applications yet." : 
                      "There are no applications to display."}
+                  </p>
+                </div>
+              )}
+              
+              {isSearching && filteredApplications.length === 0 && !loading && (
+                <div className="flex flex-col items-center justify-center py-16">
+                  <div className="text-8xl mb-6" style={{ color: colorScheme.appColor }}>🔍</div>
+                  <h3 className="text-2xl font-medium mb-2">No matching applications</h3>
+                  <p className="text-lg opacity-70">
+                    Try searching with a different term
                   </p>
                 </div>
               )}

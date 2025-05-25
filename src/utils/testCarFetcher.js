@@ -23,7 +23,6 @@ export const fetchAllTestCollections = async function (
     // finalDiscount = perHourRate * tripDurationInHours * vendor.currentRate
     const finalDiscount = perHourRate * tripDurationHours * vendorRate;
 
-    console.log(tripDurationHours, vendorRate, finalDiscount);
     const finalPrice =
       perHourRate * tripDurationHours * vendorRate * discountRate;
 
@@ -137,7 +136,6 @@ export const fetchAllTestCollections = async function (
  
                   // Skip sold-out cars
                   if (carData.isSoldOut) {
-                    console.log(`Skipping sold out car: ${carName}`);
                     return null;
                   }
 

@@ -25,7 +25,7 @@ export const fetchFirebaseCars = async (city, tripDurationHours) => {
       })
       .map((doc) => {
         const data = doc.data();
-        
+
         console.log("Partner data:", data);
         return {
           id: doc.id,
@@ -48,6 +48,7 @@ export const fetchFirebaseCars = async (city, tripDurationHours) => {
           username: data.username || "",
           // Fields used in UI
           brandLogo: data.logo || null,
+          vendor: data.brandName,
           ...data,
         };
       });
@@ -91,12 +92,14 @@ export const fetchFirebaseCars = async (city, tripDurationHours) => {
               } else {
                 return null;
               }
-            }            // create packages
+            } // create packages
             const all_fares = [];
             const total_km = [];
             const hourlyRates = [];
+            const extraKMCharge = [];
             if (carData.packages || carData.hourlyRental.limited.packages) {
-              const packageList = carData.packages || carData.hourlyRental.limited.packages;
+              const packageList =
+                carData.packages || carData.hourlyRental.limited.packages;
               for (const key in packageList) {
                 const packageHourlyRate = packageList[key].hourlyRate || 0;
                 const kmPerHour = packageList[key].kmPerHour || 0;
@@ -105,18 +108,27 @@ export const fetchFirebaseCars = async (city, tripDurationHours) => {
                 all_fares.push(fare);
                 total_km.push((kmPerHour * tripDurationHours).toFixed(1));
                 hourlyRates.push(packageHourlyRate);
+                // Check if car has extra hour charge if not then take total car price and divide it with total km
+                const extraKMChargePrice = carData.extrakm_charge
+                  ? `${carData.extrakm_charge}/km`
+                  : `${(fairPrice / (kmPerHour * tripDurationHours)).toFixed(
+                      2
+                    )}/km`;
+                extraKMCharge.push(extraKMChargePrice);
               }
             }
             console.log("car data after fair: ", carData);
+
             return {
               id: doc.id,
               partnerId: partner.id,
               partnerName: partner.fullName,
-              partnerBrandName: partner.brandName || "Zymo",
+              partnerBrandName: partner.carName || "Zymo",
               all_fares: all_fares,
               total_km: total_km,
               hourlyRates: hourlyRates,
               extrahour_charge: carData.extraHourRate || 0,
+              extraKMCharge: extraKMCharge,
               extrakm_charge: carData.extraKmRate || 0,
               fare: all_fares[0],
               inflated_fare: all_fares[0],
@@ -135,11 +147,11 @@ export const fetchFirebaseCars = async (city, tripDurationHours) => {
               source: "Zymo",
               sourceImg: partner.logo || "/images/ServiceProvider/zymo.png",
               location_est: city,
+              vendor: partner.brandName,
               ...carData,
             };
           });
           allCars = [...allCars, ...partnerCars];
-
         }
       } catch (err) {
         console.error(`Error fetching cars for partner ${partner.id}:`, err);
@@ -159,17 +171,18 @@ export const fetchFirebaseCars = async (city, tripDurationHours) => {
     } else {
       console.log(`No test collection cars found for ${city}`);
     }
-        // Step 4.5: Fetch cars from testKos collections
+    // Step 4.5: Fetch cars from testKos collections
     const testKosCollections = await fetchAllTestKosCollections(
       appDB,
       formatFare,
       city,
       tripDurationHours
     );
-    
 
     if (testKosCollections && testKosCollections.length > 0) {
-      console.log(`Found ${testKosCollections.length} testKos collection cars for ${city}`);
+      console.log(
+        `Found ${testKosCollections.length} testKos collection cars for ${city}`
+      );
       allCars = [...allCars, ...testKosCollections];
     } else {
       console.log(`No testKos collection cars found for ${city}`);
@@ -181,10 +194,11 @@ export const fetchFirebaseCars = async (city, tripDurationHours) => {
       city,
       tripDurationHours
     );
-    
 
     if (testZtCollections && testZtCollections.length > 0) {
-      console.log(`Found ${testZtCollections.length} testZt collection cars for ${city}`);
+      console.log(
+        `Found ${testZtCollections.length} testZt collection cars for ${city}`
+      );
       allCars = [...allCars, ...testZtCollections];
       console.log("All cars from testZt collections:", testZtCollections);
     } else {
@@ -203,7 +217,7 @@ export const fetchFirebaseCars = async (city, tripDurationHours) => {
       .map((car) => {
         return {
           id: car.carId || car.id,
-          brand: car.partnerBrandName || "Zymo",
+          brand: car.carName || car.name || car.model || car.type,
           name: car.carName || car.name || car.model || car.type || "Car",
           type: car.carType || car.type || "",
           options: [
@@ -221,6 +235,7 @@ export const fetchFirebaseCars = async (city, tripDurationHours) => {
           inflated_fare: car.inflated_fare,
           extrakm_charge: car.extrakm_charge || "0",
           extrahour_charge: car.extrahour_charge || 0,
+          extraKMCharge: car.extraKMCharge || 0,
           slabRates: car.slabRates || [],
           securityDeposit: car.securityDeposit || 0,
           deliveryCharges: car.deliveryCharges || false,
@@ -231,6 +246,7 @@ export const fetchFirebaseCars = async (city, tripDurationHours) => {
           },
           trips: car.trips || "N/A",
           source: car.source || "Zymo",
+          vendor: car.vendor || car.source,
           sourceImg:
             car.sourceImg ||
             car.partnerLogo ||
@@ -246,7 +262,7 @@ export const fetchFirebaseCars = async (city, tripDurationHours) => {
       });
     console.log("Filtered data:", filterdData);
     return filterdData;
-    
+
     // return [];
   } catch (error) {
     console.error("Error fetching Firebase cars:", error);
