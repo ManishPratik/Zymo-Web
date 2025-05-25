@@ -16,13 +16,14 @@ const BookingCard = ({ title }) => {
   const navigate = useNavigate();
   const [vendorDetails, setVendorDetails] = useState(null);
   const [loading, setLoading] = useState(true);
-  console.log("Car data: ", car);
+
   const isKaryana =
     car?.cars?.[0]?.brand === "Karyana" ||
     car?.cars?.[0]?.source?.toLowerCase() === "karyana";
   const isZT = car?.cars?.[0]?.source?.toLowerCase() === "zt";
   const isMyChoize = car?.source === "mychoize";
   const isZymoPartner = car?.source === "Zymo";
+  
   useEffect(() => {
     const fetchVendorDetails = async () => {
       try {
@@ -310,7 +311,6 @@ const BookingCard = ({ title }) => {
 
         {isZymoPartner &&
           car?.all_fares.map((fare, index) => {
-            // console.log("Car Details:", index);
             return (
               <div
                 key={`zymo-${index}`}

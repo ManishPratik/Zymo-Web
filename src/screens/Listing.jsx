@@ -161,7 +161,6 @@ const Listing = ({ title }) => {
 
     // Step 1: Group cars by normalized name
     const carsGroupedByNormalizedName = carsArray.reduce((acc, car) => {
-      // if (car.brand === "Karyana") console.log(car);
       if (!car || !car.name || typeof car.fare !== 'string') {
         return acc;
       }

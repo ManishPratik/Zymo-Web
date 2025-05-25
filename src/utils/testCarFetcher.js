@@ -74,13 +74,10 @@ export const fetchAllTestCollections = async function (
     // Get vendor details first to check PU status
     const vendorDetails = await getVendorDetails("Karyana");
     if (!vendorDetails) {
-      console.log("Vendor details not found for testKaaryana");
       return [];
     }
-    console.log("Vendor details fetched successfully:", vendorDetails);
     // Check if API is enabled
     if (!vendorDetails?.Api?.PU) {
-      console.log("testKaaryana API is currently disabled");
       return [];
     }
 
@@ -116,15 +113,7 @@ export const fetchAllTestCollections = async function (
                 );
                 const cityDoc = await getDocs(cityRef);
 
-                // Log raw data from Firebase for debugging
-                if (!cityDoc.empty) {
-                  console.log("Raw car data sample:", cityDoc.docs[0].data());
-                }
-
                 if (cityDoc.empty) {
-                  console.log(
-                    `No data found in collection ${collectionName}/${city}/${carCollection}`
-                  );
                   continue;
                 }
 
@@ -246,7 +235,6 @@ export const fetchAllTestCollections = async function (
       }
     } // If no cars found in any collection, show a clear message
     if (allTestCars.length === 0) {
-      console.log(`⚠️ No test cars found for ${currentCity} in any collection`);
       return [];
     }
 

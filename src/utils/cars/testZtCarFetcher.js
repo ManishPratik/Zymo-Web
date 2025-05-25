@@ -70,15 +70,11 @@ export const fetchAllTestZtCollections = async function (
     }
     // Check if API is enabled
     if (!vendorDetails?.Api?.PU) {
-      console.log("testZeptep API is currently disabled");
       return [];
     }
 
     // Check if the min hours till booking is less than the trip duration
     if (vendorDetails?.minHrsTillBooking?.sd < tripDurationHours) {
-      console.log(
-        `Minimum hours till booking (${vendorDetails?.minHrsTillBooking?.sd}) is greater than trip duration (${tripDurationHours})`
-      );
       return [];
     }
 
@@ -95,15 +91,8 @@ export const fetchAllTestZtCollections = async function (
           const cityRef = collection(appDB, "testZt", city, carCollection);
           const cityDoc = await getDocs(cityRef);
 
-          // Log raw data from Firebase for debugging
-          if (!cityDoc.empty) {
-            console.log("Raw car data sample:", cityDoc.docs[0].data());
-          }
 
           if (cityDoc.empty) {
-            console.log(
-              `No data found in collection ${"testZt"}/${city}/${carCollection}`
-            );
             continue;
           }
 
@@ -114,7 +103,6 @@ export const fetchAllTestZtCollections = async function (
 
             // Skip sold-out cars
             if (carData?.isSoldOut) {
-              console.log(`Skipping sold out car: ${carName}`);
               return null;
             }
 
@@ -167,7 +155,6 @@ export const fetchAllTestZtCollections = async function (
                 5,
             };
           });
-          console.log("Fetched cars from collection: ", cars);
           // Filter out null values and add valid cars
           const validCars = cars.filter((car) => car !== null);
           allTestCars = [...allTestCars, ...validCars];
@@ -182,7 +169,6 @@ export const fetchAllTestZtCollections = async function (
       console.error(`Error processing collection "testZt":`, error);
     }
     if (allTestCars.length === 0) {
-      console.log(`⚠️ No test cars found for ${currentCity} in any collection`);
       return [];
     }
 
@@ -199,7 +185,6 @@ export const fetchAllTestZtCollections = async function (
       };
     });
 
-    console.log("Cars after formatting: ", formattedTestCars);
     // sort formattedTestCars by fare and brand name
     formattedTestCars.sort((a, b) => {
       const fareA = parseInt(a.fare.replace(/[^0-9]/g, ""));
@@ -214,7 +199,6 @@ export const fetchAllTestZtCollections = async function (
       return result;
     });
 
-    console.log("Sorted cars: ", formattedTestCars);
     // Group cars by name to combine similar cars
     const groupTheCarsByName = (cars) => {
       const groupedCars = {};
@@ -237,7 +221,6 @@ export const fetchAllTestZtCollections = async function (
       return Object.values(groupedCars);
     };
 
-    console.log("Grouped cars: ", groupTheCarsByName(formattedTestCars));
 
     return groupTheCarsByName(formattedTestCars);
   } catch (error) {

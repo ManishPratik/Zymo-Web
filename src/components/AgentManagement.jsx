@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useEffect, useState, Fragment } from "react";
 import { Helmet } from "react-helmet-async";
 import { appDB } from "../utils/firebase";
 import { collection, getDocs, query, updateDoc, doc } from "firebase/firestore";
@@ -12,6 +12,9 @@ import {
   FiGift,
   FiDownload,
 } from "react-icons/fi";
+import PropTypes from "prop-types";
+import ZoomcarDetailsDialog from "./ZoomcarDetailsDialog"; // Added import
+import { handleGetZoomcarDetails } from "../api/zoomcarApi"; // Added import
 
 const AgentBookingList = ({ title }) => {
   const [bookings, setBookings] = useState([]);
@@ -28,6 +31,8 @@ const AgentBookingList = ({ title }) => {
   const [showDeductionOptions, setShowDeductionOptions] = useState(false);
   const [showBookingDetails, setShowBookingDetails] = useState(false);
   const [bookingDetails, setBookingDetails] = useState(null);
+  const [isZoomcarModalOpen, setIsZoomcarModalOpen] = useState(false);
+  const [zoomcarDetails, setZoomcarDetails] = useState(null); // This state is used for the modal
   const [loadingZoomDetails, setLoadingZoomDetails] = useState(false);
 
   const colorScheme = {
@@ -176,13 +181,31 @@ const AgentBookingList = ({ title }) => {
     }
   };
 
+  const formatTimestamp = (timestamp) => {
+    if (!timestamp) return "N/A";
+
+    try {
+      const date = new Date(parseInt(timestamp));
+      return date.toLocaleDateString("en-IN", {
+        day: "numeric",
+        month: "short",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+    } catch (e) {
+      console.error("Error formatting timestamp:", e);
+      return timestamp;
+    }
+  };
+
   const filteredBookings = bookings.filter((booking) => {
     const searchLower = searchQuery.toLowerCase();
     return (
       booking.bookingId?.toLowerCase().includes(searchLower) ||
       booking.UserId?.toLowerCase().includes(searchLower) ||
       booking.FirstName?.toLowerCase().includes(searchLower) ||
-      booking.PhoneNumber?.includes(searchQuery) 
+      booking.PhoneNumber?.includes(searchQuery)
     );
   });
 
@@ -264,80 +287,13 @@ const AgentBookingList = ({ title }) => {
 
     return <span style={{ color: "#edff8d" }}>{value.toString()}</span>;
   };
-  const handleGetZoomDetails = async (bookingId, uid) => {
-    setLoadingZoomDetails(true);
-    const url = import.meta.env.VITE_FUNCTIONS_API_URL;
-    // const url = "http://127.0.0.1:5001/zymo-prod/us-central1/api";
 
-    try {
-      const response = await fetch(`${url}/zoomcar/bookings/details`, {
-        method: "POST",
-        body: JSON.stringify({
-          data: {
-            booking_id: bookingId,
-            uid: uid,
-          },
-        }),
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to fetch Zoomcar booking details");
-      }
-
-      const data = await response.json();
-      
-      // Format the data for display
-      const formattedData = {
-        status: data.status || "N/A",
-        id: data.id || "N/A",
-        booking_start: formatTimestamp(data.starts),
-        booking_end: formatTimestamp(data.ends),
-        type: data.type || "N/A",
-        car_brand: data.car_details?.brand || "N/A",
-        car_model: data.car_details?.model || "N/A",
-        car_seater: data.car_details?.seater || "N/A",
-        car_segment: data.car_details?.segment || "N/A",
-        car_fuel_type: data.car_details?.fuel_type || "N/A",
-        car_transmission: data.car_details?.transmission || "N/A",
-        pickup_address: data.pickup_location?.address || "N/A",
-        payment_received: `₹${data.fare_breakup?.payment_received || 0}`,
-        refunds_made: `₹${data.fare_breakup?.refunds_made || 0}`,
-        outstanding_amount: `₹${Math.abs(data.fare_breakup?.outstanding || 0)}`,
-        user_phone: data.user_details?.phone || "N/A",
-        cancellation_status: data.sub_status || "N/A"
-      };
-
-      setBookingDetails(formattedData);
-      setShowBookingDetails(true);
-      console.log("Zoom Details:", data);
-    } catch (error) {
-      console.error("Error fetching Zoomcar details:", error);
-      alert("Failed to fetch Zoomcar booking details. Please try again.");
-    } finally {
-      setLoadingZoomDetails(false);
-    }
+  RenderValue.propTypes = {
+    // Added PropTypes for RenderValue
+    value: PropTypes.any,
+    field: PropTypes.string,
   };
 
-  const formatTimestamp = (timestamp) => {
-    if (!timestamp) return "N/A";
-    
-    try {
-      const date = new Date(parseInt(timestamp));
-      return date.toLocaleDateString("en-IN", { 
-        day: "numeric",
-        month: "short", 
-        year: "numeric",
-        hour: "2-digit",
-        minute: "2-digit"
-      });
-    } catch (e) {
-      console.error("Error formatting timestamp:", e);
-      return timestamp;
-    }
-  };
   return (
     <>
       <Helmet>
@@ -393,7 +349,7 @@ const AgentBookingList = ({ title }) => {
             <FiUsers className="text-3xl mb-2" />
             <span className="text-xs font-bold text-center">Master Agent</span>
           </Link>
-           <Link
+          <Link
             to="/add-voucher"
             className={`w-full p-4 rounded-lg flex flex-col items-center justify-center gap-2 transition-all duration-300 hover:bg-gray-700 ${
               location.pathname === "/master-agent" ? "bg-gray-700" : ""
@@ -423,7 +379,9 @@ const AgentBookingList = ({ title }) => {
             }}
           >
             <FiDownload className="text-3xl mb-2" />
-            <span className="text-xs font-bold text-center">Download dump data</span>
+            <span className="text-xs font-bold text-center">
+              Download dump data
+            </span>
           </Link>
         </nav>
         <style>
@@ -634,9 +592,13 @@ const AgentBookingList = ({ title }) => {
                   {selectedBooking.Vendor === "ZoomCar" && (
                     <button
                       onClick={() =>
-                        handleGetZoomDetails(
+                        handleGetZoomcarDetails(
+                          // Changed to use imported function
                           selectedBooking.bookingId,
-                          selectedBooking.UserId
+                          selectedBooking.UserId,
+                          setZoomcarDetails, // Pass setter function
+                          setIsZoomcarModalOpen, // Pass setter function
+                          setLoadingZoomDetails // Pass setter function
                         )
                       }
                       className="px-4 py-2 rounded text-white font-bold flex-1"
@@ -860,215 +822,19 @@ const AgentBookingList = ({ title }) => {
             </div>
           )}
 
+          {isZoomcarModalOpen &&
+            zoomcarDetails && ( // Changed to use isZoomcarModalOpen and zoomcarDetails
+              <ZoomcarDetailsDialog // Changed to use new component
+                details={zoomcarDetails}
+                onClose={() => setIsZoomcarModalOpen(false)}
+              />
+            )}
+
           {showBookingDetails && bookingDetails && (
-            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-              <div className="w-full h-full flex flex-col">
-                <div
-                  className="rounded-lg p-6 flex-1 overflow-y-auto"
-                  style={{
-                    backgroundColor: colorScheme.darkGrey2,
-                    border: `2px solid ${colorScheme.appColor}`,
-                  }}
-                >
-                  <button
-                    className="flex items-center gap-2 hover:scale-105 transition-transform mb-4 p-4"
-                    style={{ color: colorScheme.appColor }}
-                    onClick={() => setShowBookingDetails(false)}
-                  >
-                    <FiArrowLeft className="text-3xl" />
-                    <span className="text-xl">Back</span>
-                  </button>
-
-                  <h1
-                    className="text-3xl font-bold mb-4 text-center -mt-8"
-                    style={{ color: colorScheme.appColor }}
-                  >
-                    ZoomCar Booking Details
-                  </h1>
-                  
-                  {/* Booking Status Badge */}
-                  <div className="flex justify-center mb-6">
-                    <span 
-                      className={`px-6 py-2 rounded-full text-lg font-bold ${
-                        bookingDetails.status === "CANCELLED" 
-                          ? "bg-red-500 text-white" 
-                          : bookingDetails.status === "CONFIRMED" 
-                          ? "bg-green-500 text-white"
-                          : "bg-yellow-500 text-black"
-                      }`}
-                    >
-                      {bookingDetails.status}
-                    </span>
-                  </div>
-
-                  {/* Car Info Card */}
-                  <div 
-                    className="rounded-lg p-4 mb-6"
-                    style={{
-                      backgroundColor: colorScheme.darkGrey,
-                      border: `1px solid ${colorScheme.appColor}44`,
-                    }}
-                  >
-                    <h2 
-                      className="text-xl font-bold mb-2"
-                      style={{ color: colorScheme.appColor }}
-                    >
-                      Car Details
-                    </h2>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <p className="text-gray-400">Brand & Model</p>
-                        <p className="text-white text-lg">{bookingDetails.car_brand} {bookingDetails.car_model}</p>
-                      </div>
-                      <div>
-                        <p className="text-gray-400">Segment</p>
-                        <p className="text-white text-lg">{bookingDetails.car_segment}</p>
-                      </div>
-                      <div>
-                        <p className="text-gray-400">Transmission</p>
-                        <p className="text-white text-lg">{bookingDetails.car_transmission}</p>
-                      </div>
-                      <div>
-                        <p className="text-gray-400">Fuel Type</p>
-                        <p className="text-white text-lg">{bookingDetails.car_fuel_type}</p>
-                      </div>
-                      <div>
-                        <p className="text-gray-400">Seating Capacity</p>
-                        <p className="text-white text-lg">{bookingDetails.car_seater} Seater</p>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Booking Info Card */}
-                  <div 
-                    className="rounded-lg p-4 mb-6"
-                    style={{
-                      backgroundColor: colorScheme.darkGrey,
-                      border: `1px solid ${colorScheme.appColor}44`,
-                    }}
-                  >
-                    <h2 
-                      className="text-xl font-bold mb-2"
-                      style={{ color: colorScheme.appColor }}
-                    >
-                      Booking Information
-                    </h2>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <p className="text-gray-400">Booking ID</p>
-                        <p className="text-white text-lg">{bookingDetails.id}</p>
-                      </div>
-                      <div>
-                        <p className="text-gray-400">Booking Type</p>
-                        <p className="text-white text-lg">{bookingDetails.type}</p>
-                      </div>
-                      <div>
-                        <p className="text-gray-400">Start Time</p>
-                        <p className="text-white text-lg">{bookingDetails.booking_start}</p>
-                      </div>
-                      <div>
-                        <p className="text-gray-400">End Time</p>
-                        <p className="text-white text-lg">{bookingDetails.booking_end}</p>
-                      </div>
-                      <div className="col-span-2">
-                        <p className="text-gray-400">Pickup Location</p>
-                        <p className="text-white text-lg">{bookingDetails.pickup_address}</p>
-                      </div>
-                      <div>
-                        <p className="text-gray-400">User Phone</p>
-                        <p className="text-white text-lg">{bookingDetails.user_phone}</p>
-                      </div>
-                      <div>
-                        <p className="text-gray-400">Cancellation Status</p>
-                        <p className="text-white text-lg">{bookingDetails.cancellation_status}</p>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Payment Info Card */}
-                  <div 
-                    className="rounded-lg p-4 mb-6"
-                    style={{
-                      backgroundColor: colorScheme.darkGrey,
-                      border: `1px solid ${colorScheme.appColor}44`,
-                    }}
-                  >
-                    <h2 
-                      className="text-xl font-bold mb-2"
-                      style={{ color: colorScheme.appColor }}
-                    >
-                      Payment Information
-                    </h2>
-                    <div className="grid grid-cols-3 gap-4">
-                      <div>
-                        <p className="text-gray-400">Payment Received</p>
-                        <p className="text-white text-lg">{bookingDetails.payment_received}</p>
-                      </div>
-                      <div>
-                        <p className="text-gray-400">Refunds Made</p>
-                        <p className="text-white text-lg">{bookingDetails.refunds_made}</p>
-                      </div>
-                      <div>
-                        <p className="text-gray-400">Outstanding Amount</p>
-                        <p className="text-white text-lg">{bookingDetails.outstanding_amount}</p>
-                      </div>
-                    </div>
-                  </div>
-
-                  <table className="w-full text-left border-collapse hidden">
-                    <tbody>
-                      {Object.entries(bookingDetails).map(
-                        ([key, value]) => (
-                          <tr
-                            key={key}
-                            style={{ backgroundColor: colorScheme.darkGrey2 }}
-                            className="border-b border-gray-700"
-                          >
-                            <td
-                              className="px-6 py-4 text-xl font-bold uppercase"
-                              style={{
-                                color: colorScheme.appColor,
-                                width: "50%",
-                              }}
-                            >
-                              {key.replace(/_/g, " ")}
-                            </td>
-                            <td
-                              className="px-6 py-4 text-lg"
-                              style={{ width: "50%" }}
-                            >
-                              <RenderValue value={value} />
-                            </td>
-                            <td
-                              className="px-6 py-4 text-lg text-right"
-                              style={{ width: "10%" }}
-                            >
-                              <button onClick={() => handleCopyId(value)}>
-                                {copiedId === value ? (
-                                  <FiCheck
-                                    style={{
-                                      color: "#4CAF50",
-                                      fontSize: "1.5rem",
-                                    }}
-                                  />
-                                ) : (
-                                  <FiCopy
-                                    style={{
-                                      color: colorScheme.appColor,
-                                      fontSize: "1.5rem",
-                                    }}
-                                  />
-                                )}
-                              </button>
-                            </td>
-                          </tr>
-                        )
-                      )}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            </div>
+            <ZoomcarDetailsDialog
+              details={bookingDetails}
+              onClose={() => setShowBookingDetails(false)}
+            />
           )}
 
           {showDocuments && (
@@ -1317,6 +1083,11 @@ const AgentBookingList = ({ title }) => {
       </div>
     </>
   );
+};
+
+AgentBookingList.propTypes = {
+  // Added PropTypes for AgentBookingList
+  title: PropTypes.string.isRequired,
 };
 
 export default AgentBookingList;
