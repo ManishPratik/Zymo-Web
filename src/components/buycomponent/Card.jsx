@@ -27,7 +27,7 @@ const Card = ({ car }) => {
               <p className='md:text-lg text-base mb-1 text-gray-400'>Avg. Ex-Showroom Price</p>
               <p className='font-bold md:text-[26px] text-2xl'>₹{car.price.min_price}–{car.price.max_price} Lakh</p>
             </div>
-            <Link to={`/buy-car/car-details/${car.carId}`} state={{ car }} className="mt-6">
+            <Link to={`/buy-car/car-details/${car.model.replace(/\s+/g, '-').toLowerCase()}`} state={{ car }} className="mt-6">
                <button className="w-full rounded-lg p-[6px] border-2 border-appColor bg-appColor text-darkGrey font-bold text-lg flex items-center justify-center overflow-hidden group hover:bg-[#303030] hover:border-appColor hover:border-2 hover:text-appColor transition-colors">
                  Get Your Car
                  <span className="pl-6 relative flex items-center justify-center w-5 h-5 text-darkGrey2 group-hover:text-appColor">
@@ -62,10 +62,10 @@ const Card = ({ car }) => {
 
         <div className="flex flex-wrap justify-center items-center text-darkGrey font-bold md:text-xl text-[15px] text-center py-4 md:py-3 bg-appColor">
           <p className="flex-shrink-0 md:mr-1 mr-0">
-            Extended Test Drive from ₹129/hr.
+            Extended Test Drive from ₹129*/hr.
           </p>
-          <p className="flex-shrink-0 px-1 relative cursor-pointer after:content-[''] after:absolute after:left-0 after:bottom-0 after:h-[2px] after:w-full after:bg-darkGrey hover:after:h-full after:transition-all after:duration-300">
-            <Link to={`/buy-car/car-details/${car.carId}`} state={{ car }}>
+          <p className="flex-shrink-0 px-[2px] md:px-1 relative cursor-pointer after:content-[''] after:absolute after:left-0 after:bottom-0 after:h-[2px] after:w-full after:bg-darkGrey hover:after:h-full after:transition-all after:duration-300">
+            <Link to={`/buy-car/car-details/${car.model.replace(/\s+/g, '-').toLowerCase()}`} state={{ car }}>
               <span className="relative hover:text-appColor z-20 whitespace-nowrap">Try Now</span>
             </Link>
           </p>
