@@ -31,6 +31,7 @@ import ExtendedTestDriveFormPage from "./pages/Buy/ExtendedTestDriveEnterInforma
 import ExtendedTestDriveUploadDocuments from "./pages/Buy/ExtendedTestDriveUploadDocuments";
 import ExtendedTestDriveDatePicker from "./pages/Buy/ExtendedTestDriveDatePicker";
 import ExtendedTestDriveSummary from "./pages/Buy/ExtendedTestDriveSummary";
+import ExtendedTestDriveLocation from "./pages/Buy/ExtendedTestDriveLocation";
 import SubscriptionFormPage from "./components/SubscribeInfo";
 import SubscriptionUploadDocuments from "./components/SubscribeUploadDocs";
 import CreateBlogPage from "./pages/CreateBlog/CreateBlogPage";
@@ -142,6 +143,14 @@ const App = () => {
           <Route
             path="/buy-car/test-drive-confirmpage"
             element={<TestDriveConfirmPage title="Confirm Test Drive - Zymo" />}
+          />
+          <Route
+            path="/buy-car/extended-test-drive/location"
+            element={<ExtendedTestDriveLocation title="Select Location & Date - Extended Test Drive" />}
+          />
+          <Route
+            path="/buy-car/extended-test-drive/summary"
+            element={<ExtendedTestDriveSummary title="Extended Test Drive Summary" />}
           />
           <Route
             path="/about-us"

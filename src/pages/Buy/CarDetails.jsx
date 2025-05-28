@@ -208,7 +208,7 @@ const CarDetails = ({ title }) => {
 
                 <div className='flex flex-col'>
                   <Link
-                    to={`/buy-car/summary/${id}`}
+                    to="/buy-car/extended-test-drive/location"
                     state={{ car: carDetail }}
                     className="block">
                     <div className="relative inline-block">
@@ -221,16 +221,12 @@ const CarDetails = ({ title }) => {
 
                       {/* Button to hover */}
                       <button
-                        className={`px-6 py-3 rounded-lg font-semibold mx-1 ${carDetail.status === "disable"
-                            ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                            : "bg-[#e8ff81] text-darkGrey hover:bg-[#e8ff88]"
-                          }`}
-                        disabled={carDetail.status === "disable"} onMouseEnter={() => setShowPopup(true)}
+                        className="bg-[#e8ff81] text-darkGrey px-6 py-3 rounded-lg font-semibold hover:bg-[#e8ff88] mx-1"
+                        onMouseEnter={() => setShowPopup(true)}
                         onMouseLeave={() => setShowPopup(false)}
                         onClick={() => handleClicks(carDetail, "Extended Test Drive")}
-
                       >
-                        {carDetail.status === "disable" ? "Sold Out" : "Extended Test Drive"}
+                        Extended Test Drive
                       </button>
                     </div>
                   </Link>
@@ -358,7 +354,7 @@ const CarDetails = ({ title }) => {
 
                 <div className='flex flex-col'>
                   <Link
-                    to={`/buy-car/summary/${id}`}
+                    to="/buy-car/extended-test-drive/location"
                     state={{ car: carDetail }}
                     className="block">
                     <div className="relative inline-block">
@@ -371,11 +367,10 @@ const CarDetails = ({ title }) => {
 
                       {/* Button to hover */}
                       <button
-                        className="bg-[#e8ff81] text-darkGrey px-6 py-3 rounded-lg  font-semibold hover:bg-[#e8ff88] mx-1 "
+                        className="bg-[#e8ff81] text-darkGrey px-6 py-3 rounded-lg font-semibold hover:bg-[#e8ff88] mx-1"
                         onMouseEnter={() => setShowPopup(true)}
                         onMouseLeave={() => setShowPopup(false)}
                         onClick={() => handleClicks(carDetail, "Extended Test Drive")}
-
                       >
                         Extended Test Drive
                       </button>
