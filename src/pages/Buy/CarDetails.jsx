@@ -103,6 +103,7 @@ const CarDetails = ({ title }) => {
         </button>
 
         {/* Main Content */}
+
         <main className='w-full h-full flex flex-col md:flex-row gap-5 pt-10 md:pt-0'>
           {/* Image container */}
           <div className='md:w-1/2 flex items-start justify-center md:sticky top-56 h-fit'>
@@ -174,16 +175,18 @@ const CarDetails = ({ title }) => {
               </Link>
               <div className="flex gap-2 items-center group relative">
                 {/* TODO: Link to be added */}
-                <button className="bg-appColor py-3 px-4 text-darkGrey font-bold rounded-lg md:text-base text-sm hover:scale-105 transition-all duration-300">
-                  Extended Test Drive
+                <button className={`${car.status === 'disable' ? "bg-white/50 text-white/75 cursor-not-allowed" : "bg-appColor text-darkGrey hover:scale-105 cursor-pointer"} py-3 px-4  font-bold rounded-lg md:text-base text-sm transition-all duration-300`}>
+                  {car.status === "disable" ? "Sold Out" : "Extended Test Drive"}
                 </button>
 
-                <span 
+                {car.status !== "disable" && 
+                  <span 
                   className="absolute z-10 left-1/3 -translate-x-1/2 top-[-2.5rem] px-3 py-2 rounded bg-darkGrey2 text-white text-xs md:w-max 
                   text-center opacity-0 scale-95 pointer-events-none group-hover:opacity-100 group-hover:scale-100 group-hover:pointer-events-auto transition-all duration-300 shadow-md"
-                >
-                  Try Before You Buy – Book Your Extended Test Drive Now!
-                </span>
+                  >
+                    Try Before You Buy – Book Your Extended Test Drive Now!
+                  </span>
+                }
               </div>
 
             </div>

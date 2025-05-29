@@ -116,7 +116,8 @@ const fetchSubscriptionCars = async (
 
     // Filter cars where RateBasis is "MLK"
     const subscriptionCars = mychoizeData.SearchBookingModel.filter(
-      (car) => car.RateBasis === "MLK" && car.BrandName
+      (car) =>
+        (car.RateBasis === "MLK" || car.RateBasis === "EVM") && car.BrandName
     ).map((car) => {
       const baseFare = car.TotalExpCharge;
       const appliedRate = parseFloat(vendorData?.Currentratesubscription);

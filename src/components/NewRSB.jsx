@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState,useRef } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
 import {
   MapPinIcon,
   CalendarIcon,
@@ -11,7 +11,116 @@ import { toast } from "react-toastify";
 import DateTimeOverlay from "./DateTimeOverlay";
 import { getCurrentTime } from "../utils/DateFunction";
 import useTrackEvent from "../hooks/useTrackEvent";
-import {setBookingCookies,getBookingCookies} from "./CookiesConsent";
+import { setBookingCookies, getBookingCookies } from "./CookiesConsent";
+
+// City mapping function similar to Flutter logic
+const getCityFromLocation = (location, extractedCity) => {
+  if (!location) return extractedCity;
+
+  const locationStr = location.toLowerCase();
+
+  // Maharashtra -> Mumbai
+  if (
+    locationStr.includes("maharashtra") &&
+    (locationStr.includes("bhiwandi") ||
+      locationStr.includes("kalyan") ||
+      locationStr.includes("dombivli") ||
+      locationStr.includes("thane") ||
+      locationStr.includes("navi mumbai") ||
+      locationStr.includes("panvel") ||
+      locationStr.includes("vasai") ||
+      locationStr.includes("virar"))
+  ) {
+    return "Mumbai";
+  }
+
+  // Karnataka -> Bangalore (except Mysore)
+  if (
+    locationStr.includes("karnataka") &&
+    !locationStr.includes("mysuru") &&
+    !locationStr.includes("mysore")
+  ) {
+    if (
+      locationStr.includes("bangalore") ||
+      locationStr.includes("bengaluru")
+    ) {
+      return "Bangalore";
+    }
+  }
+
+  // Mysuru -> Mysore
+  if (locationStr.includes("mysuru") || locationStr.includes("mysore")) {
+    return "Mysore";
+  }
+
+  // Telangana -> Hyderabad
+  if (locationStr.includes("telangana") || locationStr.includes("hyderabad")) {
+    return "Hyderabad";
+  }
+
+  // Delhi NCR mappings
+  if (
+    locationStr.includes("ghaziabad") ||
+    locationStr.includes("noida") ||
+    locationStr.includes("gurugram") ||
+    locationStr.includes("gurgaon") ||
+    locationStr.includes("faridabad") ||
+    locationStr.includes("greater noida") ||
+    // locationStr.includes("meerut") ||
+    locationStr.includes("new delhi") ||
+    locationStr.includes("delhi division")
+  ) {
+    return "Delhi";
+  }
+
+  // Tamil Nadu -> Chennai (main cities)
+  if (
+    locationStr.includes("tamil nadu") &&
+    (locationStr.includes("chennai") || locationStr.includes("madras"))
+  ) {
+    return "Chennai";
+  }
+
+  // Andhra Pradesh
+  if (
+    locationStr.includes("andhra pradesh") &&
+    locationStr.includes("visakhapatnam") 
+  ) {
+    return "vizag";
+  }
+
+  // West Bengal -> Kolkata
+  if (
+    locationStr.includes("west bengal") &&
+    (locationStr.includes("kolkata") || locationStr.includes("calcutta"))
+  ) {
+    return "Kolkata";
+  }
+
+  // Gujarat -> Ahmedabad (main city)
+  if (locationStr.includes("gujarat") && locationStr.includes("ahmedabad")) {
+    return "Ahmedabad";
+  }
+
+  // Rajasthan -> Jaipur (main city)
+  if (locationStr.includes("rajasthan") && locationStr.includes("jaipur")) {
+    return "Jaipur";
+  }
+
+  // Punjab -> Chandigarh/Amritsar
+  if (locationStr.includes("punjab")) {
+    if (locationStr.includes("chandigarh")) {
+      return "Chandigarh";
+    }
+    if (locationStr.includes("amritsar")) {
+      return "Amritsar";
+    }
+  }
+
+  // Return the extracted city if no state-based mapping found
+  return extractedCity;
+};
+
 const NewRSB = ({ urlcity }) => {
   const [activeTab, setActiveTab] = useState("rent");
   const [placeInput, setPlaceInput] = useState(urlcity || "");
@@ -49,56 +158,62 @@ const NewRSB = ({ urlcity }) => {
       isManuallySelected.current = false; // reset flag
       return; // don't fetch suggestions
     }
-  
+
     if (!placeInput) {
       setSuggestions([]);
       return;
     }
-  
+
     const fetchSuggestions = async () => {
       try {
         if (window.google?.maps?.places?.AutocompleteSuggestion) {
-          const sessionToken = new window.google.maps.places.AutocompleteSessionToken();
-  
-          const response = await window.google.maps.places.AutocompleteSuggestion.fetchAutocompleteSuggestions({
-            input: placeInput,
-            includedRegionCodes: ["IN"],
-            language: "en",
-            sessionToken: sessionToken,
-          });
-  
-          const formatted = response?.suggestions?.map((item) => {
-            const prediction = item?.placePrediction;
-            const placeId = prediction?.placeId || "";
-            const fullText = prediction?.text?.text || "";
-            const mainText = prediction?.mainText?.text || "";
-            const secondaryText = prediction?.secondaryText?.text || "";
-  
-            return {
-              placeId,
-              fullAddress: fullText,
-              displayName: `${mainText}${secondaryText ? ", " + secondaryText : ""}`,
-              city: secondaryText,
-            };
-          }) || [];
-  
+          const sessionToken =
+            new window.google.maps.places.AutocompleteSessionToken();
+
+          const response =
+            await window.google.maps.places.AutocompleteSuggestion.fetchAutocompleteSuggestions(
+              {
+                input: placeInput,
+                includedRegionCodes: ["IN"],
+                language: "en",
+                sessionToken: sessionToken,
+              }
+            );
+
+          const formatted =
+            response?.suggestions?.map((item) => {
+              const prediction = item?.placePrediction;
+              const placeId = prediction?.placeId || "";
+              const fullText = prediction?.text?.text || "";
+              const mainText = prediction?.mainText?.text || "";
+              const secondaryText = prediction?.secondaryText?.text || "";
+
+              return {
+                placeId,
+                fullAddress: fullText,
+                displayName: `${mainText}${
+                  secondaryText ? ", " + secondaryText : ""
+                }`,
+                city: secondaryText,
+              };
+            }) || [];
+
           setSuggestions(formatted);
         }
       } catch (error) {
         console.error("Error fetching autocomplete suggestions:", error);
       }
     };
-  
+
     const debounce = setTimeout(fetchSuggestions, 200);
     return () => clearTimeout(debounce);
   }, [placeInput]);
-  
 
   const handleSuggestionClick = async (sugg) => {
     isManuallySelected.current = true; // <-- add this
     setPlaceInput(sugg.fullAddress);
     setSuggestions([]);
-    console.log("clicked on suggestion !")
+    console.log("clicked on suggestion !");
 
     const placeDetails = await getPlaceDetails(sugg.placeId);
     if (placeDetails) {
@@ -127,7 +242,12 @@ const NewRSB = ({ urlcity }) => {
       });
 
       await place.fetchFields({
-        fields: ["addressComponents", "displayName", "formattedAddress", "location"],
+        fields: [
+          "addressComponents",
+          "displayName",
+          "formattedAddress",
+          "location",
+        ],
       });
 
       return place;
@@ -142,11 +262,17 @@ const NewRSB = ({ urlcity }) => {
       console.warn("No address components found");
       return "";
     }
-  
-    const components = Array.isArray(place.addressComponents) 
-      ? place.addressComponents 
+
+    const components = Array.isArray(place.addressComponents)
+      ? place.addressComponents
       : [];
-  
+
+    // Get full address string for state/region checking
+    const fullAddress = components
+      .map((comp) => comp.longText || comp.shortText)
+      .join(", ");
+    console.log("Full address for mapping:", fullAddress);
+
     const cityTypesPriority = [
       "locality",
       "sublocality_level_1",
@@ -156,36 +282,44 @@ const NewRSB = ({ urlcity }) => {
       "administrative_area_level_2",
       "administrative_area_level_1",
     ];
-  
+
+    let extractedCity = "";
+
     for (let type of cityTypesPriority) {
       const match = components.find((component) => {
         // Handle the new structure where types is an array directly
         const types = Array.isArray(component.types) ? component.types : [];
         return types.includes(type);
       });
-  
+
       if (match) {
         // Use longText for the new structure
         const name = match.longText || match.shortText || "";
         console.log(`Found city: ${name} (type: ${type})`);
-        
+
         if (name) {
-          return name;
+          extractedCity = name;
+          break;
         }
       }
     }
-  
+
     // Fallback: use first component if it exists
-    if (components.length > 0 && components[0].longText) {
-      const name = components[0].longText;
-      console.log(`Using first component as city: ${name}`);
-      return name;
+    if (!extractedCity && components.length > 0 && components[0].longText) {
+      extractedCity = components[0].longText;
+      console.log(`Using first component as city: ${extractedCity}`);
     }
-  
-    console.warn("No suitable city component found");
-    return "";
+
+    if (!extractedCity) {
+      console.warn("No suitable city component found");
+      return "";
+    }
+
+    // Apply city mapping logic (similar to Flutter app)
+    const mappedCity = getCityFromLocation(fullAddress, extractedCity);
+
+    return mappedCity;
   };
-  
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -212,6 +346,11 @@ const NewRSB = ({ urlcity }) => {
 
   const extractCityFromGeocodingResult = (place) => {
     const components = place?.address_components || [];
+
+    // Get full address string for state/region checking
+    const fullAddress = components.map((comp) => comp.long_name).join(", ");
+    console.log("Full geocoding address for mapping:", fullAddress);
+
     const cityTypesPriority = [
       "locality",
       "sublocality_level_1",
@@ -222,18 +361,28 @@ const NewRSB = ({ urlcity }) => {
       "administrative_area_level_1",
     ];
 
+    let extractedCity = "";
+
     for (let type of cityTypesPriority) {
       const match = components.find((component) => {
         return component.types?.includes(type);
       });
 
       if (match) {
-        return match.long_name || "";
+        extractedCity = match.long_name || "";
+        if (extractedCity) break;
       }
     }
 
-    console.warn("No suitable city found in Geocoding API response");
-    return "";
+    if (!extractedCity) {
+      console.warn("No suitable city found in Geocoding API response");
+      return "";
+    }
+
+    // Apply city mapping logic (similar to Flutter app)
+    const mappedCity = getCityFromLocation(fullAddress, extractedCity);
+
+    return mappedCity;
   };
 
   const getCurrentLocation = () => {
@@ -336,14 +485,14 @@ const NewRSB = ({ urlcity }) => {
 
   const handleSearch = () => {
     // Debug logging
-    console.log('Search validation:', {
+    console.log("Search validation:", {
       city,
       startDate,
       endDate,
       place,
-      placeInput
+      placeInput,
     });
-  
+
     if (!city) {
       toast.error("Please select a valid city", {
         position: "top-center",
@@ -351,7 +500,7 @@ const NewRSB = ({ urlcity }) => {
       });
       return;
     }
-  
+
     if (!startDate) {
       toast.error("Please select a start date", {
         position: "top-center",
@@ -359,7 +508,7 @@ const NewRSB = ({ urlcity }) => {
       });
       return;
     }
-  
+
     if (!endDate) {
       toast.error("Please select an end date", {
         position: "top-center",
@@ -367,7 +516,7 @@ const NewRSB = ({ urlcity }) => {
       });
       return;
     }
-  
+
     if (!place || !place.lat || !place.lng) {
       toast.error("Please select a valid location", {
         position: "top-center",
@@ -375,15 +524,12 @@ const NewRSB = ({ urlcity }) => {
       });
       return;
     }
-  
+
     // If all validations pass, proceed with search
-    const formattedCity =
-      city === "Bengaluru"
-        ? "bangalore"
-        : ["New Delhi", "Delhi Division", "Delhi"].includes(city)
-        ? "delhi"
-        : city.toLowerCase();
-  
+    // Since city mapping is already handled in extractCityFromDetails,
+    // we just need to format for URL (the city is already mapped)
+    const formattedCity = city.toLowerCase();
+
     const stateData = {
       address: address || place.name,
       lat: place.lat,
@@ -394,18 +540,17 @@ const NewRSB = ({ urlcity }) => {
       tripDurationHours,
       activeTab,
     };
-  
+
     // Store the updated values in cookies
     setBookingCookies(placeInput, startDate, endDate, place);
-  
+
     handleRSBFunctionClicks("Search");
     sessionStorage.setItem("fromSearch", true);
-  
+
     navigate(`/self-drive-car-rentals/${formattedCity}/cars`, {
       state: stateData,
     });
   };
-  
 
   const handleTabClick = (tab) => {
     handleRSBClicks(tab);
@@ -428,10 +573,15 @@ const NewRSB = ({ urlcity }) => {
       handleSuggestionClick(suggestions[0]);
     }
   }, [suggestions, urlcity]);
-  
+
   useEffect(() => {
     // Retrieve cookies on component mount
-    const { location, startDate: savedStartDate, endDate: savedEndDate, placeDetails } = getBookingCookies();
+    const {
+      location,
+      startDate: savedStartDate,
+      endDate: savedEndDate,
+      placeDetails,
+    } = getBookingCookies();
 
     const currentDate = new Date(getCurrentTime());
 
@@ -441,10 +591,10 @@ const NewRSB = ({ urlcity }) => {
       // Restore place details if available
       if (placeDetails) {
         setPlace(placeDetails);
-        
+
         // Extract city from restored place details
         const cityName = extractCityFromDetails({
-          addressComponents: placeDetails.addressComponents
+          addressComponents: placeDetails.addressComponents,
         });
         setCity(cityName);
       }
@@ -463,12 +613,16 @@ const NewRSB = ({ urlcity }) => {
       setStartDate(currentDate);
       setEndDate(null);
     }
-
   }, []);
 
   useEffect(() => {
     // Retrieve cookies on component mount
-    const { location, startDate: savedStartDate, endDate: savedEndDate, placeDetails } = getBookingCookies();
+    const {
+      location,
+      startDate: savedStartDate,
+      endDate: savedEndDate,
+      placeDetails,
+    } = getBookingCookies();
 
     const currentDate = new Date(getCurrentTime());
 
@@ -478,14 +632,14 @@ const NewRSB = ({ urlcity }) => {
       if (placeDetails) {
         // Set place object
         setPlace(placeDetails);
-        
+
         // Set address
         setAddress(placeDetails.name || location);
 
         // Extract and set city
         if (placeDetails.addressComponents) {
           const cityName = extractCityFromDetails({
-            addressComponents: placeDetails.addressComponents
+            addressComponents: placeDetails.addressComponents,
           });
           setCity(cityName);
         }
@@ -496,7 +650,7 @@ const NewRSB = ({ urlcity }) => {
     if (savedStartDate && savedEndDate) {
       const startDateObj = new Date(savedStartDate);
       const endDateObj = new Date(savedEndDate);
-      
+
       if (startDateObj < currentDate) {
         setStartDate(currentDate);
         setEndDate(null);
@@ -512,73 +666,76 @@ const NewRSB = ({ urlcity }) => {
     }
   }, []);
 
- // Remove all existing initialization useEffects and replace with this one:
-useEffect(() => {
-  console.log('Initializing from cookies...');
-  // Retrieve cookies on component mount
-  const cookieData = getBookingCookies();
-  console.log('Cookie data retrieved:', cookieData);
+  // Remove all existing initialization useEffects and replace with this one:
+  useEffect(() => {
+    console.log("Initializing from cookies...");
+    // Retrieve cookies on component mount
+    const cookieData = getBookingCookies();
+    console.log("Cookie data retrieved:", cookieData);
 
-  const currentDate = new Date(getCurrentTime());
+    const currentDate = new Date(getCurrentTime());
 
-  if (cookieData.location) {
-    setPlaceInput(cookieData.location);
-    console.log('Setting placeInput:', cookieData.location);
+    if (cookieData.location) {
+      setPlaceInput(cookieData.location);
+      console.log("Setting placeInput:", cookieData.location);
 
-    if (cookieData.placeDetails) {
-      // Set place object with all required fields
-      const placeData = {
-        name: cookieData.placeDetails.name,
-        lat: cookieData.placeDetails.lat,
-        lng: cookieData.placeDetails.lng,
-        addressComponents: cookieData.placeDetails.addressComponents
-      };
-      setPlace(placeData);
-      console.log('Setting place:', placeData);
-      
-      // Set address
-      setAddress(cookieData.placeDetails.name || cookieData.location);
-      console.log('Setting address:', cookieData.placeDetails.name || cookieData.location);
+      if (cookieData.placeDetails) {
+        // Set place object with all required fields
+        const placeData = {
+          name: cookieData.placeDetails.name,
+          lat: cookieData.placeDetails.lat,
+          lng: cookieData.placeDetails.lng,
+          addressComponents: cookieData.placeDetails.addressComponents,
+        };
+        setPlace(placeData);
+        console.log("Setting place:", placeData);
 
-      // Extract and set city
-      if (cookieData.placeDetails.addressComponents?.length > 0) {
-        const cityName = extractCityFromDetails({
-          addressComponents: cookieData.placeDetails.addressComponents
-        });
-        console.log('Setting city from cookies:', cityName);
-        setCity(cityName || cookieData.location.split(',')[0]);
-      } else {
-        const cityFromLocation = cookieData.location.split(',')[0];
-        console.log('Setting city from location:', cityFromLocation);
-        setCity(cityFromLocation);
+        // Set address
+        setAddress(cookieData.placeDetails.name || cookieData.location);
+        console.log(
+          "Setting address:",
+          cookieData.placeDetails.name || cookieData.location
+        );
+
+        // Extract and set city
+        if (cookieData.placeDetails.addressComponents?.length > 0) {
+          const cityName = extractCityFromDetails({
+            addressComponents: cookieData.placeDetails.addressComponents,
+          });
+          console.log("Setting city from cookies:", cityName);
+          setCity(cityName || cookieData.location.split(",")[0]);
+        } else {
+          const cityFromLocation = cookieData.location.split(",")[0];
+          console.log("Setting city from location:", cityFromLocation);
+          setCity(cityFromLocation);
+        }
       }
     }
-  }
 
-  // Handle dates
-  if (cookieData.startDate && cookieData.endDate) {
-    const startDateObj = new Date(cookieData.startDate);
-    const endDateObj = new Date(cookieData.endDate);
-    
-    if (startDateObj < currentDate) {
-      console.log('Start date is in past, using current date');
+    // Handle dates
+    if (cookieData.startDate && cookieData.endDate) {
+      const startDateObj = new Date(cookieData.startDate);
+      const endDateObj = new Date(cookieData.endDate);
+
+      if (startDateObj < currentDate) {
+        console.log("Start date is in past, using current date");
+        setStartDate(currentDate);
+        setEndDate(null);
+      } else {
+        console.log("Setting dates from cookies:", {
+          start: startDateObj,
+          end: endDateObj,
+        });
+        setStartDate(startDateObj);
+        setEndDate(endDateObj);
+        calculateDuration(startDateObj, endDateObj);
+      }
+    } else {
+      console.log("No saved dates, using current date");
       setStartDate(currentDate);
       setEndDate(null);
-    } else {
-      console.log('Setting dates from cookies:', {
-        start: startDateObj,
-        end: endDateObj
-      });
-      setStartDate(startDateObj);
-      setEndDate(endDateObj);
-      calculateDuration(startDateObj, endDateObj);
     }
-  } else {
-    console.log('No saved dates, using current date');
-    setStartDate(currentDate);
-    setEndDate(null);
-  }
-}, []); // Run once on mount
+  }, []); // Run once on mount
 
   return (
     <>
@@ -625,7 +782,11 @@ useEffect(() => {
           >
             <div
               className={`flex items-center border   border-gray-500 rounded-md px-4 py-2 w-full 
-                ${placeInput ? "bg-[#faffa4] text-black" : "bg-transparent text-gray-300"}`}
+                ${
+                  placeInput
+                    ? "bg-[#faffa4] text-black"
+                    : "bg-transparent text-gray-300"
+                }`}
             >
               <MapPinIcon className="w-5 h-5 mr-2 flex-shrink-0 " />
               <div className="relative w-full">
@@ -646,9 +807,9 @@ useEffect(() => {
                 {suggestions.length > 0 && (
                   <ul className="absolute left-0 top-full mt-1 z-50 bg-[#252525] text-gray-200 rounded-lg shadow-md max-h-60 overflow-y-auto w-full min-w-[300px] no-underline">
                     {suggestions.map((sugg, idx) => (
-                      <li 
-                        key={idx}  
-                        onClick={() => handleSuggestionClick(sugg)} 
+                      <li
+                        key={idx}
+                        onClick={() => handleSuggestionClick(sugg)}
                         className="flex items-center px-3 py-2 sm:px-4 sm:py-2.5 hover:bg-[#faffa4] hover:text-[#212121] cursor-pointer text-xs sm:text-sm break-words border border-[#303030] transition-all duration-200 ease-in-out"
                       >
                         <MapPinIcon className="w-4 h-4 sm:w-5 sm:h-5 mr-2 shrink-0 text-red-400" />
@@ -660,7 +821,9 @@ useEffect(() => {
               </div>
               <button
                 className={`flex items-center ml-2 flex-shrink-0 ${
-                  placeInput ? "text-black" : "text-gray-300 hover:text-[#faffa4]"
+                  placeInput
+                    ? "text-black"
+                    : "text-gray-300 hover:text-[#faffa4]"
                 }`}
                 onClick={getCurrentLocation}
                 type="button"
@@ -674,7 +837,11 @@ useEffect(() => {
           <div className="relative w-full">
             <div
               className={`rounded-lg p-1 py-2 flex items-center relative cursor-pointer text-sm border border-gray-500 w-full h-10
-                ${startDate ? "bg-[#faffa4] text-black" : "bg-transparent text-gray-400"}`}
+                ${
+                  startDate
+                    ? "bg-[#faffa4] text-black"
+                    : "bg-transparent text-gray-400"
+                }`}
               onClick={() => {
                 setIsStartPickerOpen(true);
                 setIsEndPickerOpen(false);
@@ -717,9 +884,16 @@ useEffect(() => {
           >
             <div
               className={`rounded-lg p-1 flex items-center relative cursor-pointer text-sm border border-gray-500 w-full h-10  
-                ${activeTab === "subscribe" ? "opacity-50 cursor-not-allowed" : ""}
-                ${endDate ? "bg-[#faffa4] text-black" : "bg-transparent text-gray-400"
-              }`}
+                ${
+                  activeTab === "subscribe"
+                    ? "opacity-50 cursor-not-allowed"
+                    : ""
+                }
+                ${
+                  endDate
+                    ? "bg-[#faffa4] text-black"
+                    : "bg-transparent text-gray-400"
+                }`}
               onClick={() => {
                 if (activeTab !== "subscribe") {
                   setIsEndPickerOpen(true);

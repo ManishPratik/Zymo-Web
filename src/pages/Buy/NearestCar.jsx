@@ -9,15 +9,23 @@ import { ArrowLeft } from "lucide-react";
 import { collection, getDocs } from "firebase/firestore";
 import { webDB } from "../../utils/firebase";
 import { Helmet } from "react-helmet-async";
-import LoadingCard from '../../components/buycomponent/LoadingCard'
+import LoadingCard from "../../components/buycomponent/LoadingCard";
 import TestOwnership from "../../components/buycomponent/TestOwnership";
-  
+import axios from "axios";
+import {
+  fetchSubscriptionCars,
+  formatDateForMyChoize,
+} from "../../utils/mychoize";
+//
+
 const NearestCar = ({ title }) => {
   const navigate = useNavigate();
   const [filteredCars, setFilteredCars] = useState("Electric");
   const [allCars, setAllCars] = useState([]);
   const [searchResults, setSearchResults] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  const url = import.meta.env.VITE_FUNCTIONS_API_URL;
 
   useEffect(() => {
     document.title = title;
@@ -31,6 +39,7 @@ const NearestCar = ({ title }) => {
         const querySnapshot = await getDocs(carsCollectionRef);
 
         const cars = querySnapshot.docs.map((doc) => doc.data());
+        console.log("Fetched Cars Data:", cars);
         setAllCars(cars);
         setSearchResults(cars);
       } catch (err) {
@@ -39,6 +48,19 @@ const NearestCar = ({ title }) => {
         setLoading(false);
       }
     };
+
+    (async () => {
+      const myChoizeSubscribtionCars = await fetchSubscriptionCars(
+        "mumbai",
+        formatDateForMyChoize(Date.now() + 24 * 60 * 60 * 1000), // For 1 day
+        formatDateForMyChoize(Date.now() + 30 * 24 * 60 * 60 * 1000) // For 30 days
+      );
+
+      console.log(
+        "Fetched MyChoize Subscription Cars:",
+        myChoizeSubscribtionCars
+      );
+    })();
 
     fetchCarsData();
   }, []);
@@ -70,29 +92,30 @@ const NearestCar = ({ title }) => {
       </div> */}
       <NavBar />
       {/* <div className="head-container flex flex-col sm:flex-row justify-between items-center bg-darkGrey text-white p-4"> */}
-        {/* <button
+      {/* <button
           onClick={() => navigate("/")}
           className="text-white m-5 cursor-pointer"
         >
           <ArrowLeft className="w-6 h-6" />
         </button> */}
-        
-        {/* <h1 className="text-white text-3xl font-bold pl-8">EV Cars for sale</h1>
+
+      {/* <h1 className="text-white text-3xl font-bold pl-8">EV Cars for sale</h1>
 
         <div className="mt-3 sm:mt-0 sm:ml-4 flex justify-end w-full sm:w-auto">
           <SearchBar setSearchResults={setSearchResults} />
         </div>
       </div> */}
 
-      <div className="relative h-full sm:h-screen w-full bg-cover bg-center bg-no-repeat flex justify-center overflow-visible"
-        // style={{ 
-        //   backgroundImage: "url('/images/BuyCars/Electric_Hero_yellow.png')", 
+      <div
+        className="relative h-full sm:h-screen w-full bg-cover bg-center bg-no-repeat flex justify-center overflow-visible"
+        // style={{
+        //   backgroundImage: "url('/images/BuyCars/Electric_Hero_yellow.png')",
         //   backgroundSize: "cover",
         // }}
       >
         {/* Dark overlay */}
         {/* <div className="absolute inset-0 bg-black/50"></div> */}
-        
+
         {/* <img src="/images/BuyCars/Electric_Hero_yellow.png" alt="Yellow Hero" 
           className="absolute w-full sm:w-screen h-full object-cover z-0"
          /> */}
