@@ -1,4 +1,4 @@
-import { ArrowLeft, ChevronDown, MapPin, Calendar } from "lucide-react";
+import { ArrowLeft, ChevronDown, ChevronUp } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useParams } from "react-router-dom";
@@ -8,7 +8,7 @@ import { appDB } from "../../utils/firebase";
 import { Helmet } from "react-helmet-async";
 import useTrackEvent from "../../hooks/useTrackEvent";
 import { getVendorDetails } from "../../utils/helperFunctions";
-import { calculateSelfDrivePrice } from "../../utils/mychoize";
+import { calculateDiscountPrice, calculateSelfDrivePrice } from "../../utils/mychoize";
 
 const ExtendedTestDriveSummary = ({ title }) => {
   const navigate = useNavigate();
@@ -21,6 +21,16 @@ const ExtendedTestDriveSummary = ({ title }) => {
   const [totalAmount, setTotalAmount] = useState(0);
   const [vendorData, setVendorData] = useState(null);
   const [farePrice, setFarePrice] = useState(0);
+  
+  // Coupon related states
+  const [couponCode, setCouponCode] = useState("ZYMOWEB");
+  const [showCoupons, setShowCoupons] = useState(false);
+  const [discount, setDiscount] = useState(0);
+
+  // Array of coupon codes
+  const couponCodes = [
+    "ZYMOWEB",
+  ];
 
   const { car, selectedDate, selectedLocation, originalCar } =
     location.state || {};
@@ -59,14 +69,25 @@ const ExtendedTestDriveSummary = ({ title }) => {
       const data = await getVendorDetails("mychoize");
       setVendorData(data);
       if (data) {
-        const fare = calculateSelfDrivePrice(parseInt(car.fare.slice(1)), data);
+        const fare = calculateDiscountPrice(parseInt(car.fare.slice(1)), data);
         setFarePrice(fare);
         const securityDeposit = parseInt(originalCar.securityDeposit);
-        const total = fare + securityDeposit;
+        
+        // Apply discount if coupon code is ZYMOWEB
+        let discountAmount = 0;
+        if (couponCode === "ZYMOWEB") {
+          // Apply 10% discount on fare price
+          discountAmount =  fare - Math.round(fare * (data.DiscountSd));
+          setDiscount(discountAmount);
+        } else {
+          setDiscount(0);
+        }
+        
+        const total = fare + securityDeposit - discountAmount;
         setTotalAmount(total);
       }
     })();
-  }, [car.fare, originalCar.securityDeposit]);
+  }, [car.fare, originalCar.securityDeposit, couponCode]);
 
   const onSubmit = () => {
     navigate("/buy-car/date-picker", {
@@ -171,6 +192,14 @@ const ExtendedTestDriveSummary = ({ title }) => {
                     ₹ {originalCar?.securityDeposit}
                   </span>
                 </div>
+                {discount > 0 && (
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-300">Discount</span>
+                    <span className="text-green-400 font-medium">
+                      - ₹ {discount}
+                    </span>
+                  </div>
+                )}
                 <div className="flex justify-between items-center pt-4 border-t border-white/10">
                   <span className="text-gray-300">Total Amount</span>
                   <span className="text-white font-medium">
@@ -197,6 +226,58 @@ const ExtendedTestDriveSummary = ({ title }) => {
                   </span>
                 </div>
               </div>
+            </div>
+          </div>
+
+          {/* Coupons and Offers */}
+          <div className="bg-[#2d2d2d] backdrop-blur-md rounded-2xl overflow-hidden border border-white/10 mb-6">
+            <div className="px-6 py-4 bg-appColor">
+              <h2 className="text-darkGrey font-bold text-xl">
+                Coupons and Offers
+              </h2>
+            </div>
+            <div className="px-6 py-5">
+              <input
+                className="bg-[#1a1a1a] w-full p-3 pl-4 rounded-md text-white placeholder-gray-400 border border-white/10 focus:border-appColor focus:outline-none"
+                placeholder="Enter Coupon code"
+                value={couponCode}
+                onChange={(e) => setCouponCode(e.target.value)}
+              />
+            </div>
+
+            <div className="bg-[#1a1a1a] p-4 rounded-lg text-center mx-6 mb-6">
+              {/* Toggle Button */}
+              <div
+                className="flex items-center justify-center cursor-pointer"
+                onClick={() => setShowCoupons(!showCoupons)}
+              >
+                <span className="text-sm text-[#faffa4] font-medium mr-1">
+                  VIEW ALL OFFERS
+                </span>
+                {showCoupons ? (
+                  <ChevronUp size={16} className="text-[#faffa4]" />
+                ) : (
+                  <ChevronDown size={16} className="text-[#faffa4]" />
+                )}
+              </div>
+
+              {/* Coupon List */}
+              {showCoupons && (
+                <div className="mt-3 space-y-2">
+                  {couponCodes.map((code, index) => (
+                    <div
+                      key={index}
+                      className="bg-[#2d2d2d] px-4 py-2 rounded-md text-sm font-semibold text-white cursor-pointer hover:bg-[#3d3d3d] transition-colors"
+                      onClick={() => {
+                        setCouponCode(code);
+                        setShowCoupons(false);
+                      }}
+                    >
+                      {code}
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
 
