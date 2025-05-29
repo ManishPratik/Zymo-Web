@@ -715,7 +715,7 @@ const Listing = ({ title }) => {
               </Marquee>
             </div>
 
-            <div className="grid grid-cols-1 lg:w-[56%] items-start gap-5">
+            <div className="grid grid-cols-1 w-full lg:w-[56%] items-start gap-5">
               {[...Array(6)].map((_, index) => (
                 <div
                   key={index}
