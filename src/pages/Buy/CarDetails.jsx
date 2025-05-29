@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link, useLocation } from 'react-router-dom';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, MapPin } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import ExtendedTestDriveBenefits from '../../components/buycomponent/ExtendedTestDriveBenefits';
 import { Helmet } from 'react-helmet-async';
@@ -69,6 +69,21 @@ const CarDetails = ({ title }) => {
     trackEvent("Buy Section Car", `Buy Section Car`, `${carDetail.name} ${carDetail.model}- ${carDetail.vendor}-${label}`)
   }
 
+  const features = car.type === 'Electric'
+  ? [
+      { icon: 'fa-car', label: 'Range', value: `${car.range} Km` },
+      { icon: 'fa-battery', label: 'Battery', value: `${car.battery} kWh` },
+      { icon: 'fa-plug', label: 'Power', value: `${car.power} bhp` },
+      { icon: 'fa-stopwatch', label: 'Charging', value: `${car.charging.min_time} - ${car.charging.max_time} hrs` }
+    ]
+  : [
+      { icon: 'fa-car', label: 'Engine', value: `${car.engine} cc` },
+      { icon: 'fa-gauge', label: 'Mileage', value: `${car.mileage} kmpl` },
+      { icon: 'fa-car-battery', label: 'Power', value: `${car.power} bhp` },
+      { icon: 'fa-gauge-high', label: 'Top Speed', value: `${car.speed} kmph` }
+    ];
+
+
   return (
     <>
       <Helmet>
@@ -82,324 +97,102 @@ const CarDetails = ({ title }) => {
         {/* Back Button */}
         <button
           onClick={() => navigate(-1)}
-          className="absolute left-1 md:left-5 top-8 p-2 text-white/80 hover:text-white hover:bg-[#2A2A2A] bg-transparent transition-all z-10"
+          className="fixed left-1 md:left-5 top-8 p-2 text-white/80 hover:text-white hover:bg-[#2A2A2A] bg-transparent transition-all z-10"
         >
           <ArrowLeft size={28} />
         </button>
 
         {/* Main Content */}
-        <div className="max-w-6xl w-full bg-darkGrey rounded-lg shadow-lg overflow-hidden">
-          {/* Desktop Layout */}
-          <div className="hidden md:flex">
-            {/* Image Section */}
-            <div className=" fixed w-1/2 top-6 left-3 h-screen flex justify-center items-center  p-2">
-              <img
-                src={carDetail.image}   //add newtnexcar.png image here
-                alt={`${carDetail.name} ${carDetail.model}`}
-                className="rounded-lg shadow-md p-2bg-transparent"
-              />
-            </div>
-            {/* Details Section */}
-            <div className="w-1/2 absolute right-0 top-4 p-4">
-              <h1 className="text-3xl font-bold mb-2">{`${carDetail.name} ${carDetail.model}`}</h1>
-              <div className="flex items-center space-x-2 mb-4">
-                <span className="text-[#e8ff81] text-xl">&#9733; {carDetail.rating}</span>
-              </div>
-
-              {/* Key Features Section */}
-              <div className="p-3">
-                <h2 className="text-xl font-semibold text-gray-300 mb-4">Key Features</h2>
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="bg-[#2d2d2d] border border-white/10 p-3 rounded-lg">
-                    <div className="box flex items-center gap-5">
-                      <i className="fa-solid fa-car text-xl text-gray-300 pl-2"></i>
-                      <div>
-                        <p className="font-semibold text-gray-300">Range</p>
-                        <p className="text-lg">{carDetail.range} Km</p>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="bg-[#2d2d2d] border border-white/10 p-3 rounded-lg">
-                    <div className="box flex items-center gap-5">
-                      <i className="fa-solid fa-battery-full text-xl text-gray-300 pl-2"></i>
-                      <div>
-                        <p className="font-semibold text-gray-300">Battery</p>
-                        <p className="text-lg">{carDetail.battery} kWh</p>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="bg-[#2d2d2d] border border-white/10 p-3 rounded-lg">
-                    <div className="box flex items-center gap-5">
-                      <i className="fa-solid fa-plug text-xl text-gray-300 pl-2"></i>
-                      <div>
-                        <p className="font-semibold text-gray-300">Power</p>
-                        <p className="text-lg">{carDetail.power} bhp</p>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="bg-[#2d2d2d] border border-white/10 p-3 rounded-lg">
-                    <div className="box flex items-center gap-5">
-                      <i className="fa-solid fa-stopwatch text-xl text-gray-300 pl-2"></i>
-                      <div>
-                        <p className="font-semibold text-gray-300">Charging</p>
-                        <p className="text-lg">{`${carDetail.charging.min_time}-${carDetail.charging.max_time}`} hrs</p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Specifications Section */}
-              <h2 className="text-xl font-semibold text-white mb-4 p-3">Specifications</h2>
-              <ul className="space-y-2 mb-4 px-3">
-                <li className="flex justify-between">
-                  <span className="font-semibold text-gray-300">Body Style :</span>
-                  <span>{carDetail.bodyStyle}</span>
-                </li>
-                <li className="flex justify-between">
-                  <span className="font-semibold text-gray-300">Warranty :</span>
-                  <span>{`${carDetail.warranty_years} yrs / ${carDetail.warranty_km.toLocaleString()} Km`}</span>
-                </li>
-                <li className="flex justify-between">
-                  <span className="font-semibold text-gray-300">Length :</span>
-                  <span>{carDetail.length.toLocaleString()} mm</span>
-                </li>
-                <li className="flex justify-between">
-                  <span className="font-semibold text-gray-300">Width :</span>
-                  <span>{carDetail.width.toLocaleString()} mm</span>
-                </li>
-                <li className="flex justify-between">
-                  <span className="font-semibold text-gray-300">Height :</span>
-                  <span>{`${carDetail.height.max_height.toLocaleString()}-${carDetail.height.min_height.toLocaleString()}`} mm</span>
-                </li>
-                <li className="flex justify-between">
-                  <span className="font-semibold text-gray-300">Cargo Volume :</span>
-                  <span>{carDetail.cargoVolume} L</span>
-                </li>
-              </ul>
-
-              {/* About Section */}
-              <div className="about border border-[#e8ff81] p-3 rounded-lg my-4">
-                <h2 className="text-xl font-semibold text-gray-300 mb-4">About {carDetail.model}</h2>
-                <p className="text-gray-400 mb-4">{carDetail.about}</p>
-              </div>
-
-              {/* Price and Test Drive Button */}
-              {/* <p className="text-2xl font-bold text-gray-300 m-4">Starts at &#8377;{price}*</p> */}
-              <div className=''>
-                <p className="text-3xl font-semibold mx-2">₹{`${carDetail.price.min_price} - ${carDetail.price.max_price}`} Lakh </p>
-              </div>
-
-              <p className="text-sm text-gray- m-2 mb-4">Avg. Ex-Showroom price</p>
-
-              <div className='flex'>
-                <div className='flex flex-col'>
-                  <Link to={"/buy-car/test-drive-inputform"}
-                    state={{ car: carDetail }} >
-                    <button
-                      className="bg-[#e8ff81] text-darkGrey px-6 py-3 rounded-lg font-semibold hover:bg-[#e8ff88] mx-1"
-                      onClick={() => handleClicks(carDetail, "Test Drive")}
-                    >
-                      Test Drive
-                    </button>
-                  </Link>
-
-                </div>
-
-                <div className='flex flex-col'>
-                  <Link
-                    to={`/buy-car/summary/${id}`}
-                    state={{ car: carDetail }}
-                    className="block">
-                    <div className="relative inline-block">
-                      {/* Show Popup on Hover */}
-                      {showPopup && (
-                        <div className="absolute bottom-full mb-2 left-1/2 transform -translate-x-1/2 w-[300px] sm:w-[400px] lg:w-[500px]">
-                          <ExtendedTestDriveBenefits />
-                        </div>
-                      )}
-
-                      {/* Button to hover */}
-                      <button
-                        className={`px-6 py-3 rounded-lg font-semibold mx-1 ${carDetail.status === "disable"
-                            ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                            : "bg-[#e8ff81] text-darkGrey hover:bg-[#e8ff88]"
-                          }`}
-                        disabled={carDetail.status === "disable"} onMouseEnter={() => setShowPopup(true)}
-                        onMouseLeave={() => setShowPopup(false)}
-                        onClick={() => handleClicks(carDetail, "Extended Test Drive")}
-
-                      >
-                        {carDetail.status === "disable" ? "Sold Out" : "Extended Test Drive"}
-                      </button>
-                    </div>
-                  </Link>
-                  <p className='text-xs mx-2 my-1 overflow-y-auto'>( Try Before You Buy -</p>
-                  <p className='text-xs mx-2 my-1 overflow-y-auto'>Book Your Extended Test Drive Now! )</p>
-
-                </div>
-              </div>
-            </div>
+        <main className='w-full h-full flex flex-col md:flex-row gap-5 pt-10 md:pt-0'>
+          {/* Image container */}
+          <div className='md:w-1/2 flex items-start justify-center md:sticky top-56 h-fit'>
+            <img 
+              className='w-full h-auto max-w-[400px] md:max-w-full object-contain'
+              src={car.image}
+              alt={`${car.name}${car.model}`}
+            />
           </div>
 
-          {/* Mobile Layout */}
-          <div className="md:hidden">
-            {/* Image and Title Section */}
-            <div className="bg-darkGrey flex flex-col items-center p-3">
-              <img
-                src={carDetail.image}
-                alt={`${carDetail.name} ${carDetail.model}`}
-                className="w-3/4 rounded-lg shadow-md"
-              />
-              <div className="name-rating flex justify-between items-center px-3 mt-4">
-                <h1 className="text-3xl font-bold">{`${carDetail.name} ${carDetail.model}`}</h1>
-                <div className="flex items-center space-x-2">
-                  <span className="text-[#e8ff81] text-sm  px-1 rounded-lg">&#9733; {carDetail.rating}</span>
-                </div>
+
+          {/* Car Details */}
+          <div className='md:w-1/2 flex flex-col p-0 lg:p-2 xl:p-10'>
+            <h1 className='text-4xl text-center md:text-left font-bold'>{car.name} {car.model}</h1>
+            <div className='my-2'>
+              <span className='text-appColor text-xl md:text-2xl flex justify-center md:justify-start'>★ {car.rating}</span>
+            </div>
+            {/* Key Feaures */}
+            <div className='pt-5'>
+              <h2 className='text-xl md:text-2xl font-bold mb-4'>Key Features</h2>
+              <div className='grid grid-cols-2 gap-2 md:gap-5'>
+                {features.map((item, index) => (
+                  <div key={index} className='flex items-center gap-3 md:gap-5 md:p-4 py-3 md:pl-6 pl-4 border-2 border-white/10 rounded-xl bg-[#2d2d2d]'>
+                    <div><i className={`fa ${item.icon} text-lg`} /></div>
+                    <div className='flex flex-col'>
+                      <h3 className='lg:text-lg text-white/75'>{item.label}</h3>
+                      <p className='lg:text-xl font-semibold'>{item.value}</p>
+                    </div>
+                  </div>
+                ))}
               </div>
+
             </div>
 
-            {/* Key Features Section */}
-            <div className="p-3">
-              <h2 className="text-xl font-semibold text-gray-300 mb-4">Key Features</h2>
-              <div className="grid grid-cols-2 gap-3">
-                <div className="bg-[#2d2d2d] border border-white/10 p-3 rounded-lg">
-                  <div className="box flex items-center gap-3">
-                    <i className="fa-solid fa-car"></i>
-                    <div>
-                      <p className="font-semibold text-gray-300">Range</p>
-                      <p className="text-lg">{carDetail.range} Km</p>
-                    </div>
-                  </div>
-                </div>
-                <div className="bg-[#2d2d2d] border border-white/10 p-3 rounded-lg">
-                  <div className="box flex items-center gap-3">
-                    <i className="fa-solid fa-battery-full"></i>
-                    <div>
-                      <p className="font-semibold text-gray-300">Battery</p>
-                      <p className="text-lg">{carDetail.battery} kWh</p>
-                    </div>
-                  </div>
-                </div>
-                <div className="bg-[#2d2d2d] border border-white/10 p-3 rounded-lg">
-                  <div className="box flex items-center gap-3">
-                    <i className="fa-solid fa-plug"></i>
-                    <div>
-                      <p className="font-semibold text-gray-300">Power</p>
-                      <p className="text-lg">{carDetail.power} bhp</p>
-                    </div>
-                  </div>
-                </div>
-                <div className="bg-[#2d2d2d] border border-white/10 p-3 rounded-lg">
-                  <div className="box flex items-center gap-3">
-                    <i className="fa-solid fa-stopwatch"></i>
-                    <div>
-                      <p className="font-semibold text-gray-300">Charging</p>
-                      <p className="text-lg">{`${carDetail.charging.min_time}-${carDetail.charging.max_time}`} hrs</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Specifications Section */}
-            <div className="p-3 bg-darkGrey">
-              <h2 className="text-xl font-semibold text-white mb-4">Specifications</h2>
-              <ul className="space-y-2">
-                <li className="flex justify-between">
-                  <span className="font-semibold text-gray-300">Body Style :</span>
-                  <span>{carDetail.bodyStyle}</span>
-                </li>
-                <li className="flex justify-between">
-                  <span className="font-semibold text-gray-300">Warranty :</span>
-                  <span>{`${carDetail.warranty_years} yrs / ${carDetail.warranty_km.toLocaleString()} Km`}</span>
-                </li>
-                <li className="flex justify-between">
-                  <span className="font-semibold text-gray-300">Length :</span>
-                  <span>{carDetail.length.toLocaleString()} mm</span>
-                </li>
-                <li className="flex justify-between">
-                  <span className="font-semibold text-gray-300">Width :</span>
-                  <span>{carDetail.width.toLocaleString()} mm</span>
-                </li>
-                <li className="flex justify-between">
-                  <span className="font-semibold text-gray-300">Height :</span>
-                  <span>{`${carDetail.height.max_height.toLocaleString()}-${carDetail.height.min_height.toLocaleString()}`} mm</span>
-                </li>
-                <li className="flex justify-between">
-                  <span className="font-semibold text-gray-300">Cargo Volume :</span>
-                  <span>{carDetail.cargoVolume} L</span>
-                </li>
+            {/* specifications */}
+            <section className='py-10'>
+              <h2 className='text-xl md:text-2xl font-bold mb-4'>Specifications</h2>
+              <ul className='w-full'>
+                <li className='w-full flex justify-between px-2 font-bold text-white/75 md:text-lg mb-2'>Body Style <span className='ml-auto inline-block text-white font-normal'>{car.bodyStyle}</span></li>
+                <li className='w-full flex justify-between px-2 font-bold text-white/75 md:text-lg mb-2'>Warranty <span className='ml-auto inline-block text-white font-normal'>{car.warranty_years} yrs / {car.warranty_km} km</span></li>
+                <li className='w-full flex justify-between px-2 font-bold text-white/75 md:text-lg mb-2'>Length <span className='ml-auto inline-block text-white font-normal'>{car.length} mm</span></li>
+                <li className='w-full flex justify-between px-2 font-bold text-white/75 md:text-lg mb-2'>Width <span className='ml-auto inline-block text-white font-normal'>{car.width} mm</span></li>
+                { car.type == 'Electric' ? 
+                  <li className='w-full flex justify-between px-2 font-bold text-white/75 md:text-lg mb-2'>Height <span className='ml-auto inline-block text-white font-normal'>{car.height.min_height} - {car.height.max_height} mm</span></li> : 
+                  <li className='w-full flex justify-between px-2 font-bold text-white/75 md:text-lg mb-2'>Height <span className='ml-auto inline-block text-white font-normal'>{car.height} mm</span></li>
+                }  
+                <li className='w-full flex justify-between px-2 font-bold text-white/75 md:text-lg mb-2'>Cargo Volume <span className='ml-auto inline-block text-white font-normal'>{car.cargoVolume} L</span></li>
               </ul>
-            </div>
+            </section>
 
-            {/* About Section */}
-            <div className="p-3 bg-[#2d2d2d] border border-[#e8ff81] rounded-lg mt-4">
-              <h2 className="text-xl font-semibold text-gray-300 mb-4">About {carDetail.model}</h2>
-              <p className="text-gray-300">{carDetail.about}</p>
-            </div>
+            <section className='p-6 border-l-4 border-appColor bg-darkGrey2 rounded-md shadow-md'>
+              <h3 className='text-xl font-bold text-appColor mb-2'>
+                About {car.name} {car.model}
+              </h3>
+              <p className='text-white leading-relaxed'>{car.about}</p>
+            </section>
 
-            {/* Price and Test Drive Button */}
-            <div className="p-3 bg-darkGrey flex flex-col items-center">
-              <p className="text-2xl font-bold mb-4">₹{`${carDetail.price.min_price}-${carDetail.price.max_price}`} Lakh</p>
-              <div className='flex'>
-                <div className='flex flex-col'>
-                  <Link to={`/buy-car/test-drive-inputform`}
-                    state={{ car: carDetail }} >
-                    <button
-                      className="bg-[#e8ff81] text-darkGrey px-6 py-3 rounded-lg font-semibold text-sm hover:bg-[#e8ff88] mx-1"
-                      onClick={() => handleClicks(carDetail, "Test Drive")}
-                    >
-                      Test Drive
-                    </button>
-                  </Link>
 
-                </div>
+            <section className='pt-10'>
+              <p className='text-3xl md:text-4xl font-bold md:pb-2 md:text-left text-center'>₹{car.price.min_price} - {car.price.max_price} Lakh</p>
+              <span className='text-white/75 block md:text-left text-center'>Average Ex-Showroom Price</span>
+            </section>
 
-                <div className='flex flex-col'>
-                  <Link
-                    to={`/buy-car/summary/${id}`}
+            <div className='flex gap-2 pt-5 md:justify-start justify-center'>
+              <Link to={`/buy-car/test-drive-inputform`}
                     state={{ car: carDetail }}
-                    className="block">
-                    <div className="relative inline-block">
-                      {/* Show Popup on Hover */}
-                      {showPopup && (
-                        <div className="absolute bottom-full mb-2 left-1/2 transform -translate-x-1/2 w-[300px] sm:w-[400px] lg:w-[500px]">
-                          <ExtendedTestDriveBenefits />
-                        </div>
-                      )}
+              >
+                <button className='bg-appColor py-3 px-4 text-darkGrey font-bold rounded-lg md:text-base text-sm hover:scale-105 transition-all duration-300'>Test Drive</button>
+              </Link>
+              <div className="flex gap-2 items-center group relative">
+                {/* TODO: Link to be added */}
+                <button className="bg-appColor py-3 px-4 text-darkGrey font-bold rounded-lg md:text-base text-sm hover:scale-105 transition-all duration-300">
+                  Extended Test Drive
+                </button>
 
-                      {/* Button to hover */}
-                      {/* fixed mobile view issue */}
-                      <button
-                        className={`px-6 py-3 rounded-lg font-semibold mx-1 ${carDetail.status === "disable"
-                            ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                            : "bg-[#e8ff81] text-darkGrey hover:bg-[#e8ff88]"
-                          }`}
-                        disabled={carDetail.status === "disable"} onMouseEnter={() => setShowPopup(true)}
-                        onMouseLeave={() => setShowPopup(false)}
-                        onClick={() => handleClicks(carDetail, "Extended Test Drive")}
-
-                      >
-                        {carDetail.status === "disable" ? "Sold Out" : "Extended Test Drive"}
-                      </button>
-                    </div>
-                  </Link>
-                  <p className='text-xs mx-2 my-1 overflow-y-auto'>( Try Before You Buy -</p>
-                  <p className='text-xs mx-2 my-1 overflow-y-auto'>Book Your Extended Test Drive Now! )</p>
-                </div>
+                <span 
+                  className="absolute z-10 left-1/3 -translate-x-1/2 top-[-2.5rem] px-3 py-2 rounded bg-darkGrey2 text-white text-xs md:w-max 
+                  text-center opacity-0 scale-95 pointer-events-none group-hover:opacity-100 group-hover:scale-100 group-hover:pointer-events-auto transition-all duration-300 shadow-md"
+                >
+                  Try Before You Buy – Book Your Extended Test Drive Now!
+                </span>
               </div>
+
             </div>
+
           </div>
-        </div>
+
+        </main>
+        
       </div>
-
-      {/* Test Drive Popup */}
-      {/* <TestDrivePopup
-        isOpen={isTestDrivePopupOpen}
-        close={() => setIsTestDrivePopupOpen(false)}
-        id={id}
-      /> */}
 
     </>
   );
