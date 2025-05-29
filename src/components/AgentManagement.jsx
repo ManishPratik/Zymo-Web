@@ -40,7 +40,7 @@ const AgentBookingList = ({ title }) => {
     darkGrey: "#212121", // Dark background
     darkGrey2: "#424242", // Modal and table background
   };
-
+  console.log("Selected Booking:", selectedBooking);
   const uniqueFields = ["bookingId", "UserId", "Email", "paymentId", "id"];
 
   // Convert Firestore timestamp or string to JavaScript Date object

@@ -23,13 +23,13 @@ const ExtendedTestDriveSummary = ({ title }) => {
   const [farePrice, setFarePrice] = useState(0);
   
   // Coupon related states
-  const [couponCode, setCouponCode] = useState("ZYMOWEB");
+  const [couponCode, setCouponCode] = useState("ZYMOET");
   const [showCoupons, setShowCoupons] = useState(false);
   const [discount, setDiscount] = useState(0);
 
   // Array of coupon codes
   const couponCodes = [
-    "ZYMOWEB",
+    "ZYMOET",
   ];
 
   const { car, selectedDate, selectedLocation, originalCar } =
@@ -73,9 +73,9 @@ const ExtendedTestDriveSummary = ({ title }) => {
         setFarePrice(fare);
         const securityDeposit = parseInt(originalCar.securityDeposit);
         
-        // Apply discount if coupon code is ZYMOWEB
+        // Apply discount if coupon code is ZYMOET
         let discountAmount = 0;
-        if (couponCode === "ZYMOWEB") {
+        if (couponCode === "ZYMOET") {
           // Apply 10% discount on fare price
           discountAmount =  fare - Math.round(fare * (data.DiscountSd));
           setDiscount(discountAmount);
