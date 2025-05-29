@@ -47,7 +47,13 @@ async function sendWhatsAppMessageWhenZoomCarVendor(data) {
     console.error(`Failed to send WhatsApp message: ${error.message}`);
   }
 }
-
+async function sendWhatsappNotifZymocarBooking() {
+  try {
+    console.log("Sending WhatsApp notification for Zymocar booking...");
+  } catch (error) {
+    console.error(`Failed to send WhatsApp notification: ${error.message}`);
+  }  
+}
 //Whatsapp message to zymo(when vendor is zoomcar)
 async function sendWhatsAppMessageWhenZoomCarVendorToZymo(data) {
   try {
@@ -249,4 +255,5 @@ module.exports = {
   bookingCancelMessage,
   sendTestDriveWhatsappMessage,
   sendExtendedTestDriveWhatsappMessage,
+  sendWhatsappNotifZymocarBooking
 };
