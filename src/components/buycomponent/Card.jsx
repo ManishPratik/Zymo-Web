@@ -65,7 +65,7 @@ const Card = ({ car }) => {
             Extended Test Drive from ₹129*/hr.
           </p>
           <p className="flex-shrink-0 px-[2px] md:px-1 relative cursor-pointer after:content-[''] after:absolute after:left-0 after:bottom-0 after:h-[2px] after:w-full after:bg-darkGrey hover:after:h-full after:transition-all after:duration-300">
-            <Link to={`/buy-car/car-details/${car.model.replace(/\s+/g, '-').toLowerCase()}`} state={{ car }}>
+            <Link to={`/buy-car/extended-test-drive/location`} state={{ car }}>
               <span className="relative hover:text-appColor z-20 whitespace-nowrap">Try Now</span>
             </Link>
           </p>
