@@ -64,7 +64,8 @@ const Listing = ({ title }) => {
     activeTab,
   } = location.state || {};
   const { city } = useParams();
-
+console.log("address", address);
+console.log("city", city);
   const trackEvent = useTrackEvent();
   const navigate = useNavigate();
 
@@ -590,7 +591,7 @@ const Listing = ({ title }) => {
           <div className="location-container">
             <span className="text-[#faffa4] text-lg flex items-center gap-1 mt-2 md:mt-0">
               <FiMapPin className="text-[#faffa4] w-5 h-5" />
-              {address}
+              { city || address}
             </span>
           </div>
         </header>
