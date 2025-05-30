@@ -180,7 +180,7 @@ const CarDetails = ({ title }) => {
                 </Link>
 
                 <span 
-                  className="absolute z-10 left-1/3 -translate-x-1/2 top-[-2.5rem] px-3 py-2 rounded bg-darkGrey2 text-white text-xs md:w-max 
+                  className="absolute z-10 left-1/2 md:left-1/3 -translate-x-1/2 top-[-3rem] md:top-[-2.5rem] px-1 py-1 md:px-3 md:py-2 rounded bg-darkGrey2 text-white text-xs w-52 md:w-max 
                   text-center opacity-0 scale-95 pointer-events-none group-hover:opacity-100 group-hover:scale-100 group-hover:pointer-events-auto transition-all duration-300 shadow-md"
                 >
                   Try Before You Buy – Book Your Extended Test Drive Now!
