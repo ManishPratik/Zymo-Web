@@ -8,7 +8,10 @@ import { appDB } from "../../utils/firebase";
 import { Helmet } from "react-helmet-async";
 import useTrackEvent from "../../hooks/useTrackEvent";
 import { getVendorDetails } from "../../utils/helperFunctions";
-import { calculateDiscountPrice, calculateSelfDrivePrice } from "../../utils/mychoize";
+import {
+  calculateDiscountPrice,
+  calculateSelfDrivePrice,
+} from "../../utils/mychoize";
 
 const ExtendedTestDriveSummary = ({ title }) => {
   const navigate = useNavigate();
@@ -21,19 +24,20 @@ const ExtendedTestDriveSummary = ({ title }) => {
   const [totalAmount, setTotalAmount] = useState(0);
   const [vendorData, setVendorData] = useState(null);
   const [farePrice, setFarePrice] = useState(0);
-  
+
   // Coupon related states
   const [couponCode, setCouponCode] = useState("ZYMOET");
   const [showCoupons, setShowCoupons] = useState(false);
   const [discount, setDiscount] = useState(0);
 
   // Array of coupon codes
-  const couponCodes = [
-    "ZYMOET",
-  ];
+  const couponCodes = ["ZYMOET"];
 
-  const { car, selectedDate, selectedLocation, originalCar } =
+  const {selectedCar: car, selectedDate, selectedLocation, originalCar } =
     location.state || {};
+
+    console.log("Car Data:", location.state);
+    console.log("Original Car Data:", originalCar);
 
   useEffect(() => {
     document.title = title;
@@ -72,17 +76,17 @@ const ExtendedTestDriveSummary = ({ title }) => {
         const fare = calculateDiscountPrice(parseInt(car.fare.slice(1)), data);
         setFarePrice(fare);
         const securityDeposit = parseInt(originalCar.securityDeposit);
-        
+
         // Apply discount if coupon code is ZYMOET
         let discountAmount = 0;
         if (couponCode === "ZYMOET") {
           // Apply 10% discount on fare price
-          discountAmount =  fare - Math.round(fare * (data.DiscountSd));
+          discountAmount = fare - Math.round(fare * data.DiscountSd);
           setDiscount(discountAmount);
         } else {
           setDiscount(0);
         }
-        
+
         const total = fare + securityDeposit - discountAmount;
         setTotalAmount(total);
       }

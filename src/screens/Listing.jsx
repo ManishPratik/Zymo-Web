@@ -64,8 +64,8 @@ const Listing = ({ title }) => {
     activeTab,
   } = location.state || {};
   const { city } = useParams();
-console.log("address", address);
-console.log("city", city);
+  console.log("address", address);
+  console.log("city", city);
   const trackEvent = useTrackEvent();
   const navigate = useNavigate();
 
@@ -94,7 +94,7 @@ console.log("city", city);
     { name: "MyChoize", logo: "/images/ServiceProvider/mychoize.png" },
     { name: "Carronrent", logo: "/images/ServiceProvider/carronrent.png" },
     { name: "Doorcars", logo: "/images/ServiceProvider/doorcars1.png" },
-    { name: "Renx", logo: "/images/ServiceProvider/renx.jpeg" }
+    { name: "Renx", logo: "/images/ServiceProvider/renx.jpeg" },
   ];
 
   const toggleDeals = (key) => {
@@ -155,18 +155,21 @@ console.log("city", city);
   // It groups the cars by name and brand and finds the minimum fare for each group
   const clubCarsByName = async (carsArray) => {
     const clubbingCarNames = (await getCarKeywords()) || [];
-   
+
     if (!Array.isArray(carsArray) || carsArray.length === 0) {
       return [];
     }
 
     // Step 1: Group cars by normalized name
     const carsGroupedByNormalizedName = carsArray.reduce((acc, car) => {
-      if (!car || !car.name || typeof car.fare !== 'string') {
+      if (!car || !car.name || typeof car.fare !== "string") {
         return acc;
       }
 
-      const normalizedNameKey = getNormalizedCarName(car.name, clubbingCarNames);
+      const normalizedNameKey = getNormalizedCarName(
+        car.name,
+        clubbingCarNames
+      );
 
       if (!acc[normalizedNameKey]) {
         acc[normalizedNameKey] = [];
@@ -176,47 +179,50 @@ console.log("city", city);
     }, {});
 
     // Step 2: Transform groups into the desired output structure
-    return Object.entries(carsGroupedByNormalizedName).map(([normalizedGroupName, carsInGroup]) => {
-      if (!carsInGroup || carsInGroup.length === 0) {
-        return null;
-      }
+    return Object.entries(carsGroupedByNormalizedName)
+      .map(([normalizedGroupName, carsInGroup]) => {
+        if (!carsInGroup || carsInGroup.length === 0) {
+          return null;
+        }
 
-      // Sort cars within the group by price (ascending)
-      const sortedCarsInGroup = [...carsInGroup].sort((a, b) => {
-        const fareA = parseInt(a.fare?.replace(/[^0-9]/g, "") || "0");
-        const fareB = parseInt(b.fare?.replace(/[^0-9]/g, "") || "0");
-        return fareA - fareB;
-      });
+        // Sort cars within the group by price (ascending)
+        const sortedCarsInGroup = [...carsInGroup].sort((a, b) => {
+          const fareA = parseInt(a.fare?.replace(/[^0-9]/g, "") || "0");
+          const fareB = parseInt(b.fare?.replace(/[^0-9]/g, "") || "0");
+          return fareA - fareB;
+        });
 
-      const minFareCar = sortedCarsInGroup[0];
-      if (!minFareCar) {
-        return null;
-      }
+        const minFareCar = sortedCarsInGroup[0];
+        if (!minFareCar) {
+          return null;
+        }
 
-      const minFare = minFareCar.fare;
-      const seat = minFareCar.options?.find((opt) => typeof opt === 'string' && opt.includes("Seats")) || "N/A";
-      const brand = minFareCar.brand; // Brand of the car with the minimum fare
+        const minFare = minFareCar.fare;
+        const seat =
+          minFareCar.options?.find(
+            (opt) => typeof opt === "string" && opt.includes("Seats")
+          ) || "N/A";
+        const brand = minFareCar.brand; // Brand of the car with the minimum fare
 
-      return {
-        brand: brand,
-        name: normalizedGroupName, // The normalized group name (e.g., "SWIFT")
-        fare: minFare,
-        seat: seat,
-        cars: sortedCarsInGroup, // All cars in this normalized group, sorted by price
-      };
-    }).filter(group => group !== null); // Remove any null groups
+        return {
+          brand: brand,
+          name: normalizedGroupName, // The normalized group name (e.g., "SWIFT")
+          fare: minFare,
+          seat: seat,
+          cars: sortedCarsInGroup, // All cars in this normalized group, sorted by price
+        };
+      })
+      .filter((group) => group !== null); // Remove any null groups
   };
 
   useEffect(() => {
-  
-
     if (hasRun.current) return;
     hasRun.current = true;
 
     const startDateEpoc = Date.parse(startDate);
     const endDateEpoc = Date.parse(endDate);
     if (!city || !lat || !lng || !startDateEpoc || !endDateEpoc) {
-     setLoading(false);
+      setLoading(false);
       return;
     }
 
@@ -283,11 +289,12 @@ console.log("city", city);
           );
           const firebasePromise = fetchFirebaseCars(city, tripDurationHours);
 
-          const [zoomData, mychoizeData, firebaseData] = await Promise.allSettled([
-            zoomPromise ? zoomPromise : Promise.resolve(null),
-            mychoizePromise ? mychoizePromise : Promise.resolve(null),
-            firebasePromise,
-          ]);
+          const [zoomData, mychoizeData, firebaseData] =
+            await Promise.allSettled([
+              zoomPromise ? zoomPromise : Promise.resolve(null),
+              mychoizePromise ? mychoizePromise : Promise.resolve(null),
+              firebasePromise,
+            ]);
 
           if (
             zoomData.status === "fulfilled" &&
@@ -362,7 +369,7 @@ console.log("city", city);
         setCarCount(
           groupCarList.reduce((count, group) => count + group.cars.length, 0)
         );
-        setLoading(false);      
+        setLoading(false);
 
         localStorage.setItem("carList", JSON.stringify(allCarData));
       } catch (error) {
@@ -374,11 +381,9 @@ console.log("city", city);
     search();
   }, [city, startDate, endDate, activeTab, lat, lng, tripDurationHours]);
 
-// useEffect(() => {
-//   localStorage.setItem("carList", JSON.stringify(carList));
-// }, [carList]);
-
-
+  // useEffect(() => {
+  //   localStorage.setItem("carList", JSON.stringify(carList));
+  // }, [carList]);
 
   useEffect(() => {
     document.title = title;
@@ -461,7 +466,6 @@ console.log("city", city);
     setCarCount(
       clubbedCarList.reduce((count, group) => count + group.cars.length, 0)
     );
- 
   };
 
   const handleSelectedCar = (label) => {
@@ -516,15 +520,20 @@ console.log("city", city);
 
   const CarSpecBadges = ({ options }) => {
     // Extract seat information from options
-    const seatInfo = options.find(opt => opt.includes("Seats")) || "N/A";
+    const seatInfo = options.find((opt) => opt.includes("Seats")) || "N/A";
     // Extract fuel type information (Petrol, Diesel, Electric)
-    const fuelInfo = options.find(opt =>
-      opt.includes("Petrol") || opt.includes("Diesel") || opt.includes("Electric")
-    ) || "N/A";
+    const fuelInfo =
+      options.find(
+        (opt) =>
+          opt.includes("Petrol") ||
+          opt.includes("Diesel") ||
+          opt.includes("Electric")
+      ) || "N/A";
     // Extract transmission information (Manual, Automatic)
-    const transmissionInfo = options.find(opt =>
-      opt.includes("Manual") || opt.includes("Automatic")
-    ) || "N/A";
+    const transmissionInfo =
+      options.find(
+        (opt) => opt.includes("Manual") || opt.includes("Automatic")
+      ) || "N/A";
 
     return (
       <div className="flex flex-wrap gap-2 my-2">
@@ -540,9 +549,13 @@ console.log("city", city);
         <div className="flex items-center bg-gray-300 rounded-md px-3 py-1">
           <BsFuelPump size={14} className="text-black mr-1" />
           <span className="text-black font-medium text-sm">
-            {fuelInfo.includes("Petrol") ? "Petrol" :
-              fuelInfo.includes("Diesel") ? "Diesel" :
-                fuelInfo.includes("Electric") ? "Electric" : "N/A"}
+            {fuelInfo.includes("Petrol")
+              ? "Petrol"
+              : fuelInfo.includes("Diesel")
+              ? "Diesel"
+              : fuelInfo.includes("Electric")
+              ? "Electric"
+              : "N/A"}
           </span>
         </div>
 
@@ -550,8 +563,11 @@ console.log("city", city);
         <div className="flex items-center bg-gray-300 rounded-md px-3 py-1">
           <TbManualGearbox size={14} className="text-black mr-1" />
           <span className="text-black font-medium text-sm">
-            {transmissionInfo.includes("Manual") ? "Manual" :
-              transmissionInfo.includes("Automatic") ? "Automatic" : "N/A"}
+            {transmissionInfo.includes("Manual")
+              ? "Manual"
+              : transmissionInfo.includes("Automatic")
+              ? "Automatic"
+              : "N/A"}
           </span>
         </div>
       </div>
@@ -591,7 +607,7 @@ console.log("city", city);
           <div className="location-container">
             <span className="text-[#faffa4] text-lg flex items-center gap-1 mt-2 md:mt-0">
               <FiMapPin className="text-[#faffa4] w-5 h-5" />
-              { city || address}
+              {city || address}
             </span>
           </div>
         </header>
@@ -687,7 +703,9 @@ console.log("city", city);
         {/* Car Grid */}
         {loading ? (
           <>
-            <h3 className="text-[#faffa4] text-lg text-center">We compare multiple sites to get you the best deal</h3>
+            <h3 className="text-[#faffa4] text-lg text-center">
+              We compare multiple sites to get you the best deal
+            </h3>
 
             <div
               className="sm:max-w-[40rem] max-w-80"
@@ -732,9 +750,14 @@ console.log("city", city);
         ) : filteredList.length === 0 ? (
           <div className="text-center text-white mt-10">
             {filtersApplied ? (
-              <p className="text-lg">No cars available for the specified filters. Try searching other filters or press the refresh button 🔄.</p>
+              <p className="text-lg">
+                No cars available for the specified filters. Try searching other
+                filters or press the refresh button 🔄.
+              </p>
             ) : (
-              <p className="text-lg">Please apply filters or check availability later.</p>
+              <p className="text-lg">
+                Please apply filters or check availability later.
+              </p>
             )}
           </div>
         ) : (
@@ -758,10 +781,14 @@ console.log("city", city);
                       <div>
                         <h3 className="text-md font-semibold">{car.name}</h3>
                         <CarSpecBadges options={car.cars[0].options} />
-                         <p className="text-xs text-[#faffa4]">Available from</p>
+                        <p className="text-xs text-[#faffa4]">Available from</p>
                         <div className="img-container">
                           <div className="flex gap-1">
-                            {[...new Map(car.cars.map(car => [car.sourceImg, car])).values()].map((uniqueCar) => (
+                            {[
+                              ...new Map(
+                                car.cars.map((car) => [car.sourceImg, car])
+                              ).values(),
+                            ].map((uniqueCar) => (
                               <img
                                 key={uniqueCar.sourceImg} // Add a unique key for React rendering
                                 loading="lazy"
@@ -775,7 +802,8 @@ console.log("city", city);
                       </div>
                       <div className="text-right">
                         <p className="text-sm text-[#faffa4]">
-                          {car.cars.length} deal{car.cars.length > 1 ? "s" : ""} available
+                          {car.cars.length} deal{car.cars.length > 1 ? "s" : ""}{" "}
+                          available
                         </p>
                         <p className="text-sm text-gray-400">Starts at</p>
                         <p className="text-sm text-gray-500 !line-through !decoration-2">
@@ -824,9 +852,15 @@ console.log("city", city);
                           <CarSpecBadges options={car.cars[0].options} />
                         </div>
                         <div>
-                          <p className="text-xs text-[#faffa4]">Available from</p>
+                          <p className="text-xs text-[#faffa4]">
+                            Available from
+                          </p>
                           <div className="flex gap-1">
-                            {[...new Map(car.cars.map(car => [car.sourceImg, car])).values()].map((uniqueCar) => (
+                            {[
+                              ...new Map(
+                                car.cars.map((car) => [car.sourceImg, car])
+                              ).values(),
+                            ].map((uniqueCar) => (
                               <img
                                 key={uniqueCar.sourceImg} // Add a unique key for React rendering
                                 loading="lazy"
@@ -857,7 +891,8 @@ console.log("city", city);
                       <div className="flex flex-col justify-between text-right w-1/4 border-l border-gray-400 pl-4">
                         <div>
                           <p className="text-sm text-[#faffa4]">
-                            {car.cars.length} deal{car.cars.length > 1 ? "s" : ""} available
+                            {car.cars.length} deal
+                            {car.cars.length > 1 ? "s" : ""} available
                           </p>
                           <p className="text-xs text-gray-400">Starts at</p>
                           <p className="text-md text-gray-400 !line-through !decoration-[2px]">
@@ -954,7 +989,10 @@ console.log("city", city);
                                     goToDetails(individualCar);
                                   } else if (activeTab === "subscribe") {
                                     goToDetails(individualCar);
-                                  } else if (individualCar.source === "Karyana" || individualCar.source === "ZT") {
+                                  } else if (
+                                    individualCar.source === "Karyana" ||
+                                    individualCar.source === "ZT"
+                                  ) {
                                     goToPackages(car); // Show packages for Karyana cars with multiple packages
                                   } else {
                                     goToPackages(individualCar);

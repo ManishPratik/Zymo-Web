@@ -849,6 +849,7 @@ function BookingPage() {
   };
 
   const handleUploadDocuments = () => {
+    console.log(selectedPickupLocation, selectedDropLocation)
     if (!selectedPickupLocation || !selectedDropLocation) {
       toast.warn("Please choose the pickup and drop locations", {
         position: "top-center",
